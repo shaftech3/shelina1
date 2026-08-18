@@ -16,10 +16,20 @@ function required(name: string): string {
   return value;
 }
 
+function getSecret(name: string, fallbackName?: string): string {
+  const value = process.env[name] ?? (fallbackName ? process.env[fallbackName] : undefined);
+  if (!value || !value.trim()) {
+    throw new Error(
+      `Missing required environment variable ${name}${fallbackName ? ` or ${fallbackName}` : ''}. Copy .env.example to .env and fill it in.`,
+    );
+  }
+  return value;
+}
+
 const NODE_ENV = process.env.NODE_ENV ?? 'development';
 const isProduction = NODE_ENV === 'production';
 
-const sessionSecret = required('SESSION_SECRET');
+const sessionSecret = getSecret('SESSION_SECRET', 'JWT_SECRET');
 
 // A weak secret is a real vulnerability in production, so fail loudly rather
 // than booting with something guessable.
@@ -38,6 +48,12 @@ export const env = {
     .split(',')
     .map((origin) => origin.trim())
     .filter(Boolean),
+  /** Single admin account configuration */
+  adminEmail: (process.env.ADMIN_EMAIL ?? process.env.SEED_ADMIN_EMAIL ?? 'shelinaofficial@gmail.com')
+    .trim()
+    .toLowerCase(),
+  adminPassword: process.env.ADMIN_PASSWORD ?? process.env.SEED_ADMIN_PASSWORD ?? '',
+  adminName: process.env.ADMIN_NAME ?? process.env.SEED_ADMIN_NAME ?? 'Shelina Admin',
   /** Session lifetime for both admin and customer cookies. */
   sessionMaxAgeMs: 1000 * 60 * 60 * 8,
   /**

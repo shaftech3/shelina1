@@ -20,7 +20,7 @@ fi
 # 2. Start Shelina API backend if not already running
 if ! curl -s -m 2 http://127.0.0.1:4000/api/health >/dev/null 2>&1; then
   echo "[dev] Starting Shelina backend API on port 4000..."
-  (cd "$ROOT/shelina-api" && PORT=4000 npm start) &
+  (cd "$ROOT/shelina-api" && PORT=4000 npm run dev) &
   sleep 1
 fi
 

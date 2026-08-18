@@ -4,7 +4,10 @@ import { readFileSync } from 'node:fs';
 
 const BASE = 'http://localhost:4173';
 const API = 'http://localhost:4000/api';
-const ADMIN = { email: 'admin@shelina.local', password: 'shelina-dev-2026' };
+const ADMIN = {
+  email: process.env.ADMIN_EMAIL ?? 'shelinaofficial@gmail.com',
+  password: process.env.ADMIN_PASSWORD ?? process.env.SEED_ADMIN_PASSWORD ?? 'shelina-dev-2026',
+};
 
 let pass = 0;
 let fail = 0;

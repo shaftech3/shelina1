@@ -32,8 +32,9 @@ const INVALID_CREDENTIALS = 'Incorrect email or password.';
 authRouter.post('/admin/login', credentialLimiter, async (req, res, next) => {
   try {
     const { email, password } = loginSchema.parse(req.body);
+    const normalizedEmail = email.trim().toLowerCase();
 
-    const admin = await prisma.adminUser.findUnique({ where: { email } });
+    const admin = await prisma.adminUser.findUnique({ where: { email: normalizedEmail } });
     if (!admin) throw ApiError.unauthorized(INVALID_CREDENTIALS);
 
     const valid = await verifyPassword(password, admin.passwordHash);
@@ -60,14 +61,16 @@ authRouter.get('/admin/me', async (req, res, next) => {
   try {
     const adminId = readSession(req.cookies ?? {}, 'admin');
     if (!adminId) {
-      res.json({ success: true, data: null });
-      return;
+      throw ApiError.unauthorized('Admin authentication required.');
     }
     const admin = await prisma.adminUser.findUnique({
       where: { id: adminId },
       select: { id: true, email: true, name: true, role: true },
     });
-    res.json({ success: true, data: admin ?? null });
+    if (!admin) {
+      throw ApiError.unauthorized('Admin authentication required.');
+    }
+    res.json({ success: true, data: admin });
   } catch (error) {
     next(error);
   }

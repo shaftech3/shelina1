@@ -42,6 +42,7 @@ export type IconName =
   | 'external'
   | 'drag'
   | 'eye'
+  | 'eye-off'
   // Order glyphs (Stage 6).
   | 'download'
   | 'receipt';
@@ -222,6 +223,14 @@ const PATHS: Record<IconName, ReactElement> = {
     <>
       <path d="M2.6 12S6 5.8 12 5.8 21.4 12 21.4 12 18 18.2 12 18.2 2.6 12 2.6 12z" />
       <circle cx="12" cy="12" r="2.8" />
+    </>
+  ),
+  'eye-off': (
+    <>
+      <path d="M9.9 4.2A10.6 10.6 0 0112 4c6 0 9.4 6.2 9.4 6.2a14.8 14.8 0 01-3.2 4.4" />
+      <path d="M14.1 14.1a3 3 0 01-4.2-4.2" />
+      <path d="M4.3 6.3A14.9 14.9 0 002.6 10.2s3.4 6.2 9.4 6.2c1.7 0 3.1-.4 4.3-1" />
+      <path d="M3 3l18 18" />
     </>
   ),
 };

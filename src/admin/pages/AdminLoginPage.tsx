@@ -22,6 +22,7 @@ export function AdminLoginPage() {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -41,10 +42,19 @@ export function AdminLoginPage() {
     event.preventDefault();
     if (submitting) return;
 
+    if (!email.trim()) {
+      setError('Please enter your admin email address.');
+      return;
+    }
+    if (!password) {
+      setError('Please enter your password.');
+      return;
+    }
+
     setError(null);
     setSubmitting(true);
     try {
-      await login({ email, password });
+      await login({ email: email.trim(), password });
       navigate(destination, { replace: true });
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Sign in failed. Please try again.');
@@ -75,17 +85,29 @@ export function AdminLoginPage() {
             required
             value={email}
             onChange={(event) => setEmail(event.target.value)}
-            placeholder="you@example.com"
+            placeholder="shelinaofficial@gmail.com"
           />
 
           <Input
             label="Password"
-            type="password"
+            type={showPassword ? 'text' : 'password'}
             name="password"
             autoComplete="current-password"
             required
             value={password}
             onChange={(event) => setPassword(event.target.value)}
+            placeholder="••••••••"
+            iconRight={
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                className="p-1 text-ink-subtle hover:text-ink focus:outline-none transition-colors"
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                title={showPassword ? 'Hide password' : 'Show password'}
+              >
+                <Icon name={showPassword ? 'eye-off' : 'eye'} size={18} />
+              </button>
+            }
           />
 
           {error && (
@@ -100,11 +122,6 @@ export function AdminLoginPage() {
           </Button>
         </form>
 
-        {/*
-          Stage 5: authentication is real. The password is verified against a
-          bcrypt hash in PostgreSQL and the session is an HttpOnly cookie, so
-          this note no longer needs to warn about a client-only guard.
-        */}
         <p className="mt-6 text-center text-caption leading-relaxed text-ink-subtle">
           Access is restricted to Shelina staff accounts. Every request is authorised on the server.
         </p>

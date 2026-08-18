@@ -7,11 +7,12 @@ export interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 
   hint?: string;
   error?: string;
   iconLeft?: ReactNode;
+  iconRight?: ReactNode;
   wrapperClassName?: string;
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
-  { label, hint, error, required, iconLeft, className, wrapperClassName, ...rest },
+  { label, hint, error, required, iconLeft, iconRight, className, wrapperClassName, ...rest },
   ref,
 ) {
   return (
@@ -27,8 +28,16 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
             ref={ref}
             {...fieldProps}
             {...rest}
-            className={controlClasses(Boolean(error), cn('h-12', iconLeft && 'pl-11', className))}
+            className={controlClasses(
+              Boolean(error),
+              cn('h-12', iconLeft && 'pl-11', iconRight && 'pr-11', className),
+            )}
           />
+          {iconRight && (
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center">
+              {iconRight}
+            </div>
+          )}
         </div>
       )}
     </Field>
