@@ -1,0 +1,7 @@
+node_modules/
+dist/
+# Real environment files must never be committed — they hold DATABASE_URL
+# and SESSION_SECRET.
+.env
+.env.local
+.env.*.local

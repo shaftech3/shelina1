@@ -1,0 +1,170 @@
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: ['./index.html', './src/**/*.{ts,tsx}'],
+  theme: {
+    // Mobile-first breakpoints. `xs` targets small phones (320-359px is base).
+    screens: {
+      xs: '360px',
+      sm: '480px',
+      md: '768px',
+      lg: '1024px',
+      xl: '1280px',
+      '2xl': '1440px',
+      '3xl': '1920px',
+    },
+    extend: {
+      colors: {
+        // All values resolve to CSS custom properties defined in styles/tokens.css
+        primary: {
+          DEFAULT: 'rgb(var(--c-primary) / <alpha-value>)',
+          hover: 'rgb(var(--c-primary-hover) / <alpha-value>)',
+          light: 'rgb(var(--c-primary-light) / <alpha-value>)',
+          soft: 'rgb(var(--c-primary-soft) / <alpha-value>)',
+          deep: 'rgb(var(--c-primary-deep) / <alpha-value>)',
+        },
+        secondary: {
+          DEFAULT: 'rgb(var(--c-secondary) / <alpha-value>)',
+          hover: 'rgb(var(--c-secondary-hover) / <alpha-value>)',
+          light: 'rgb(var(--c-secondary-light) / <alpha-value>)',
+          soft: 'rgb(var(--c-secondary-soft) / <alpha-value>)',
+          deep: 'rgb(var(--c-secondary-deep) / <alpha-value>)',
+        },
+        cream: 'rgb(var(--c-cream) / <alpha-value>)',
+        background: 'rgb(var(--c-background) / <alpha-value>)',
+        surface: 'rgb(var(--c-surface) / <alpha-value>)',
+        'surface-alt': 'rgb(var(--c-surface-alt) / <alpha-value>)',
+        border: {
+          DEFAULT: 'rgb(var(--c-border) / <alpha-value>)',
+          strong: 'rgb(var(--c-border-strong) / <alpha-value>)',
+        },
+        ink: {
+          DEFAULT: 'rgb(var(--c-text) / <alpha-value>)',
+          muted: 'rgb(var(--c-text-muted) / <alpha-value>)',
+          subtle: 'rgb(var(--c-text-subtle) / <alpha-value>)',
+          invert: 'rgb(var(--c-text-invert) / <alpha-value>)',
+        },
+        success: 'rgb(var(--c-success) / <alpha-value>)',
+        'success-deep': 'rgb(var(--c-success-deep) / <alpha-value>)',
+        warning: 'rgb(var(--c-warning) / <alpha-value>)',
+        'warning-deep': 'rgb(var(--c-warning-deep) / <alpha-value>)',
+        error: 'rgb(var(--c-error) / <alpha-value>)',
+        'error-hover': 'rgb(var(--c-error-hover) / <alpha-value>)',
+        'error-deep': 'rgb(var(--c-error-deep) / <alpha-value>)',
+      },
+      fontFamily: {
+        display: ['"Cormorant Garamond"', 'Georgia', '"Times New Roman"', 'serif'],
+        sans: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
+      },
+      fontSize: {
+        // Fluid, slightly more generous than a standard scale (premium editorial feel)
+        display: ['clamp(2.5rem, 1.6rem + 4.2vw, 5rem)', { lineHeight: '1.04', letterSpacing: '-0.02em' }],
+        h1: ['clamp(2.05rem, 1.45rem + 2.7vw, 3.6rem)', { lineHeight: '1.1', letterSpacing: '-0.018em' }],
+        h2: ['clamp(1.7rem, 1.28rem + 1.8vw, 2.7rem)', { lineHeight: '1.15', letterSpacing: '-0.015em' }],
+        h3: ['clamp(1.35rem, 1.14rem + 0.9vw, 1.9rem)', { lineHeight: '1.22', letterSpacing: '-0.01em' }],
+        h4: ['clamp(1.14rem, 1.05rem + 0.42vw, 1.4rem)', { lineHeight: '1.3', letterSpacing: '-0.005em' }],
+        'body-lg': ['clamp(1.06rem, 1rem + 0.3vw, 1.22rem)', { lineHeight: '1.68' }],
+        body: ['clamp(0.98rem, 0.94rem + 0.18vw, 1.06rem)', { lineHeight: '1.7' }],
+        'body-sm': ['0.925rem', { lineHeight: '1.62' }],
+        caption: ['0.8rem', { lineHeight: '1.45' }],
+        button: ['0.925rem', { lineHeight: '1', letterSpacing: '0.02em' }],
+        label: ['0.86rem', { lineHeight: '1.35', letterSpacing: '0.01em' }],
+        eyebrow: ['0.75rem', { lineHeight: '1.3', letterSpacing: '0.22em' }],
+      },
+      spacing: {
+        gutter: 'var(--space-gutter)',
+        section: 'var(--space-section)',
+      },
+      maxWidth: {
+        container: 'var(--container-max)',
+        prose: '68ch',
+      },
+      borderRadius: {
+        xs: '4px',
+        sm: '6px',
+        DEFAULT: '10px',
+        md: '12px',
+        lg: '16px',
+        xl: '22px',
+        '2xl': '30px',
+        editorial: '40px',
+      },
+      boxShadow: {
+        xs: '0 1px 2px 0 rgb(28 34 38 / 0.04)',
+        sm: '0 2px 8px -2px rgb(28 34 38 / 0.06), 0 1px 2px rgb(28 34 38 / 0.03)',
+        DEFAULT: '0 6px 20px -8px rgb(28 34 38 / 0.10), 0 2px 6px -2px rgb(28 34 38 / 0.04)',
+        md: '0 12px 32px -12px rgb(28 34 38 / 0.13), 0 3px 8px -3px rgb(28 34 38 / 0.05)',
+        lg: '0 24px 60px -22px rgb(28 34 38 / 0.18), 0 6px 14px -6px rgb(28 34 38 / 0.06)',
+        ring: '0 0 0 1px rgb(var(--c-border))',
+        focus: '0 0 0 3px rgb(var(--c-primary) / 0.28)',
+      },
+      transitionTimingFunction: {
+        elegant: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+        entrance: 'cubic-bezier(0.16, 0.84, 0.44, 1)',
+        exit: 'cubic-bezier(0.4, 0, 0.6, 1)',
+      },
+      transitionDuration: {
+        fast: '160ms',
+        base: '280ms',
+        slow: '520ms',
+        reveal: '820ms',
+      },
+      // Extra fine-grained steps used by scrims, tint fills and hairline rings.
+      opacity: {
+        3: '0.03',
+        8: '0.08',
+        12: '0.12',
+        18: '0.18',
+        55: '0.55',
+        72: '0.72',
+        92: '0.92',
+      },
+      aspectRatio: {
+        product: '4 / 5',
+        category: '3 / 4',
+        banner: '16 / 9',
+        hero: '4 / 3',
+        wide: '21 / 9',
+      },
+      keyframes: {
+        'fade-in': { from: { opacity: '0' }, to: { opacity: '1' } },
+        'fade-up': {
+          from: { opacity: '0', transform: 'translate3d(0, 18px, 0)' },
+          to: { opacity: '1', transform: 'translate3d(0, 0, 0)' },
+        },
+        'fade-down': {
+          from: { opacity: '0', transform: 'translate3d(0, -12px, 0)' },
+          to: { opacity: '1', transform: 'translate3d(0, 0, 0)' },
+        },
+        'scale-in': {
+          from: { opacity: '0', transform: 'scale(0.97)' },
+          to: { opacity: '1', transform: 'scale(1)' },
+        },
+        'slide-in-right': {
+          from: { transform: 'translate3d(100%, 0, 0)' },
+          to: { transform: 'translate3d(0, 0, 0)' },
+        },
+        'slide-in-left': {
+          from: { transform: 'translate3d(-100%, 0, 0)' },
+          to: { transform: 'translate3d(0, 0, 0)' },
+        },
+        'hero-media': {
+          from: { opacity: '0', transform: 'scale(1.04)' },
+          to: { opacity: '1', transform: 'scale(1)' },
+        },
+        shimmer: { from: { transform: 'translateX(-100%)' }, to: { transform: 'translateX(100%)' } },
+        spin: { to: { transform: 'rotate(360deg)' } },
+      },
+      animation: {
+        'fade-in': 'fade-in var(--dur-base) var(--ease-entrance) both',
+        'fade-up': 'fade-up var(--dur-slow) var(--ease-entrance) both',
+        'fade-down': 'fade-down var(--dur-base) var(--ease-entrance) both',
+        'scale-in': 'scale-in var(--dur-base) var(--ease-entrance) both',
+        'slide-in-right': 'slide-in-right var(--dur-base) var(--ease-entrance) both',
+        'slide-in-left': 'slide-in-left var(--dur-base) var(--ease-entrance) both',
+        shimmer: 'shimmer 1.6s infinite',
+        spin: 'spin 0.7s linear infinite',
+      },
+    },
+  },
+  plugins: [],
+};

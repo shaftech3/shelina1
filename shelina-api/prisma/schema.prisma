@@ -1,0 +1,363 @@
+// Shelina — database schema (Stages 5–6)
+//
+// Stage 5 modelled the CATALOGUE, CONTENT and IDENTITY.
+// Stage 6 adds ORDERS: Order and OrderItem only.
+//
+// Payment, Coupon, Review, Wishlist and Analytics remain deliberately absent —
+// they belong to Stage 7+. Stage 6 orders are Cash on Delivery, so there is no
+// payment model, only an unpaid/paid flag on the order itself.
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─────────────────────────── Identity ───────────────────────────
+//
+// AdminUser and CustomerUser are separate tables on purpose. They are two
+// unrelated identity systems: an admin session must never authorise storefront
+// customer actions and a customer session must never grant admin access.
+// Keeping them apart at the schema level makes accidental privilege crossover
+// structurally impossible rather than merely discouraged.
+
+model AdminUser {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  role         String   @default("admin")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("admin_users")
+}
+
+model CustomerUser {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  orders Order[]
+
+  @@map("customer_users")
+}
+
+// ─────────────────────────── Catalogue ──────────────────────────
+
+model Category {
+  id             String   @id @default(cuid())
+  name           String
+  slug           String   @unique
+  description    String?
+  image          String?
+  imageAlt       String?
+  group          String?
+  featured       Boolean  @default(false)
+  seoTitle       String?
+  seoDescription String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  products Product[]
+
+  @@map("categories")
+}
+
+model Brand {
+  id             String   @id @default(cuid())
+  name           String
+  slug           String   @unique
+  description    String?
+  logo           String?
+  logoAlt        String?
+  seoTitle       String?
+  seoDescription String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  products Product[]
+
+  @@map("brands")
+}
+
+model Product {
+  id               String  @id @default(cuid())
+  name             String
+  slug             String  @unique
+  sku              String? @unique
+  shortDescription String?
+  description      String?
+
+  price     Int // minor-unit-free integer PKR; no floating point money
+  salePrice Int?
+
+  stock       Int    @default(0)
+  stockStatus String @default("in-stock") // in-stock | low-stock | out-of-stock | pre-order
+
+  status     String  @default("active") // active | draft | archived
+  featured   Boolean @default(false)
+  newArrival Boolean @default(false)
+  onSale     Boolean @default(false)
+
+  // ── Manual, per-product variants ──────────────────────────────
+  //
+  // CRITICAL ARCHITECTURAL RULE: there is NO Size table, NO GlobalSize enum,
+  // NO GlobalColor enum and NO colour dictionary anywhere in this schema.
+  // Sizes and colours are authored per product as free-form strings and are
+  // never validated against any shared list.
+  //
+  // They are stored as JSON arrays rather than String[] because the Stage 3
+  // storefront renders a per-value availability flag (and an optional admin
+  // authored swatch) that a flat string array cannot carry. The VALUE itself
+  // is still an arbitrary string typed by the admin — "38", "UK 6",
+  // "Free Size", "Coffee" are all equally valid and stored verbatim.
+  //
+  //   sizes  : [{ value: string, available: boolean }]
+  //   colors : [{ name: string, swatch?: string, available: boolean }]
+  sizes  Json @default("[]")
+  colors Json @default("[]")
+
+  tags String[] @default([])
+
+  seoTitle       String?
+  seoDescription String?
+
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  brandId String?
+  brand   Brand?  @relation(fields: [brandId], references: [id], onDelete: Restrict)
+
+  media      ProductMedia[]
+  orderItems OrderItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Indexes match how the storefront actually queries: slug/sku lookups and
+  // category/brand/status filters. Deliberately not indexing every column.
+  @@index([categoryId])
+  @@index([brandId])
+  @@index([status])
+  @@map("products")
+}
+
+model ProductMedia {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  type      String // image | video
+  url       String // URL reference only — never binary data
+  alt       String?
+  poster    String? // video poster frame
+  width     Int?
+  height    Int?
+  sortOrder Int     @default(0)
+
+  createdAt DateTime @default(now())
+
+  @@index([productId, sortOrder])
+  @@map("product_media")
+}
+
+// ─────────────────────────── Content ────────────────────────────
+
+// Single-row table holding the storefront homepage hero + editorial block.
+model Homepage {
+  id String @id @default("homepage")
+
+  eyebrow        String?
+  heading        String
+  subheading     String?
+  badge          String?
+  image          String?
+  imageAlt       String?
+  secondaryImage String?
+
+  ctaText          String?
+  ctaLink          String?
+  secondaryCtaText String?
+  secondaryCtaLink String?
+
+  // Editorial / promotional block further down the page.
+  editorialEyebrow     String?
+  editorialHeading     String?
+  editorialDescription String?
+  editorialImage       String?
+  editorialImageAlt    String?
+  editorialCtaText     String?
+  editorialCtaLink     String?
+
+  updatedAt DateTime @updatedAt
+
+  banners Banner[]
+
+  @@map("homepage")
+}
+
+model Banner {
+  id          String  @id @default(cuid())
+  title       String
+  description String?
+  eyebrow     String?
+  image       String?
+  imageAlt    String?
+  ctaText     String?
+  ctaLink     String?
+  variant     String  @default("split") // image | split | plain
+  tone        String? // cream | primary | secondary | surface
+  mediaSide   String? // left | right
+  active      Boolean @default(true)
+  sortOrder   Int     @default(0)
+
+  homepageId String   @default("homepage")
+  homepage   Homepage @relation(fields: [homepageId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([active, sortOrder])
+  @@map("banners")
+}
+
+// Single-row global SEO settings.
+model SeoSettings {
+  id String @id @default("seo")
+
+  siteTitle       String
+  siteDescription String
+  defaultImage    String?
+  keywords        String[] @default([])
+
+  ogTitle       String?
+  ogDescription String?
+  ogImage       String?
+
+  twitterTitle       String?
+  twitterDescription String?
+  twitterImage       String?
+
+  updatedAt DateTime @updatedAt
+
+  @@map("seo_settings")
+}
+
+// ─────────────────────────── Orders (Stage 6) ───────────────────────────
+//
+// Cash on Delivery only. No payment gateway, no coupons, no reviews and no
+// delivery-tracking model exists in this stage.
+
+model Order {
+  id String @id @default(cuid())
+
+  /// Human-readable, customer-facing identifier — e.g. SHL-20260816-0001.
+  /// Deliberately NOT the cuid primary key: order numbers get read aloud,
+  /// typed into support chats and printed on invoices.
+  orderNumber String @unique
+
+  /// Orders belong to a registered customer. Guest checkout is out of scope,
+  /// and Restrict keeps order history from silently disappearing if an account
+  /// is ever removed.
+  customerId String
+  customer   CustomerUser @relation(fields: [customerId], references: [id], onDelete: Restrict)
+
+  /// PENDING | CONFIRMED | PROCESSING | SHIPPED | DELIVERED | CANCELLED
+  /// Stored as a String rather than a native enum so the allowed set and the
+  /// legal transitions live in one auditable place in application code
+  /// (src/services/orderStatus.ts) instead of being split across a migration.
+  status String @default("PENDING")
+
+  /// Cash on Delivery: UNPAID until someone marks it otherwise. This is the
+  /// single payment field the brief permits — it is not a payment system.
+  paymentStatus String @default("UNPAID")
+
+  /// Contact + shipping details captured AT CHECKOUT. These are snapshots on
+  /// purpose: editing an account later must not rewrite where a past parcel
+  /// was actually sent.
+  customerName    String
+  customerEmail   String
+  customerPhone   String
+  shippingAddress String
+  city            String
+  notes           String?
+
+  /// Money, in the same integer PKR unit the catalogue uses. Every one of
+  /// these is computed on the server from database prices; a client-supplied
+  /// total is never trusted or stored.
+  subtotal    Int
+  shippingFee Int
+  grandTotal  Int
+
+  /// Client-supplied key that makes "Place order" idempotent. A double-click
+  /// sends the same key twice; the UNIQUE constraint means the second insert
+  /// loses, and the API returns the order the first one created. Nullable
+  /// because the key is optional — Postgres allows many NULLs in a unique
+  /// index, so keyless orders are unaffected.
+  idempotencyKey String? @unique
+
+  /// Set once, when a cancellation returns reserved units to stock. Its
+  /// presence is what makes stock restoration idempotent: a second cancel of
+  /// an already-cancelled order finds this non-null and restores nothing.
+  stockRestoredAt DateTime?
+
+  items OrderItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([customerId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("orders")
+}
+
+model OrderItem {
+  id      String @id @default(cuid())
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  /// The product this line came from, kept for reporting and stock
+  /// restoration. SetNull because a deleted product must not delete history.
+  ///
+  /// IMPORTANT: this relation is NOT how an order or invoice reads its own
+  /// contents. Every displayed value comes from the snapshot columns below.
+  productId String?
+  product   Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  /// ── Purchase-time snapshot ────────────────────────────────────────────
+  /// A later edit to the catalogue (rename, re-price, new SKU, new photo)
+  /// must never rewrite an order that has already been placed. These columns
+  /// are written once at checkout and then treated as immutable.
+  productName  String
+  sku          String?
+  productImage String?
+  productSlug  String?
+
+  /// The EXACT free-form strings the customer selected, stored verbatim.
+  /// "38", "UK 7", "Free Size", "Dark Brown" are all equally valid. There is
+  /// no size table, no colour table and no dictionary to validate them
+  /// against — the product itself is the only authority, and it was checked
+  /// at checkout time.
+  size  String?
+  color String?
+
+  quantity  Int
+  /// Price actually charged per unit, in integer PKR, as calculated by the
+  /// server from the product row at the moment of purchase.
+  unitPrice Int
+  lineTotal Int
+
+  createdAt DateTime @default(now())
+
+  @@index([orderId])
+  @@index([productId])
+  @@map("order_items")
+}

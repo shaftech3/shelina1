@@ -1,0 +1,97 @@
+/**
+ * Shelina design tokens.
+ * Single source of truth for colour, spacing, motion and elevation primitives.
+ * Tailwind maps onto these variables (see tailwind.config.js) so no component
+ * should ever hardcode a raw brand colour value.
+ */
+
+:root {
+  /* ---- Brand colour (space separated RGB for Tailwind alpha support) ---- */
+  --c-primary: 37 150 190; /* #2596BE — brand primary, used as fills */
+  --c-primary-hover: 28 122 156; /* darker press/hover state */
+  --c-primary-light: 168 214 231; /* tint for borders / subtle fills */
+  --c-primary-soft: 235 246 250; /* very soft wash background */
+  /* Accessible sibling for SMALL primary-coloured text on light surfaces.
+     #2596BE only reaches 3.4:1 on white, which fails WCAG AA for body text,
+     so eyebrows/links/labels use this 5.7:1 variant instead. Fills stay #2596BE. */
+  --c-primary-deep: 26 111 140;
+
+  --c-secondary: 210 158 158; /* #D29E9E — brand accent, used as fills */
+  --c-secondary-hover: 190 135 135;
+  --c-secondary-light: 236 213 213;
+  --c-secondary-soft: 250 243 243;
+  /* Same rationale as primary-deep: 4.9:1 for small accent text. */
+  --c-secondary-deep: 158 91 91;
+
+  /* ---- Neutrals ---- */
+  --c-cream: 250 251 246; /* #FAFBF6 — replaces harsh dark/black areas */
+  --c-background: 255 255 255; /* #FFFFFF */
+  --c-surface: 255 255 255;
+  --c-surface-alt: 250 251 246;
+
+  --c-border: 232 233 228;
+  --c-border-strong: 214 216 209;
+
+  /* Text — deliberately never pure black */
+  --c-text: 28 34 38;
+  --c-text-muted: 92 100 105;
+  /* 110 116 120, not 138 145 150: subtle text renders at caption size (12.8px),
+     which needs 4.5:1. Clears 4.74:1 on white and 4.56:1 on cream. */
+  --c-text-subtle: 110 116 120;
+  --c-text-invert: 250 251 246;
+
+  /* ---- Status ---- */
+  /* Status colours label caption-size text (stock states), so they are tuned to
+     clear 4.5:1 on both white and cream rather than to their raw brand hue. */
+  --c-success: 43 130 100;
+  --c-warning: 150 108 32;
+  /* -deep variants: the base hues clear 4.5:1 on white but only ~4.0:1 on
+     their own 12% tint, which is how status Badges render them. These are
+     the tint-safe versions (>=5.2:1) — use them for small tinted text. */
+  --c-success-deep: 37 110 85;
+  --c-warning-deep: 126 91 27;
+  --c-error: 190 68 68;
+  /* Darker press/hover state for the destructive button. 7.0:1 on white. */
+  --c-error-hover: 158 48 48;
+  --c-error-deep: 167 60 60;
+
+  /* ---- Layout ---- */
+  --container-max: 1360px;
+  --space-gutter: 1.25rem;
+  --space-section: 4rem;
+  --header-height: 68px;
+
+  /* ---- Motion ---- */
+  --ease-elegant: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease-entrance: cubic-bezier(0.16, 0.84, 0.44, 1);
+  --ease-exit: cubic-bezier(0.4, 0, 0.6, 1);
+  --dur-fast: 160ms;
+  --dur-base: 280ms;
+  --dur-slow: 520ms;
+  --dur-reveal: 820ms;
+}
+
+@media (min-width: 768px) {
+  :root {
+    --space-gutter: 2rem;
+    --space-section: 6rem;
+    --header-height: 80px;
+  }
+}
+
+@media (min-width: 1280px) {
+  :root {
+    --space-gutter: 2.5rem;
+    --space-section: 7.5rem;
+  }
+}
+
+/* Global reduced-motion contract: collapse all durations to ~0. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-fast: 1ms;
+    --dur-base: 1ms;
+    --dur-slow: 1ms;
+    --dur-reveal: 1ms;
+  }
+}

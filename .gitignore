@@ -1,0 +1,62 @@
+# ===========================================================================
+# Shelina workspace — root ignore rules
+#
+# The two applications (shelina/, shelina-api/) each keep their own .gitignore.
+# This file covers the workspace level: local PostgreSQL storage, test output
+# and tooling caches that must never be committed or shipped.
+# ===========================================================================
+
+# --- Local PostgreSQL development cluster -----------------------------------
+# `pgdata` is the on-disk storage of a LOCAL dev database and `pgrun` holds its
+# unix socket. Neither belongs in the repository: production uses an external
+# managed PostgreSQL instance, and the schema + data are reproducible with
+#   cd shelina-api && npx prisma migrate deploy && npm run seed
+pgdata/
+pgrun/
+
+# --- Dependencies & build output --------------------------------------------
+node_modules/
+dist/
+build/
+out/
+coverage/
+
+# --- Test / audit artifacts --------------------------------------------------
+# The harnesses in tests/ are source and ARE committed; their output is not.
+shots*/
+*.png.tmp
+playwright-report/
+test-results/
+.playwright/
+
+# --- Environment & secrets ---------------------------------------------------
+# Real values live only in untracked .env files; .env.example holds placeholders.
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# --- Logs & caches -----------------------------------------------------------
+*.log
+npm-debug.log*
+logs/
+.npm/
+.cache/
+.turbo/
+*.tsbuildinfo
+
+# --- Temporary / backup files -------------------------------------------------
+*.bak
+*.tmp
+*.orig
+*~
+
+# --- Editor & OS --------------------------------------------------------------
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+
+# PostgreSQL runtime log (created by restore-db.sh)
+pg.log
