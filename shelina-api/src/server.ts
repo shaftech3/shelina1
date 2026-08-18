@@ -1,6 +1,7 @@
 import { createApp } from './app.js';
 import { env } from './lib/env.js';
 import { bootstrapSingleAdmin } from './lib/bootstrapAdmin.js';
+import { verifyEmailConfiguration } from './services/email.js';
 
 const app = createApp();
 
@@ -11,4 +12,7 @@ app.listen(env.port, '0.0.0.0', async () => {
 
   // Guarantee single admin account synchronization on startup
   await bootstrapSingleAdmin();
+
+  // Validate Brevo SMTP readiness
+  await verifyEmailConfiguration();
 });

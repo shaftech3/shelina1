@@ -1,6 +1,13 @@
-import { chromium } from '/home/user/node_modules/playwright-core/index.mjs';
 import { execSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
+
+let chromium = null;
+try {
+  const pw = await import('playwright-core');
+  chromium = pw.chromium;
+} catch {
+  // Headless browser optional in non-desktop CI
+}
 
 const BASE = 'http://localhost:4173';
 const API = 'http://localhost:4000/api';

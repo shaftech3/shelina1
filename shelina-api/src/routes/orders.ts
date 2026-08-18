@@ -7,6 +7,7 @@ import { checkoutSchema, orderStatusSchema } from '../validation/schemas.js';
 import { serializeOrder } from '../services/serialize.js';
 import { createOrder, cancelOrderAndRestoreStock, calculateShipping } from '../services/orders.js';
 import { renderInvoicePdf } from '../services/invoice.js';
+import { sendEmail } from '../services/email.js';
 import {
   allowedTransitions,
   canTransition,
@@ -75,6 +76,26 @@ ordersRouter.post('/', requireCustomer, async (req, res, next) => {
 
     try {
       const order = await createOrder({ ...input, customerId: req.customerId! });
+
+      // Asynchronously trigger Brevo order confirmation email (non-blocking)
+      sendEmail({
+        to: order.customerEmail,
+        subject: `Order Confirmation — ${order.orderNumber} | Shelina Footwear Atelier`,
+        text: `Dear ${order.customerName},\n\nThank you for choosing Shelina. Your order ${order.orderNumber} has been received and is being prepared.\n\nTotal: Rs. ${order.grandTotal.toLocaleString()}\nDelivery City: ${order.city}\nPayment: Cash on Delivery\n\nWarm regards,\nShelina Footwear Atelier`,
+        html: `<div style="font-family: sans-serif; color: #1e1e1e; max-width: 600px; margin: 0 auto; padding: 24px;">
+          <h2 style="color: #63331b; font-family: serif; margin-bottom: 8px;">Shelina Footwear Atelier</h2>
+          <p style="font-size: 16px; margin-bottom: 16px;">Dear ${order.customerName},</p>
+          <p>Thank you for choosing Shelina. Your order <strong>${order.orderNumber}</strong> has been received and is being prepared by our craftsmen.</p>
+          <div style="background-color: #f7f5f2; border: 1px solid #e7e2d9; border-radius: 8px; padding: 16px; margin: 20px 0;">
+            <p style="margin: 4px 0;"><strong>Order Number:</strong> ${order.orderNumber}</p>
+            <p style="margin: 4px 0;"><strong>Total Amount:</strong> Rs. ${order.grandTotal.toLocaleString()}</p>
+            <p style="margin: 4px 0;"><strong>Payment Method:</strong> Cash on Delivery (COD)</p>
+            <p style="margin: 4px 0;"><strong>Delivery Address:</strong> ${order.shippingAddress}, ${order.city}</p>
+          </div>
+          <p style="color: #6e6b66; font-size: 14px;">If you have any questions regarding your order, please reply directly to this email.</p>
+        </div>`,
+      }).catch((err) => console.error('[email] Order confirmation dispatch note:', err));
+
       res.status(201).json({ success: true, data: serializeOrder(order) });
     } catch (error) {
       /**

@@ -52,7 +52,7 @@ const currentAdminEmail = psql('SELECT email FROM admin_users LIMIT 1');
 ok(currentAdminEmail === ADMIN_EMAIL, `12. Admin email is correct (${ADMIN_EMAIL})`, currentAdminEmail);
 
 const adminHash = psql('SELECT "passwordHash" FROM admin_users LIMIT 1');
-ok(adminHash.startsWith('$2') && adminHash.length === 60, 'Password is bcrypt hashed', adminHash.slice(0, 7));
+ok(adminHash.startsWith('$2') && adminHash.length === 60, 'Password is valid bcrypt hash structure');
 ok(!adminHash.includes(ADMIN_PASSWORD), 'No plaintext password in database');
 ok(psql(`SELECT count(*) FROM admin_users WHERE "passwordHash" = '${ADMIN_PASSWORD}'`) === '0', 'Password hash != plaintext');
 
