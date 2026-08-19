@@ -76,8 +76,8 @@ export function readSession(
 export function setSessionCookie(res: Response, audience: Audience, subject: string): void {
   res.cookie(COOKIE_NAME[audience], sign({ sub: subject, aud: audience }), {
     httpOnly: true, // never visible to document.cookie
-    secure: env.isProduction, // HTTPS-only in production
-    sameSite: env.isProduction ? 'strict' : 'lax',
+    secure: env.isProduction, // HTTPS-only in production (required for sameSite: 'none')
+    sameSite: env.isProduction ? 'none' : 'lax',
     maxAge: env.sessionMaxAgeMs,
     path: '/',
   });
@@ -87,7 +87,7 @@ export function clearSessionCookie(res: Response, audience: Audience): void {
   res.clearCookie(COOKIE_NAME[audience], {
     httpOnly: true,
     secure: env.isProduction,
-    sameSite: env.isProduction ? 'strict' : 'lax',
+    sameSite: env.isProduction ? 'none' : 'lax',
     path: '/',
   });
 }

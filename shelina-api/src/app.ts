@@ -37,6 +37,22 @@ export function createApp() {
         // Same-origin/curl requests send no Origin header.
         if (!origin) return callback(null, true);
         if (env.corsOrigins.includes(origin)) return callback(null, true);
+
+        // In development, allow local dev origin connections
+        if (!env.isProduction && (/^http:\/\/localhost(:\d+)?$/.test(origin) || /^http:\/\/127\.0\.0\.1(:\d+)?$/.test(origin))) {
+          return callback(null, true);
+        }
+
+        // Support wildcard patterns in CORS_ORIGIN (e.g. https://*.vercel.app)
+        const matchesWildcard = env.corsOrigins.some((allowed) => {
+          if (allowed.includes('*')) {
+            const regex = new RegExp('^' + allowed.replace(/\./g, '\\.').replace(/\*/g, '.*') + '$');
+            return regex.test(origin);
+          }
+          return false;
+        });
+        if (matchesWildcard) return callback(null, true);
+
         return callback(null, false);
       },
       credentials: true,
