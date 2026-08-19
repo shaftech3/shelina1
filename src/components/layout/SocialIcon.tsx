@@ -14,13 +14,14 @@ const ICONS: Record<SocialPlatform, IconName> = {
   instagram: 'instagram',
   facebook: 'facebook',
   tiktok: 'tiktok',
-  youtube: 'youtube',
 };
 
 export function SocialIcon({ platform, label, href, invert = false, className }: SocialIconProps) {
   return (
     <a
       href={href}
+      target="_blank"
+      rel="noopener noreferrer"
       aria-label={label}
       title={label}
       className={cn(

@@ -4,9 +4,11 @@
   "main": "index.js",
   "scripts": {
     "dev": "tsx watch src/server.ts",
+    "build": "prisma generate && tsc --noEmit",
     "start": "tsx src/server.ts",
     "typecheck": "tsc --noEmit",
     "migrate": "prisma migrate dev",
+    "migrate:deploy": "prisma migrate deploy",
     "seed": "tsx prisma/seed.ts",
     "generate": "prisma generate"
   },

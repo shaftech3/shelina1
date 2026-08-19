@@ -10,11 +10,11 @@ done
 export PATH
 
 # 1. Start PostgreSQL if not already running
-if ! pg_isready -h 127.0.0.1 -p 5432 >/dev/null 2>&1; then
+if command -v pg_isready >/dev/null 2>&1 && ! pg_isready -h 127.0.0.1 -p 5432 >/dev/null 2>&1; then
   echo "[dev] Starting PostgreSQL database..."
-  id -u shelina >/dev/null 2>&1 || useradd -m -s /bin/bash shelina
+  id -u shelina >/dev/null 2>&1 || useradd -m -s /bin/bash shelina 2>/dev/null || true
   chown -R shelina:shelina "$ROOT/pgdata" "$ROOT/pgrun" "$ROOT/shelina-api" 2>/dev/null || true
-  su -s /bin/bash shelina -c "cd '$ROOT' && bash ./restore-db.sh"
+  (su -s /bin/bash shelina -c "cd '$ROOT' && bash ./restore-db.sh") || true
 fi
 
 # 2. Start Shelina API backend if not already running
@@ -30,5 +30,5 @@ if ! curl -s -m 2 http://127.0.0.1:4000/api/health >/dev/null 2>&1; then
   done
 fi
 
-# 3. Start Vite frontend
-exec vite "$@"
+# 3. Start Vite frontend on port 3000
+exec vite --host 0.0.0.0 --port 3000 "$@"

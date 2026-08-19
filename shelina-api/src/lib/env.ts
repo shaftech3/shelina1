@@ -38,7 +38,9 @@ const sessionSecret = getSessionSecret();
 export const env = {
   NODE_ENV,
   isProduction,
-  port: Number(process.env.API_PORT ?? (process.env.PORT && process.env.PORT !== '8080' ? process.env.PORT : 4000)),
+  port: Number(
+    process.env.API_PORT ?? (isProduction ? (process.env.PORT ?? 8080) : 4000)
+  ),
   databaseUrl,
   sessionSecret,
   /** Comma-separated allowlist. Never "*" — credentials are involved. */

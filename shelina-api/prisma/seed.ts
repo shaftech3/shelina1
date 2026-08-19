@@ -91,7 +91,9 @@ interface MockEditorial {
   image: MockImage; cta?: { label: string; href: string };
 }
 
-const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
+const connectionString =
+  process.env.DATABASE_URL || 'postgresql://shelina@127.0.0.1:5432/shelina_dev?schema=public';
+const adapter = new PrismaPg({ connectionString });
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
@@ -115,42 +117,36 @@ async function main() {
     .toLowerCase();
   const adminPassword = process.env.ADMIN_PASSWORD ?? process.env.SEED_ADMIN_PASSWORD ?? '';
 
-  if (!adminEmail || !adminPassword) {
-    throw new Error(
-      'ADMIN_EMAIL and ADMIN_PASSWORD (or SEED_ADMIN_EMAIL / SEED_ADMIN_PASSWORD) must be set to seed the first admin. ' +
-        'No default password is built in — see .env.example.',
-    );
-  }
-  if (adminPassword.length < 8) {
-    throw new Error('ADMIN_PASSWORD must be at least 8 characters.');
-  }
+  if (adminPassword && adminPassword.length >= 8) {
+    const passwordHash = await bcrypt.hash(adminPassword, 12);
+    const adminName = process.env.ADMIN_NAME ?? process.env.SEED_ADMIN_NAME ?? 'Shelina Admin';
 
-  const passwordHash = await bcrypt.hash(adminPassword, 12);
-  const adminName = process.env.ADMIN_NAME ?? process.env.SEED_ADMIN_NAME ?? 'Shelina Admin';
-
-  // Enforce single admin account guarantee
-  const existingAdmins = await prisma.adminUser.findMany();
-  if (existingAdmins.length > 0) {
-    const primary = existingAdmins.find((a) => a.email.toLowerCase() === adminEmail) ?? existingAdmins[0];
-    await prisma.adminUser.update({
-      where: { id: primary.id },
-      data: { email: adminEmail, name: adminName, passwordHash, role: 'admin' },
-    });
-    if (existingAdmins.length > 1) {
-      const extraIds = existingAdmins.filter((a) => a.id !== primary.id).map((a) => a.id);
-      await prisma.adminUser.deleteMany({ where: { id: { in: extraIds } } });
+    // Enforce single admin account guarantee
+    const existingAdmins = await prisma.adminUser.findMany();
+    if (existingAdmins.length > 0) {
+      const primary = existingAdmins.find((a) => a.email.toLowerCase() === adminEmail) ?? existingAdmins[0];
+      await prisma.adminUser.update({
+        where: { id: primary.id },
+        data: { email: adminEmail, name: adminName, passwordHash, role: 'admin' },
+      });
+      if (existingAdmins.length > 1) {
+        const extraIds = existingAdmins.filter((a) => a.id !== primary.id).map((a) => a.id);
+        await prisma.adminUser.deleteMany({ where: { id: { in: extraIds } } });
+      }
+    } else {
+      await prisma.adminUser.create({
+        data: {
+          email: adminEmail,
+          name: adminName,
+          passwordHash,
+          role: 'admin',
+        },
+      });
     }
+    console.log(`[seed] admin ready: ${adminEmail} (bcrypt hash stored, never plaintext)`);
   } else {
-    await prisma.adminUser.create({
-      data: {
-        email: adminEmail,
-        name: adminName,
-        passwordHash,
-        role: 'admin',
-      },
-    });
+    console.log('[seed] ADMIN_PASSWORD not set or < 8 chars — skipping admin seed (use ADMIN_PASSWORD env var or admin bootstrap)');
   }
-  console.log(`[seed] admin ready: ${adminEmail} (bcrypt hash stored, never plaintext)`);
 
   /* ── Categories ── */
   const categoryIdBySlug = new Map<string, string>();
@@ -367,9 +363,19 @@ async function main() {
   console.log('[seed] done.');
 }
 
-main()
-  .catch((error) => {
-    console.error('[seed] failed:', error);
-    process.exit(1);
-  })
-  .finally(() => prisma.$disconnect());
+export async function seedDatabase(): Promise<void> {
+  await main();
+}
+
+const isDirectRun =
+  process.argv[1] &&
+  (process.argv[1].endsWith('seed.ts') || process.argv[1].endsWith('seed.js'));
+
+if (isDirectRun) {
+  main()
+    .catch((error) => {
+      console.error('[seed] failed:', error);
+      process.exit(1);
+    })
+    .finally(() => prisma.$disconnect());
+}

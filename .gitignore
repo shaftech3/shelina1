@@ -13,6 +13,9 @@
 #   cd shelina-api && npx prisma migrate deploy && npm run seed
 pgdata/
 pgrun/
+*pgdata*/
+pgdata-dev/
+shelina-api/pgdata*/
 
 # --- Dependencies & build output --------------------------------------------
 node_modules/

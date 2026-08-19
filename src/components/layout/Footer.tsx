@@ -70,7 +70,9 @@ export function Footer() {
               {STORE_CONFIG.supportEmail}
             </a>
             <a
-              href={`tel:${STORE_CONFIG.supportPhone.replace(/\s/g, '')}`}
+              href={STORE_CONFIG.whatsappUrl}
+              target="_blank"
+              rel="noopener noreferrer"
               className="rounded-xs transition-colors hover:text-primary-deep"
             >
               {STORE_CONFIG.supportPhone}
@@ -79,11 +81,17 @@ export function Footer() {
           </address>
         </div>
 
-        {/* Legal */}
+        {/* Legal & Attribution */}
         <div className="flex flex-col gap-4 border-t border-border py-6 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-caption text-ink-subtle">
-            © {new Date().getFullYear()} {STORE_CONFIG.name}. All rights reserved.
-          </p>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-3">
+            <p className="text-caption text-ink-subtle">
+              © {new Date().getFullYear()} {STORE_CONFIG.name}. All rights reserved.
+            </p>
+            <span className="hidden text-caption text-ink-subtle/40 sm:inline" aria-hidden>•</span>
+            <p className="text-caption text-ink-subtle">
+              Website by <span className="font-medium text-ink-muted">ST-Solutions</span>
+            </p>
+          </div>
           {/* Omitted entirely while there are no legal pages to link to. */}
           {legalNav.length > 0 && (
           <ul className="flex flex-wrap gap-x-5 gap-y-2">

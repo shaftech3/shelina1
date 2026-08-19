@@ -12,7 +12,7 @@ export default defineConfig({
   },
   server: {
     host: '0.0.0.0',
-    port: 5173,
+    port: 3000,
     // Permit proxied preview hosts during development.
     allowedHosts: true,
     // The browser is not inside the sandbox, so it must never be told to call
@@ -27,7 +27,7 @@ export default defineConfig({
   },
   preview: {
     host: '0.0.0.0',
-    port: 4173,
+    port: 3000,
     allowedHosts: true,
     proxy: {
       '/api': {

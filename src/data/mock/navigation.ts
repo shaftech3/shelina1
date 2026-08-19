@@ -66,11 +66,22 @@ export const footerNav: { title: string; links: NavLink[] }[] = [
  */
 export const legalNav: NavLink[] = [];
 
-export type SocialPlatform = 'instagram' | 'facebook' | 'tiktok' | 'youtube';
+export type SocialPlatform = 'instagram' | 'facebook' | 'tiktok';
 
 export const socialLinks: { platform: SocialPlatform; label: string; href: string }[] = [
-  { platform: 'instagram', label: 'Shelina on Instagram', href: '#' },
-  { platform: 'facebook', label: 'Shelina on Facebook', href: '#' },
-  { platform: 'tiktok', label: 'Shelina on TikTok', href: '#' },
-  { platform: 'youtube', label: 'Shelina on YouTube', href: '#' },
+  {
+    platform: 'facebook',
+    label: 'Shelina on Facebook',
+    href: 'https://www.facebook.com/profile.php?id=1279055035285704&hr=1&wtsid=rdr_0e2rvnTyHIvAjOqZm',
+  },
+  {
+    platform: 'instagram',
+    label: 'Shelina on Instagram',
+    href: 'https://www.instagram.com/shelina_offical',
+  },
+  {
+    platform: 'tiktok',
+    label: 'Shelina on TikTok',
+    href: 'https://www.tiktok.com/@shelinacollection',
+  },
 ];

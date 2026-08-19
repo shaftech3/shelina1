@@ -4,8 +4,9 @@ export const STORE_CONFIG = {
   tagline: 'Footwear, refined.',
   currency: 'PKR',
   locale: 'en-PK',
-  supportEmail: 'care@shelina.pk',
-  supportPhone: '+92 300 0000000',
+  supportEmail: 'shelinaofficial@gmail.com',
+  supportPhone: '03247741080',
+  whatsappUrl: 'https://wa.me/923247741080',
   address: 'Faisalabad, Punjab, Pakistan',
   /**
    * Display only — used for the announcement strip and any "spend X more"
