@@ -38,8 +38,15 @@ export function createApp() {
         if (!origin) return callback(null, true);
         if (env.corsOrigins.includes(origin)) return callback(null, true);
 
-        // In development, allow local dev origin connections
-        if (!env.isProduction && (/^http:\/\/localhost(:\d+)?$/.test(origin) || /^http:\/\/127\.0\.0\.1(:\d+)?$/.test(origin))) {
+        // In development, allow local dev origin connections and preview domains
+        if (
+          !env.isProduction &&
+          (/^http:\/\/localhost(:\d+)?$/.test(origin) ||
+            /^http:\/\/127\.0\.0\.1(:\d+)?$/.test(origin) ||
+            /^https:\/\/.*\.run\.app$/.test(origin) ||
+            /^https:\/\/.*\.google\.com$/.test(origin) ||
+            origin === 'https://ai.studio')
+        ) {
           return callback(null, true);
         }
 

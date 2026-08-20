@@ -74,20 +74,32 @@ export function readSession(
 }
 
 export function setSessionCookie(res: Response, audience: Audience, subject: string): void {
+  const isHttps =
+    env.isProduction ||
+    Boolean(res.req?.secure) ||
+    res.req?.headers['x-forwarded-proto'] === 'https' ||
+    Boolean(process.env.COOKIE_SECURE);
+
   res.cookie(COOKIE_NAME[audience], sign({ sub: subject, aud: audience }), {
     httpOnly: true, // never visible to document.cookie
-    secure: env.isProduction, // HTTPS-only in production (required for sameSite: 'none')
-    sameSite: env.isProduction ? 'none' : 'lax',
+    secure: isHttps, // HTTPS-only (required for sameSite: 'none' and iframes)
+    sameSite: isHttps ? 'none' : 'lax',
     maxAge: env.sessionMaxAgeMs,
     path: '/',
   });
 }
 
 export function clearSessionCookie(res: Response, audience: Audience): void {
+  const isHttps =
+    env.isProduction ||
+    Boolean(res.req?.secure) ||
+    res.req?.headers['x-forwarded-proto'] === 'https' ||
+    Boolean(process.env.COOKIE_SECURE);
+
   res.clearCookie(COOKIE_NAME[audience], {
     httpOnly: true,
-    secure: env.isProduction,
-    sameSite: env.isProduction ? 'none' : 'lax',
+    secure: isHttps,
+    sameSite: isHttps ? 'none' : 'lax',
     path: '/',
   });
 }

@@ -51,7 +51,7 @@ export async function bootstrapSingleAdmin(): Promise<void> {
 
     // Find the primary admin: matching email, or the first existing record
     const primaryAdmin =
-      existingAdmins.find((a) => a.email.toLowerCase() === adminEmail) ?? existingAdmins[0];
+      existingAdmins.find((a: { email: string }) => a.email.toLowerCase() === adminEmail) ?? existingAdmins[0];
 
     const updateData: { email?: string; name?: string; passwordHash?: string } = {};
 
@@ -78,8 +78,8 @@ export async function bootstrapSingleAdmin(): Promise<void> {
     // Enforce single admin account guarantee: remove any extraneous admin rows
     if (existingAdmins.length > 1) {
       const extraIds = existingAdmins
-        .filter((a) => a.id !== primaryAdmin.id)
-        .map((a) => a.id);
+        .filter((a: { id: string }) => a.id !== primaryAdmin.id)
+        .map((a: { id: string }) => a.id);
       await prisma.adminUser.deleteMany({
         where: { id: { in: extraIds } },
       });

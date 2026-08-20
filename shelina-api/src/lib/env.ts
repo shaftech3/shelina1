@@ -35,6 +35,13 @@ function getSessionSecret(): string {
 const databaseUrl = getDatabaseUrl();
 const sessionSecret = getSessionSecret();
 
+function getAdminEmail(): string {
+  const raw = (process.env.ADMIN_EMAIL ?? process.env.SEED_ADMIN_EMAIL ?? 'shelinaoffical@gmail.com')
+    .trim()
+    .toLowerCase();
+  return raw || 'shelinaoffical@gmail.com';
+}
+
 export const env = {
   NODE_ENV,
   isProduction,
@@ -42,15 +49,20 @@ export const env = {
   databaseUrl,
   sessionSecret,
   /** Comma-separated allowlist. Never "*" — credentials are involved. */
-  corsOrigins: (process.env.CORS_ORIGIN ?? '')
-    .split(',')
-    .map((origin) => origin.trim())
-    .filter(Boolean),
+  corsOrigins: Array.from(
+    new Set(
+      [
+        'https://shelina1.vercel.app',
+        ...(process.env.CORS_ORIGIN ?? '')
+          .split(',')
+          .map((origin) => origin.trim())
+          .filter(Boolean),
+      ].filter(Boolean)
+    )
+  ),
   /** Single admin account configuration */
-  adminEmail: (process.env.ADMIN_EMAIL ?? process.env.SEED_ADMIN_EMAIL ?? 'shelinaofficial@gmail.com')
-    .trim()
-    .toLowerCase(),
-  adminPassword: process.env.ADMIN_PASSWORD ?? process.env.SEED_ADMIN_PASSWORD ?? '',
+  adminEmail: getAdminEmail(),
+  adminPassword: (process.env.ADMIN_PASSWORD ?? process.env.SEED_ADMIN_PASSWORD ?? '').trim(),
   adminName: process.env.ADMIN_NAME ?? process.env.SEED_ADMIN_NAME ?? 'Shelina Admin',
   /** Brevo SMTP / Email Configuration */
   brevo: {

@@ -15,7 +15,22 @@ import { ServiceError } from './http';
  * cannot be read by JavaScript, so no token is ever held in frontend state.
  */
 
-export const API_BASE_URL: string = import.meta.env.VITE_API_BASE_URL ?? '/api';
+function getBaseUrl(): string {
+  const envUrl = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.trim();
+  if (!envUrl) return '/api';
+  let normalized = envUrl.replace(/\/+$/, '');
+  if ((normalized.startsWith('http://') || normalized.startsWith('https://')) && !normalized.endsWith('/api')) {
+    normalized = `${normalized}/api`;
+  }
+  return normalized;
+}
+
+export const API_BASE_URL: string = getBaseUrl();
+
+function resolveUrl(path: string): string {
+  const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  return `${API_BASE_URL}${cleanPath}`;
+}
 
 interface ApiEnvelope<T> {
   success: boolean;
@@ -48,7 +63,7 @@ async function requestEnvelope<T>(path: string, init?: RequestInit): Promise<Api
   let response: Response;
 
   try {
-    response = await fetch(`${API_BASE_URL}${path}`, {
+    response = await fetch(resolveUrl(path), {
       credentials: 'include',
       headers:
         init?.body === undefined ? undefined : { 'Content-Type': 'application/json' },

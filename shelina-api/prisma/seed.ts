@@ -3,7 +3,7 @@ import { createRequire } from 'node:module';
 import path from 'node:path';
 import fs from 'node:fs';
 import { PrismaPg } from '@prisma/adapter-pg';
-import { PrismaClient } from '../node_modules/.prisma/client/client.js';
+import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 
 /**
@@ -124,13 +124,13 @@ async function main() {
     // Enforce single admin account guarantee
     const existingAdmins = await prisma.adminUser.findMany();
     if (existingAdmins.length > 0) {
-      const primary = existingAdmins.find((a) => a.email.toLowerCase() === adminEmail) ?? existingAdmins[0];
+      const primary = existingAdmins.find((a: { email: string }) => a.email.toLowerCase() === adminEmail) ?? existingAdmins[0];
       await prisma.adminUser.update({
         where: { id: primary.id },
         data: { email: adminEmail, name: adminName, passwordHash, role: 'admin' },
       });
       if (existingAdmins.length > 1) {
-        const extraIds = existingAdmins.filter((a) => a.id !== primary.id).map((a) => a.id);
+        const extraIds = existingAdmins.filter((a: { id: string }) => a.id !== primary.id).map((a: { id: string }) => a.id);
         await prisma.adminUser.deleteMany({ where: { id: { in: extraIds } } });
       }
     } else {

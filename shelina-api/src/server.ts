@@ -1,5 +1,6 @@
 import { createApp } from './app.js';
 import { env } from './lib/env.js';
+import { ensureSchemaMigrations } from './lib/ensureSchema.js';
 import { bootstrapSingleAdmin } from './lib/bootstrapAdmin.js';
 import { verifyEmailConfiguration } from './services/email.js';
 import { ensureDevDatabaseReady } from './lib/devDatabase.js';
@@ -14,6 +15,9 @@ app.listen(env.port, '0.0.0.0', async () => {
 
   // Guarantee development database is online if running locally
   await ensureDevDatabaseReady();
+
+  // Guarantee all database schema tables exist in connected PostgreSQL
+  await ensureSchemaMigrations();
 
   // Populate catalogue if database is empty
   try {
