@@ -30,17 +30,17 @@ export function useMyOrders(page = 1, pageSize = 20): AsyncState<OrderList> {
   );
 }
 
-/** One of the signed-in customer's orders, by id or order number. */
+/** One of the signed-in customer's or guest's orders, by id or order number. */
 export function useMyOrder(idOrNumber: string | undefined): AsyncState<Order> {
   const revision = useDataRevision();
-  const { isAuthenticated, initialising } = useCustomerAccount();
+  const { initialising } = useCustomerAccount();
   return useAsync(
     () =>
       idOrNumber
         ? orderService.getMine(idOrNumber)
         : Promise.reject(new Error('Order not found.')),
     [idOrNumber, revision],
-    !initialising && isAuthenticated,
+    !initialising && Boolean(idOrNumber),
   );
 }
 

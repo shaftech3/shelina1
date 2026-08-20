@@ -66,6 +66,23 @@ export async function ensureSchemaMigrations(): Promise<void> {
       );
       console.log(`[schema] Successfully applied migration: ${dirName}`);
     }
+
+    // 3. Ensure orders.customerId column is nullable for guest orders
+    try {
+      await prisma.$executeRawUnsafe(`
+        DO $$
+        BEGIN
+          IF EXISTS (
+            SELECT 1 FROM information_schema.columns
+            WHERE table_name = 'orders' AND column_name = 'customerId' AND is_nullable = 'NO'
+          ) THEN
+            ALTER TABLE "orders" ALTER COLUMN "customerId" DROP NOT NULL;
+          END IF;
+        END $$;
+      `);
+    } catch {
+      // Ignore if table doesn't exist yet or already nullable
+    }
   } catch (error) {
     console.error('[schema] Migration check/execution error:', error instanceof Error ? error.message : error);
   }

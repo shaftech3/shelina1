@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import type { Response } from 'express';
+import type { Request, Response } from 'express';
+import type { IncomingHttpHeaders } from 'node:http';
 import { env } from './env.js';
 
 /**
@@ -18,9 +19,7 @@ import { env } from './env.js';
  * admin session can never authorise a customer action and a customer session
  * can never grant admin access — even if a cookie is copied by hand.
  *
- * Tokens are signed JWTs delivered in HttpOnly cookies. They are never
- * readable by JavaScript and never returned in a response body, so the browser
- * bundle holds no secret of any kind.
+ * Tokens are signed JWTs delivered in HttpOnly cookies and/or Bearer token headers.
  */
 
 export type Audience = 'admin' | 'customer';
@@ -58,22 +57,31 @@ function sign(payload: SessionPayload): string {
   });
 }
 
+export type SessionRequestSource =
+  | Request
+  | {
+      cookies?: Record<string, string | undefined>;
+      headers?: IncomingHttpHeaders | Record<string, string | string[] | undefined>;
+    }
+  | Record<string, string | undefined>;
+
 /**
  * Reads and verifies a session token for ONE audience.
  * Checks both Authorization: Bearer <token> header and HttpOnly cookie.
  * Returns null for a missing, malformed, expired or wrong-audience token.
  */
 export function readSession(
-  reqOrCookies:
-    | { cookies?: Record<string, string | undefined>; headers?: Record<string, string | string[] | undefined> }
-    | Record<string, string | undefined>,
+  source: SessionRequestSource | null | undefined,
   audience: Audience,
 ): string | null {
+  if (!source || typeof source !== 'object') return null;
+
   let token: string | undefined;
 
   // 1. Check Authorization Bearer header
-  if (reqOrCookies && typeof reqOrCookies === 'object' && 'headers' in reqOrCookies && reqOrCookies.headers) {
-    const rawAuth = reqOrCookies.headers.authorization || reqOrCookies.headers.Authorization;
+  if ('headers' in source && source.headers && typeof source.headers === 'object') {
+    const headers = source.headers as Record<string, string | string[] | undefined>;
+    const rawAuth = headers['authorization'] ?? headers['Authorization'];
     const authHeader = Array.isArray(rawAuth) ? rawAuth[0] : rawAuth;
     if (typeof authHeader === 'string' && authHeader.toLowerCase().startsWith('bearer ')) {
       token = authHeader.slice(7).trim();
@@ -81,12 +89,14 @@ export function readSession(
   }
 
   // 2. Check Cookie
-  if (!token && reqOrCookies && typeof reqOrCookies === 'object') {
-    const cookies =
-      'cookies' in reqOrCookies && reqOrCookies.cookies
-        ? reqOrCookies.cookies
-        : (reqOrCookies as Record<string, string | undefined>);
-    token = cookies?.[COOKIE_NAME[audience]];
+  if (!token) {
+    const cookieName = COOKIE_NAME[audience];
+    if ('cookies' in source && source.cookies && typeof source.cookies === 'object') {
+      token = source.cookies[cookieName];
+    } else if (!('headers' in source)) {
+      const cookieDict = source as Record<string, string | undefined>;
+      token = cookieDict[cookieName];
+    }
   }
 
   if (!token) return null;

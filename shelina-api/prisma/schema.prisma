@@ -263,11 +263,9 @@ model Order {
   /// typed into support chats and printed on invoices.
   orderNumber String @unique
 
-  /// Orders belong to a registered customer. Guest checkout is out of scope,
-  /// and Restrict keeps order history from silently disappearing if an account
-  /// is ever removed.
-  customerId String
-  customer   CustomerUser @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  /// Orders can belong to a registered customer or placed as a guest (null).
+  customerId String?
+  customer   CustomerUser? @relation(fields: [customerId], references: [id], onDelete: SetNull)
 
   /// PENDING | CONFIRMED | PROCESSING | SHIPPED | DELIVERED | CANCELLED
   /// Stored as a String rather than a native enum so the allowed set and the

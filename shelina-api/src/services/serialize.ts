@@ -292,7 +292,7 @@ interface OrderItemRow {
 interface OrderRow {
   id: string;
   orderNumber: string;
-  customerId: string;
+  customerId: string | null;
   status: string;
   paymentStatus: string;
   customerName: string;
@@ -335,7 +335,7 @@ export function serializeOrder(row: OrderRow) {
   return {
     id: row.id,
     orderNumber: row.orderNumber,
-    customerId: row.customerId,
+    customerId: row.customerId ?? null,
     status: row.status,
     paymentStatus: row.paymentStatus,
     customerName: row.customerName,

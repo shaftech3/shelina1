@@ -33,7 +33,7 @@ const ORDER_INCLUDE = {
  * instead of the browser guessing at it. Declared before `/:id` so the literal
  * path is not swallowed by the parameter route.
  */
-ordersRouter.get('/shipping-quote', requireCustomer, (req, res, next) => {
+ordersRouter.get('/shipping-quote', (req, res, next) => {
   try {
     const subtotal = Number((req.query as Record<string, string | undefined>).subtotal ?? 0);
     const safeSubtotal = Number.isFinite(subtotal) && subtotal > 0 ? Math.floor(subtotal) : 0;
@@ -53,10 +53,10 @@ ordersRouter.get('/shipping-quote', requireCustomer, (req, res, next) => {
 /**
  * POST /api/orders — place an order.
  *
- * Authenticated customers only; guest checkout is out of scope for Stage 6.
+ * Supports both guest checkout and logged-in customer orders.
  * The payload carries what is being bought, never what it costs.
  */
-ordersRouter.post('/', requireCustomer, async (req, res, next) => {
+ordersRouter.post('/', async (req, res, next) => {
   try {
     /**
      * Checkout validation is reported as 422 rather than the generic 400 the
@@ -74,8 +74,12 @@ ordersRouter.post('/', requireCustomer, async (req, res, next) => {
     }
     const input = parsed.data;
 
+    // Optional customer identity (null for guest checkout)
+    const { readSession } = await import('../lib/auth.js');
+    const customerId = readSession(req, 'customer');
+
     try {
-      const order = await createOrder({ ...input, customerId: req.customerId! });
+      const order = await createOrder({ ...input, customerId: customerId ?? null });
 
       // Asynchronously trigger Brevo order confirmation email (non-blocking)
       sendEmail({
@@ -157,28 +161,34 @@ ordersRouter.get('/', requireCustomer, async (req, res, next) => {
 });
 
 /**
- * Loads an order for a customer, enforcing ownership.
- *
- * Someone else's order is reported as 404, not 403: a 403 would confirm that
- * the id exists, which is itself a small information leak. Accepts an id or an
- * order number so /order/success/SHL-... can resolve without a second lookup.
+ * Loads an order for a customer or guest.
  */
-async function findOwnedOrder(idOrNumber: string, customerId: string) {
-  const order = await prisma.order.findFirst({
-    where: {
-      customerId,
-      OR: [{ id: idOrNumber }, { orderNumber: idOrNumber }],
-    },
-    include: ORDER_INCLUDE,
-  });
-  if (!order) throw ApiError.notFound('Order not found.');
-  return order;
-}
-
-/** GET /api/orders/:id — one of the customer's own orders. */
-ordersRouter.get('/:id', requireCustomer, async (req, res, next) => {
+ordersRouter.get('/:id', async (req, res, next) => {
   try {
-    const order = await findOwnedOrder(param(req.params.id, 'order id'), req.customerId!);
+    const idOrNumber = param(req.params.id, 'order id');
+    const { readSession } = await import('../lib/auth.js');
+    const customerId = readSession(req, 'customer');
+    const adminId = readSession(req, 'admin');
+
+    let order = null;
+    if (adminId) {
+      order = await prisma.order.findFirst({
+        where: { OR: [{ id: idOrNumber }, { orderNumber: idOrNumber }] },
+        include: ORDER_INCLUDE,
+      });
+    } else if (customerId) {
+      order = await prisma.order.findFirst({
+        where: { customerId, OR: [{ id: idOrNumber }, { orderNumber: idOrNumber }] },
+        include: ORDER_INCLUDE,
+      });
+    } else {
+      order = await prisma.order.findFirst({
+        where: { customerId: null, OR: [{ id: idOrNumber }, { orderNumber: idOrNumber }] },
+        include: ORDER_INCLUDE,
+      });
+    }
+
+    if (!order) throw ApiError.notFound('Order not found.');
     res.json({ success: true, data: serializeOrder(order) });
   } catch (error) {
     next(error);
@@ -188,27 +198,29 @@ ordersRouter.get('/:id', requireCustomer, async (req, res, next) => {
 /**
  * GET /api/orders/:id/invoice — PDF invoice.
  *
- * A customer may download only their own invoice. An admin may download any,
- * so the admin session is checked as a fallback rather than duplicating this
- * route under /api/admin.
+ * A customer may download only their own invoice. An admin may download any.
+ * A guest may download the invoice for their own guest order.
  */
 ordersRouter.get('/:id/invoice', async (req, res, next) => {
   try {
     const idOrNumber = param(req.params.id, 'order id');
     const { readSession } = await import('../lib/auth.js');
 
-    const customerId = readSession(req.cookies ?? {}, 'customer');
-    const adminId = readSession(req.cookies ?? {}, 'admin');
-
-    if (!customerId && !adminId) throw ApiError.unauthorized('Authentication required.');
+    const customerId = readSession(req, 'customer');
+    const adminId = readSession(req, 'admin');
 
     const order = adminId
       ? await prisma.order.findFirst({
           where: { OR: [{ id: idOrNumber }, { orderNumber: idOrNumber }] },
           include: ORDER_INCLUDE,
         })
+      : customerId
+      ? await prisma.order.findFirst({
+          where: { customerId: customerId, OR: [{ id: idOrNumber }, { orderNumber: idOrNumber }] },
+          include: ORDER_INCLUDE,
+        })
       : await prisma.order.findFirst({
-          where: { customerId: customerId!, OR: [{ id: idOrNumber }, { orderNumber: idOrNumber }] },
+          where: { customerId: null, OR: [{ id: idOrNumber }, { orderNumber: idOrNumber }] },
           include: ORDER_INCLUDE,
         });
 

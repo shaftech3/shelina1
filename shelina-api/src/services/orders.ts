@@ -37,7 +37,7 @@ export interface CheckoutItemInput {
 }
 
 export interface CreateOrderInput {
-  customerId: string;
+  customerId?: string | null;
   customerName: string;
   customerEmail: string;
   customerPhone: string;
@@ -227,7 +227,7 @@ export async function createOrder(input: CreateOrderInput) {
       data: {
         orderNumber: await nextOrderNumber(tx),
         idempotencyKey: input.idempotencyKey ?? null,
-        customerId: input.customerId,
+        customerId: input.customerId ?? null,
         status: 'PENDING',
         paymentStatus: 'UNPAID',
         customerName: input.customerName,

@@ -66,14 +66,7 @@ export function CheckoutPage() {
     noIndex: true,
   });
 
-  // Guests cannot check out in this stage. Preserve where they were headed.
-  useEffect(() => {
-    if (!initialising && !isAuthenticated) {
-      navigate('/account/sign-in?redirect=/checkout', { replace: true });
-    }
-  }, [initialising, isAuthenticated, navigate]);
-
-  // Prefill from the account, but leave every field editable — the delivery
+  // Prefill from the account if logged in, but leave every field editable — the delivery
   // name and the account name are not always the same person.
   useEffect(() => {
     if (!customer) return;
@@ -89,7 +82,7 @@ export function CheckoutPage() {
    * would risk showing a number different from the one actually charged.
    */
   useEffect(() => {
-    if (!isAuthenticated || totals.subtotal <= 0) return;
+    if (totals.subtotal <= 0) return;
     let active = true;
     orderService
       .shippingQuote(totals.subtotal)
@@ -103,7 +96,7 @@ export function CheckoutPage() {
     return () => {
       active = false;
     };
-  }, [isAuthenticated, totals.subtotal]);
+  }, [totals.subtotal]);
 
   const grandTotal = useMemo(
     () => totals.subtotal + (shippingFee ?? 0),
