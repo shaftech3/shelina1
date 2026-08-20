@@ -59,7 +59,7 @@ productsRouter.get('/', async (req, res, next) => {
     let includeNonActive = false;
     if (wantsAll) {
       const { readSession } = await import('../lib/auth.js');
-      includeNonActive = Boolean(readSession(req.cookies ?? {}, 'admin'));
+      includeNonActive = Boolean(readSession(req, 'admin'));
     }
 
     const where: Record<string, unknown> = {};

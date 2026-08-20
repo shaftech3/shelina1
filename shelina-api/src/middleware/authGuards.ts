@@ -22,7 +22,7 @@ declare global {
 /** Requires a valid ADMIN session. A customer cookie will not satisfy this. */
 export async function requireAdmin(req: Request, _res: Response, next: NextFunction) {
   try {
-    const adminId = readSession(req.cookies ?? {}, 'admin');
+    const adminId = readSession(req, 'admin');
     if (!adminId) throw ApiError.unauthorized('Admin authentication required.');
 
     // Confirm the account still exists — a deleted admin's token must die too.
@@ -39,7 +39,7 @@ export async function requireAdmin(req: Request, _res: Response, next: NextFunct
 /** Requires a valid CUSTOMER session. An admin cookie will not satisfy this. */
 export async function requireCustomer(req: Request, _res: Response, next: NextFunction) {
   try {
-    const customerId = readSession(req.cookies ?? {}, 'customer');
+    const customerId = readSession(req, 'customer');
     if (!customerId) throw ApiError.unauthorized('Customer authentication required.');
 
     const customer = await prisma.customerUser.findUnique({

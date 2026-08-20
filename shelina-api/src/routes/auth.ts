@@ -2,7 +2,14 @@ import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
 import { prisma } from '../lib/prisma.js';
 import { ApiError } from '../lib/errors.js';
-import { clearSessionCookie, hashPassword, readSession, setSessionCookie, verifyPassword } from '../lib/auth.js';
+import {
+  clearSessionCookie,
+  hashPassword,
+  readSession,
+  setSessionCookie,
+  signSessionToken,
+  verifyPassword,
+} from '../lib/auth.js';
 import { loginSchema, registerSchema } from '../validation/schemas.js';
 import { env } from '../lib/env.js';
 
@@ -41,9 +48,11 @@ authRouter.post('/admin/login', credentialLimiter, async (req, res, next) => {
     if (!valid) throw ApiError.unauthorized(INVALID_CREDENTIALS);
 
     setSessionCookie(res, 'admin', admin.id);
+    const token = signSessionToken('admin', admin.id);
+
     res.json({
       success: true,
-      data: { id: admin.id, email: admin.email, name: admin.name, role: admin.role },
+      data: { id: admin.id, email: admin.email, name: admin.name, role: admin.role, token },
     });
   } catch (error) {
     next(error);
@@ -59,7 +68,7 @@ authRouter.post('/admin/logout', (_req, res) => {
 
 authRouter.get('/admin/me', async (req, res, next) => {
   try {
-    const adminId = readSession(req.cookies ?? {}, 'admin');
+    const adminId = readSession(req, 'admin');
     if (!adminId) {
       throw ApiError.unauthorized('Admin authentication required.');
     }
@@ -91,7 +100,9 @@ authRouter.post('/customer/register', credentialLimiter, async (req, res, next) 
     });
 
     setSessionCookie(res, 'customer', customer.id);
-    res.status(201).json({ success: true, data: customer });
+    const token = signSessionToken('customer', customer.id);
+
+    res.status(201).json({ success: true, data: { ...customer, token } });
   } catch (error) {
     next(error);
   }
@@ -108,9 +119,11 @@ authRouter.post('/customer/login', credentialLimiter, async (req, res, next) => 
     if (!valid) throw ApiError.unauthorized(INVALID_CREDENTIALS);
 
     setSessionCookie(res, 'customer', customer.id);
+    const token = signSessionToken('customer', customer.id);
+
     res.json({
       success: true,
-      data: { id: customer.id, email: customer.email, name: customer.name },
+      data: { id: customer.id, email: customer.email, name: customer.name, token },
     });
   } catch (error) {
     next(error);
@@ -126,7 +139,7 @@ authRouter.post('/customer/logout', (_req, res) => {
 
 authRouter.get('/customer/me', async (req, res, next) => {
   try {
-    const customerId = readSession(req.cookies ?? {}, 'customer');
+    const customerId = readSession(req, 'customer');
     if (!customerId) {
       res.json({ success: true, data: null });
       return;

@@ -5,15 +5,64 @@ import { ServiceError } from './http';
  * REST TRANSPORT
  * ============================================================================
  *
- * Every service now talks to the Stage 5 Express API through this one client.
+ * Every service talks to the Express API through this one client.
  *
- * `VITE_API_BASE_URL` is the ONLY backend value the browser ever sees, and it
- * is a public URL. DATABASE_URL, SESSION_SECRET and password hashes live on
- * the server and are never bundled.
- *
- * `credentials: 'include'` sends the HttpOnly session cookies. Those cookies
- * cannot be read by JavaScript, so no token is ever held in frontend state.
+ * It supports both HttpOnly session cookies (credentials: 'include') and
+ * Authorization: Bearer <token> headers to guarantee cross-origin reliability
+ * across all browser privacy settings (Safari ITP, third-party cookie blocking,
+ * etc.) between Vercel and Render.
  */
+
+const ADMIN_TOKEN_KEY = 'shelina_admin_token';
+const CUSTOMER_TOKEN_KEY = 'shelina_customer_token';
+
+export function getAdminToken(): string | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    return localStorage.getItem(ADMIN_TOKEN_KEY) || sessionStorage.getItem(ADMIN_TOKEN_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function setAdminToken(token: string | null): void {
+  if (typeof window === 'undefined') return;
+  try {
+    if (token) {
+      localStorage.setItem(ADMIN_TOKEN_KEY, token);
+      sessionStorage.setItem(ADMIN_TOKEN_KEY, token);
+    } else {
+      localStorage.removeItem(ADMIN_TOKEN_KEY);
+      sessionStorage.removeItem(ADMIN_TOKEN_KEY);
+    }
+  } catch {
+    // Ignore storage quota or access errors
+  }
+}
+
+export function getCustomerToken(): string | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    return localStorage.getItem(CUSTOMER_TOKEN_KEY) || sessionStorage.getItem(CUSTOMER_TOKEN_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function setCustomerToken(token: string | null): void {
+  if (typeof window === 'undefined') return;
+  try {
+    if (token) {
+      localStorage.setItem(CUSTOMER_TOKEN_KEY, token);
+      sessionStorage.setItem(CUSTOMER_TOKEN_KEY, token);
+    } else {
+      localStorage.removeItem(CUSTOMER_TOKEN_KEY);
+      sessionStorage.removeItem(CUSTOMER_TOKEN_KEY);
+    }
+  } catch {
+    // Ignore storage errors
+  }
+}
 
 function getBaseUrl(): string {
   const envUrl = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.trim();
@@ -62,11 +111,41 @@ export class ApiValidationError extends ServiceError {
 async function requestEnvelope<T>(path: string, init?: RequestInit): Promise<ApiEnvelope<T>> {
   let response: Response;
 
+  const headers: Record<string, string> = {
+    ...(init?.headers as Record<string, string> | undefined),
+  };
+
+  if (init?.body !== undefined && !headers['Content-Type']) {
+    headers['Content-Type'] = 'application/json';
+  }
+
+  // Attach auth token if available and not already set
+  if (!headers['Authorization']) {
+    const adminToken = getAdminToken();
+    const customerToken = getCustomerToken();
+
+    if (
+      adminToken &&
+      (path.startsWith('/admin') ||
+        path.startsWith('/auth/admin') ||
+        path.startsWith('/products') ||
+        path.startsWith('/categories') ||
+        path.startsWith('/brands') ||
+        path.startsWith('/homepage') ||
+        path.startsWith('/banners') ||
+        path.startsWith('/seo') ||
+        path.startsWith('/media'))
+    ) {
+      headers['Authorization'] = `Bearer ${adminToken}`;
+    } else if (customerToken && (path.startsWith('/auth/customer') || path.startsWith('/orders'))) {
+      headers['Authorization'] = `Bearer ${customerToken}`;
+    }
+  }
+
   try {
     response = await fetch(resolveUrl(path), {
       credentials: 'include',
-      headers:
-        init?.body === undefined ? undefined : { 'Content-Type': 'application/json' },
+      headers,
       ...init,
     });
   } catch {
@@ -85,6 +164,10 @@ async function requestEnvelope<T>(path: string, init?: RequestInit): Promise<Api
   }
 
   if (!response.ok || !payload?.success) {
+    // Clear stale admin token on unauthorized response for admin routes
+    if (response.status === 401 && (path.startsWith('/admin') || path.startsWith('/auth/admin'))) {
+      setAdminToken(null);
+    }
     const message = payload?.message ?? `Request failed (${response.status}).`;
     if (payload?.errors) {
       throw new ApiValidationError(message, payload.errors, response.status);

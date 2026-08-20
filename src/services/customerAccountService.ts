@@ -1,5 +1,5 @@
 import type { CustomerAccount, CustomerSessionState } from '@/types';
-import { api } from './apiClient';
+import { api, setCustomerToken } from './apiClient';
 
 /**
  * ============================================================================
@@ -14,16 +14,11 @@ import { api } from './apiClient';
  *   restore()  → GET  /api/auth/customer/me
  *
  * Passwords are hashed with bcrypt on the server and the session is a signed
- * JWT in an HttpOnly cookie, exactly as for the admin panel.
+ * JWT in an HttpOnly cookie + Bearer token header for cross-domain reliability.
  *
  * SEPARATION FROM THE ADMIN PANEL — unchanged and load-bearing:
  * this module only ever touches `/api/auth/customer/*` and the customer
- * cookie. The two sessions use different cookies AND different token audience
- * claims, so an admin session can never make the storefront think a customer
- * is signed in, and a customer session can never satisfy an admin guard.
- *
- * SCOPE: accounts only. No orders, no order history, no addresses — those are
- * Stage 6. Signing out never clears the cart, which belongs to the browser.
+ * cookie/token.
  */
 
 type Listener = () => void;
@@ -47,12 +42,13 @@ export interface CustomerRegistration extends CustomerCredentials {
 }
 
 export const customerAccountService = {
-  /** Resolves the session from the server cookie. Called once on mount. */
+  /** Resolves the session from the server cookie / token. Called once on mount. */
   async restore(): Promise<CustomerAccount | null> {
     try {
       currentCustomer = await api.get<CustomerAccount | null>('/auth/customer/me');
     } catch {
       currentCustomer = null;
+      setCustomerToken(null);
     }
     initialised = true;
     emit();
@@ -63,7 +59,6 @@ export const customerAccountService = {
     return {
       customer: currentCustomer,
       isAuthenticated: currentCustomer !== null,
-      // Customer authentication is now implemented.
       isEnabled: true,
     };
   },
@@ -85,10 +80,18 @@ export const customerAccountService = {
   },
 
   async signIn(credentials: CustomerCredentials): Promise<CustomerAccount> {
-    const customer = await api.post<CustomerAccount>('/auth/customer/login', {
+    const response = await api.post<CustomerAccount & { token?: string }>('/auth/customer/login', {
       email: credentials.email.trim().toLowerCase(),
       password: credentials.password,
     });
+    if (response.token) {
+      setCustomerToken(response.token);
+    }
+    const customer: CustomerAccount = {
+      id: response.id,
+      email: response.email,
+      name: response.name,
+    };
     currentCustomer = customer;
     initialised = true;
     emit();
@@ -96,11 +99,19 @@ export const customerAccountService = {
   },
 
   async register(input: CustomerRegistration): Promise<CustomerAccount> {
-    const customer = await api.post<CustomerAccount>('/auth/customer/register', {
+    const response = await api.post<CustomerAccount & { token?: string }>('/auth/customer/register', {
       name: input.name.trim(),
       email: input.email.trim().toLowerCase(),
       password: input.password,
     });
+    if (response.token) {
+      setCustomerToken(response.token);
+    }
+    const customer: CustomerAccount = {
+      id: response.id,
+      email: response.email,
+      name: response.name,
+    };
     currentCustomer = customer;
     initialised = true;
     emit();
@@ -111,7 +122,10 @@ export const customerAccountService = {
   async signOut(): Promise<void> {
     try {
       await api.post<null>('/auth/customer/logout');
+    } catch {
+      // Ignore network errors on logout
     } finally {
+      setCustomerToken(null);
       currentCustomer = null;
       emit();
     }
