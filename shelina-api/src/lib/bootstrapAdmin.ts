@@ -10,7 +10,7 @@ import { hashPassword } from './auth.js';
  * Enforces the core business rule: Shelina has EXACTLY ONE admin account.
  *
  * Source of truth:
- *   ADMIN_EMAIL (default: shelinaofficial@gmail.com)
+ *   ADMIN_EMAIL (default: shelinaoffical@gmail.com)
  *   ADMIN_PASSWORD (environment variable only, never committed)
  *
  * This function:

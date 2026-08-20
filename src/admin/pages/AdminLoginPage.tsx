@@ -85,7 +85,7 @@ export function AdminLoginPage() {
             required
             value={email}
             onChange={(event) => setEmail(event.target.value)}
-            placeholder="shelinaofficial@gmail.com"
+            placeholder="shelinaoffical@gmail.com"
           />
 
           <Input

@@ -112,7 +112,7 @@ async function main() {
   );
 
   /* ── Admin user ── */
-  const adminEmail = (process.env.ADMIN_EMAIL ?? process.env.SEED_ADMIN_EMAIL ?? 'shelinaofficial@gmail.com')
+  const adminEmail = (process.env.ADMIN_EMAIL ?? process.env.SEED_ADMIN_EMAIL ?? 'shelinaoffical@gmail.com')
     .trim()
     .toLowerCase();
   const adminPassword = process.env.ADMIN_PASSWORD ?? process.env.SEED_ADMIN_PASSWORD ?? '';
