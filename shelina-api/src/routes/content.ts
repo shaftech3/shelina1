@@ -52,7 +52,7 @@ bannersRouter.get('/', async (req, res, next) => {
     let includeInactive = false;
     if (req.query.all === 'true') {
       const { readSession } = await import('../lib/auth.js');
-      includeInactive = Boolean(readSession(req.cookies ?? {}, 'admin'));
+      includeInactive = Boolean(readSession(req, 'admin'));
     }
 
     const banners = await prisma.banner.findMany({
