@@ -21,7 +21,11 @@ fi
 # 2. Restart Shelina API backend on port 4000
 fuser -k 4000/tcp 2>/dev/null || pkill -f "shelina-api/src/server.ts" 2>/dev/null || true
 echo "[dev] Starting Shelina backend API on port 4000..."
-(cd "$ROOT/shelina-api" && PORT=4000 "$ROOT/shelina-api/node_modules/.bin/tsx" "$ROOT/shelina-api/src/server.ts") &
+TSX_BIN="$ROOT/node_modules/.bin/tsx"
+[ ! -x "$TSX_BIN" ] && TSX_BIN="$ROOT/shelina-api/node_modules/.bin/tsx"
+[ ! -x "$TSX_BIN" ] && TSX_BIN="npx tsx"
+
+(cd "$ROOT" && PORT=4000 "$TSX_BIN" "$ROOT/shelina-api/src/server.ts") &
 
 for _ in {1..50}; do
   if curl -s -m 1 http://127.0.0.1:4000/api/health >/dev/null 2>&1; then

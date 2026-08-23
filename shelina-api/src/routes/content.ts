@@ -13,14 +13,41 @@ export const seoRouter = Router();
 
 const HOMEPAGE_ID = 'homepage';
 
+const DEFAULT_HOMEPAGE = {
+  eyebrow: 'Atelier Collection',
+  heading: 'Step into your style',
+  subheading: 'Handcrafted leather footwear made with quiet precision in Pakistan.',
+  badge: 'Spring / Summer 2026',
+  image: '/images/hero/hero-main.jpg',
+  imageAlt: 'Handcrafted leather footwear display',
+  ctaText: 'Explore Collection',
+  ctaLink: '/products',
+  secondaryCtaText: 'Our Story',
+  secondaryCtaLink: '/about',
+  editorialEyebrow: 'Our Craft',
+  editorialHeading: 'Made by hand, shaped by time',
+  editorialDescription: 'Every Shelina pair begins with full-grain leather selected for its temper and grain. Cut, lasted and finished by craftsmen in Lahore.',
+  editorialImage: '/images/categories/ladies-chappals.jpg',
+  editorialImageAlt: 'Leather craftsman at work',
+  editorialCtaText: 'Learn More',
+  editorialCtaLink: '/about',
+};
+
 /** Public read. Banners come back ordered in the same query — no N+1. */
 homepageRouter.get('/', async (_req, res, next) => {
   try {
-    const homepage = await prisma.homepage.findUnique({
+    let homepage = await prisma.homepage.findUnique({
       where: { id: HOMEPAGE_ID },
       include: { banners: { orderBy: { sortOrder: 'asc' } } },
     });
-    if (!homepage) throw ApiError.notFound('Homepage content has not been seeded.');
+    if (!homepage) {
+      homepage = await prisma.homepage.upsert({
+        where: { id: HOMEPAGE_ID },
+        update: {},
+        create: { id: HOMEPAGE_ID, ...DEFAULT_HOMEPAGE },
+        include: { banners: { orderBy: { sortOrder: 'asc' } } },
+      });
+    }
     res.json({ success: true, data: serializeHomepage(homepage) });
   } catch (error) {
     next(error);
@@ -108,10 +135,29 @@ bannersRouter.delete('/:id', requireAdmin, async (req, res, next) => {
 
 const SEO_ID = 'seo';
 
+const DEFAULT_SEO = {
+  siteTitle: 'Shelina',
+  siteDescription: 'Handcrafted leather chappals, shoes and sneakers for women and men, made in Pakistan.',
+  defaultImage: '/images/hero/hero-main.jpg',
+  keywords: ['leather chappals', 'ladies shoes', 'gents shoes', 'sneakers', 'Pakistan'],
+  ogTitle: 'Shelina Footwear',
+  ogDescription: 'Handcrafted leather footwear made with quiet precision.',
+  ogImage: '/images/hero/hero-main.jpg',
+  twitterTitle: 'Shelina Footwear',
+  twitterDescription: 'Handcrafted leather footwear made with quiet precision.',
+  twitterImage: '/images/hero/hero-main.jpg',
+};
+
 seoRouter.get('/', async (_req, res, next) => {
   try {
-    const seo = await prisma.seoSettings.findUnique({ where: { id: SEO_ID } });
-    if (!seo) throw ApiError.notFound('SEO settings have not been seeded.');
+    let seo = await prisma.seoSettings.findUnique({ where: { id: SEO_ID } });
+    if (!seo) {
+      seo = await prisma.seoSettings.upsert({
+        where: { id: SEO_ID },
+        update: {},
+        create: { id: SEO_ID, ...DEFAULT_SEO },
+      });
+    }
     res.json({ success: true, data: serializeSeo(seo) });
   } catch (error) {
     next(error);

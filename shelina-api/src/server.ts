@@ -19,11 +19,13 @@ app.listen(env.port, '0.0.0.0', async () => {
   // Guarantee all database schema tables exist in connected PostgreSQL
   await ensureSchemaMigrations();
 
-  // Populate catalogue if database is empty
+  // Populate catalogue and content if database is empty
   try {
     const productCount = await prisma.product.count();
-    if (productCount === 0) {
-      console.log('[api] Catalogue empty in connected PostgreSQL. Seeding initial catalogue...');
+    const homepageCount = await prisma.homepage.count();
+    const seoCount = await prisma.seoSettings.count();
+    if (productCount === 0 || homepageCount === 0 || seoCount === 0) {
+      console.log('[api] Initial content empty in connected PostgreSQL. Seeding initial catalogue and settings...');
       const seedModule = await import('../prisma/seed.js');
       if (typeof seedModule.seedDatabase === 'function') {
         await seedModule.seedDatabase();

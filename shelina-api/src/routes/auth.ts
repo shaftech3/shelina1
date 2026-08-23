@@ -90,12 +90,17 @@ authRouter.get('/admin/me', async (req, res, next) => {
 authRouter.post('/customer/register', credentialLimiter, async (req, res, next) => {
   try {
     const { name, email, password } = registerSchema.parse(req.body);
+    const normalizedEmail = email.trim().toLowerCase();
+    const normalizedName = name.trim();
 
-    const existing = await prisma.customerUser.findUnique({ where: { email }, select: { id: true } });
+    const existing = await prisma.customerUser.findUnique({
+      where: { email: normalizedEmail },
+      select: { id: true },
+    });
     if (existing) throw ApiError.conflict('An account with that email already exists.');
 
     const customer = await prisma.customerUser.create({
-      data: { name, email, passwordHash: await hashPassword(password) },
+      data: { name: normalizedName, email: normalizedEmail, passwordHash: await hashPassword(password) },
       select: { id: true, email: true, name: true },
     });
 
@@ -111,8 +116,9 @@ authRouter.post('/customer/register', credentialLimiter, async (req, res, next) 
 authRouter.post('/customer/login', credentialLimiter, async (req, res, next) => {
   try {
     const { email, password } = loginSchema.parse(req.body);
+    const normalizedEmail = email.trim().toLowerCase();
 
-    const customer = await prisma.customerUser.findUnique({ where: { email } });
+    const customer = await prisma.customerUser.findUnique({ where: { email: normalizedEmail } });
     if (!customer) throw ApiError.unauthorized(INVALID_CREDENTIALS);
 
     const valid = await verifyPassword(password, customer.passwordHash);
