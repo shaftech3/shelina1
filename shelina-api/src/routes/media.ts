@@ -146,7 +146,17 @@ mediaRouter.get('/config', requireAdmin, (_req, res) => {
  */
 export function handleServeMediaFile(req: Request, res: Response, next: NextFunction) {
   try {
-    const rawParam = req.params.filename || req.params[0] || (req.url ? path.basename(req.url.split('?')[0]) : '');
+    const rawVal = req.params.filename ?? req.params[0];
+    let rawParam = '';
+
+    if (typeof rawVal === 'string') {
+      rawParam = rawVal;
+    } else if (Array.isArray(rawVal) && rawVal.length > 0 && typeof rawVal[0] === 'string') {
+      rawParam = rawVal[0];
+    } else if (typeof req.url === 'string') {
+      rawParam = path.basename(req.url.split('?')[0]);
+    }
+
     if (!rawParam || rawParam === 'config' || rawParam === 'multiple') {
       return next();
     }
