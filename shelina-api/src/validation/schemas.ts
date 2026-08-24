@@ -47,6 +47,8 @@ export const productInputSchema = z
     stock: z.number().int().min(0, 'Stock cannot be negative.').default(0),
     stockStatus: z.enum(['in-stock', 'low-stock', 'out-of-stock', 'pre-order']).default('in-stock'),
 
+    deliveryCharge: z.number().int().min(0, 'Delivery charge cannot be negative.').default(0),
+
     status: z.enum(['active', 'draft', 'archived']).default('active'),
     featured: z.boolean().default(false),
     newArrival: z.boolean().default(false),
@@ -212,8 +214,11 @@ export const checkoutSchema = z.object({
     .min(7, 'Enter a valid phone number.')
     .max(30, 'Enter a valid phone number.')
     .regex(/^[0-9+()\-\s]+$/, 'A phone number can only contain digits, spaces, + ( ) and -.'),
-  shippingAddress: requiredText('Shipping address is required.').max(400),
+  province: requiredText('Province / Region is required.').max(120),
   city: requiredText('City is required.').max(120),
+  area: requiredText('Area / Neighborhood / Town is required.').max(150),
+  streetAddress: requiredText('Street address / House no. is required.').max(300),
+  shippingAddress: z.string().trim().max(500).optional(),
   notes: trimmed(1000).optional().nullable(),
   items: z
     .array(checkoutItemSchema, { error: 'Your cart is empty.' })

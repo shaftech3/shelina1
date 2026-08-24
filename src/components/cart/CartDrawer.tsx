@@ -1,5 +1,5 @@
 import { formatPrice } from '@/lib/format';
-import { Button, ButtonLink, Drawer, Icon } from '@/components/ui';
+import { ButtonLink, Drawer, Icon } from '@/components/ui';
 import { useCart } from '@/cart';
 import { CartLine } from './CartLine';
 
@@ -51,12 +51,12 @@ export function CartDrawer() {
             </p>
 
             <div className="flex flex-col gap-2">
-              <ButtonLink href="/cart" onClick={closeCart} fullWidth>
-                View bag
+              <ButtonLink href="/checkout" onClick={closeCart} fullWidth variant="primary">
+                Proceed to Checkout
               </ButtonLink>
-              <Button variant="ghost" fullWidth onClick={closeCart}>
-                Continue shopping
-              </Button>
+              <ButtonLink href="/cart" onClick={closeCart} fullWidth variant="outline">
+                View Bag
+              </ButtonLink>
             </div>
           </div>
         )

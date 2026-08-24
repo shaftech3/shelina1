@@ -17,6 +17,7 @@ import { categoryService, ServiceError, type CategoryInput } from '@/services';
 import type { Category } from '@/types';
 import { AdminLayout } from '../components/AdminLayout';
 import { ConfirmDeleteModal } from '../components/ConfirmDeleteModal';
+import { MediaUploadInput } from '../components/MediaUploadInput';
 import { useAdminCategories } from '../hooks/useAdminData';
 
 interface FormState {
@@ -289,11 +290,13 @@ export function AdminCategoriesPage() {
             value={form.description}
             onChange={(event) => set('description', event.target.value)}
           />
-          <Input
-            label="Image path"
+          <MediaUploadInput
+            label="Category Image"
+            mediaType="image"
             value={form.imageSrc}
-            onChange={(event) => set('imageSrc', event.target.value)}
-            placeholder="/images/categories/ladies-chappals.jpg"
+            onChange={(url) => set('imageSrc', url)}
+            onRemove={() => set('imageSrc', '')}
+            hint="Upload category feature image (JPG, PNG, WebP)"
           />
           <Input
             label="Image alt text"

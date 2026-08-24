@@ -41,8 +41,11 @@ export interface CreateOrderInput {
   customerName: string;
   customerEmail: string;
   customerPhone: string;
-  shippingAddress: string;
+  province?: string | null;
   city: string;
+  area?: string | null;
+  streetAddress?: string | null;
+  shippingAddress?: string | null;
   notes?: string | null;
   items: CheckoutItemInput[];
   idempotencyKey?: string;
@@ -78,11 +81,30 @@ function matchOption(selected: string | null | undefined, authored: string[]): s
 }
 
 /**
- * Flat fee, waived above a configured subtotal. Deliberately trivial: the brief
- * asked for a configurable fee, not a shipping-provider integration.
+ * Calculates delivery fee:
+ * Uses per-product delivery charges when authored on items,
+ * or standard store flat shipping fee (with free shipping threshold support).
  */
-export function calculateShipping(subtotal: number): number {
+export function calculateShipping(
+  subtotal: number,
+  itemsWithDelivery?: { deliveryCharge?: number | null; quantity: number }[],
+): number {
   if (subtotal <= 0) return 0;
+
+  if (itemsWithDelivery && itemsWithDelivery.length > 0) {
+    let customDeliverySum = 0;
+    let hasCustomDelivery = false;
+    for (const item of itemsWithDelivery) {
+      if (typeof item.deliveryCharge === 'number' && item.deliveryCharge > 0) {
+        customDeliverySum += item.deliveryCharge * item.quantity;
+        hasCustomDelivery = true;
+      }
+    }
+    if (hasCustomDelivery) {
+      return customDeliverySum;
+    }
+  }
+
   if (env.freeShippingThreshold > 0 && subtotal >= env.freeShippingThreshold) return 0;
   return env.shippingFee;
 }
@@ -220,8 +242,18 @@ export async function createOrder(input: CreateOrderInput) {
     }
 
     const subtotal = lines.reduce((total, line) => total + line.lineTotal, 0);
-    const shippingFee = calculateShipping(subtotal);
+    const shippingFee = calculateShipping(
+      subtotal,
+      lines.map((line) => {
+        const prod = byId.get(line.productId);
+        return { deliveryCharge: prod?.deliveryCharge, quantity: line.quantity };
+      }),
+    );
     const grandTotal = subtotal + shippingFee;
+
+    const fullShippingAddress =
+      input.shippingAddress?.trim() ||
+      [input.streetAddress, input.area, input.city, input.province].filter(Boolean).join(', ');
 
     const order = await tx.order.create({
       data: {
@@ -233,8 +265,11 @@ export async function createOrder(input: CreateOrderInput) {
         customerName: input.customerName,
         customerEmail: input.customerEmail,
         customerPhone: input.customerPhone,
-        shippingAddress: input.shippingAddress,
+        province: input.province ?? null,
         city: input.city,
+        area: input.area ?? null,
+        streetAddress: input.streetAddress ?? null,
+        shippingAddress: fullShippingAddress,
         notes: input.notes ?? null,
         subtotal,
         shippingFee,

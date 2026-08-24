@@ -2,6 +2,8 @@ import express from 'express';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import helmet from 'helmet';
+import path from 'path';
+import fs from 'fs';
 import { env } from './lib/env.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import { authRouter } from './routes/auth.js';
@@ -17,10 +19,20 @@ export function createApp() {
   // Behind the sandbox proxy; needed for correct client IPs in rate limiting.
   app.set('trust proxy', 1);
 
+  // Serve uploaded media files statically
+  const uploadsDir = path.resolve(process.cwd(), 'public/uploads');
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+  }
+  app.use('/uploads', express.static(uploadsDir));
+
   // Sensible security headers. crossOriginResourcePolicy is relaxed because
   // the API is consumed from a different origin than it is served from.
+  // frameguard is disabled to support running within the AI Studio preview iframe.
   app.use(
     helmet({
+      frameguard: false,
+      contentSecurityPolicy: false,
       crossOriginResourcePolicy: { policy: 'cross-origin' },
     }),
   );
@@ -93,7 +105,7 @@ export function createApp() {
   app.use('/api/orders', ordersRouter);
   app.use('/api/admin/orders', adminOrdersRouter);
 
-  app.use(notFoundHandler);
+  app.use('/api', notFoundHandler);
   app.use(errorHandler);
 
   return app;

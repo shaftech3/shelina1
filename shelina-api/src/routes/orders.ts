@@ -33,15 +33,38 @@ const ORDER_INCLUDE = {
  * instead of the browser guessing at it. Declared before `/:id` so the literal
  * path is not swallowed by the parameter route.
  */
-ordersRouter.get('/shipping-quote', (req, res, next) => {
+ordersRouter.get('/shipping-quote', async (req, res, next) => {
   try {
     const subtotal = Number((req.query as Record<string, string | undefined>).subtotal ?? 0);
     const safeSubtotal = Number.isFinite(subtotal) && subtotal > 0 ? Math.floor(subtotal) : 0;
+    const itemsRaw = (req.query as Record<string, string | undefined>).items;
+
+    let itemsWithDelivery: { deliveryCharge?: number | null; quantity: number }[] | undefined;
+    if (itemsRaw) {
+      try {
+        const parsed = JSON.parse(itemsRaw);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const productIds = parsed.map((p: { productId?: string }) => String(p.productId)).filter(Boolean);
+          const products = await prisma.product.findMany({
+            where: { id: { in: productIds } },
+            select: { id: true, deliveryCharge: true },
+          });
+          const prodMap = new Map(products.map((p) => [p.id, p.deliveryCharge]));
+          itemsWithDelivery = parsed.map((p: { productId?: string; quantity?: number }) => ({
+            deliveryCharge: prodMap.get(String(p.productId)) ?? 0,
+            quantity: Number(p.quantity) || 1,
+          }));
+        }
+      } catch {
+        // Fallback to standard subtotal calculation
+      }
+    }
+
     res.json({
       success: true,
       data: {
         subtotal: safeSubtotal,
-        shippingFee: calculateShipping(safeSubtotal),
+        shippingFee: calculateShipping(safeSubtotal, itemsWithDelivery),
         freeShippingThreshold: env.freeShippingThreshold,
       },
     });

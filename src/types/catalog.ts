@@ -75,6 +75,8 @@ export interface Product {
   stockCount?: number;
   featured?: boolean;
   isNew?: boolean;
+  /** Custom delivery charge in store currency (e.g. PKR). */
+  deliveryCharge?: number;
   /** One-line summary used on cards and at the top of the detail page. */
   shortDescription?: string;
   /** Long-form copy shown on the detail page. Plain text — never raw HTML. */

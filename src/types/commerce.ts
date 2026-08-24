@@ -59,11 +59,15 @@ export interface Order {
   customerEmail: string;
   customerPhone: string;
   shippingAddress: string;
+  province?: string | null;
+  area?: string | null;
+  streetAddress?: string | null;
   city: string;
   notes: string | null;
 
   subtotal: number;
   shippingFee: number;
+  deliveryCharge?: number;
   grandTotal: number;
   /** Total units across all lines. */
   itemCount: number;
@@ -81,8 +85,11 @@ export interface CheckoutDetails {
   customerName: string;
   customerEmail: string;
   customerPhone: string;
-  shippingAddress: string;
+  province: string;
   city: string;
+  area: string;
+  streetAddress: string;
+  shippingAddress?: string;
   notes?: string;
 }
 

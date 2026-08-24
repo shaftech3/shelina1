@@ -18,6 +18,7 @@ import type { Banner, EditorialFeature, HeroSlide } from '@/types';
 import { AdminLayout } from '../components/AdminLayout';
 import { ConfirmDeleteModal } from '../components/ConfirmDeleteModal';
 import { FormSection } from '../components/FormSection';
+import { MediaUploadInput } from '../components/MediaUploadInput';
 import { useAdminHomepage } from '../hooks/useAdminData';
 
 /* ---------------------------------------------------------------- Hero --- */
@@ -109,8 +110,15 @@ function HeroEditor({ slide }: { slide: HeroSlide }) {
           <Textarea label="Subheading" rows={2} value={form.subheading} onChange={(e) => set('subheading', e.target.value)} />
           <Input label="Badge" value={form.badge} onChange={(e) => set('badge', e.target.value)} hint="Optional pill, e.g. “New season”." />
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Input label="Hero image path" value={form.imageSrc} onChange={(e) => set('imageSrc', e.target.value)} />
+          <div className="flex flex-col gap-3">
+            <MediaUploadInput
+              label="Hero Image"
+              mediaType="image"
+              value={form.imageSrc}
+              onChange={(url) => set('imageSrc', url)}
+              onRemove={() => set('imageSrc', '')}
+              hint="Upload high-resolution hero showcase image (JPG, PNG, WebP)"
+            />
             <Input
               label="Hero image alt text"
               value={form.imageAlt}
@@ -223,8 +231,15 @@ function EditorialEditor({ editorial }: { editorial: EditorialFeature }) {
             error={error ?? undefined}
           />
           <Textarea label="Description" rows={3} value={form.description} onChange={(e) => set('description', e.target.value)} />
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Input label="Image path" value={form.imageSrc} onChange={(e) => set('imageSrc', e.target.value)} />
+          <div className="flex flex-col gap-3">
+            <MediaUploadInput
+              label="Promotional Section Image"
+              mediaType="image"
+              value={form.imageSrc}
+              onChange={(url) => set('imageSrc', url)}
+              onRemove={() => set('imageSrc', '')}
+              hint="Upload editorial block image (JPG, PNG, WebP)"
+            />
             <Input label="Image alt text" value={form.imageAlt} onChange={(e) => set('imageAlt', e.target.value)} />
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
@@ -477,7 +492,14 @@ function BannersEditor({ banners }: { banners: Banner[] }) {
             error={error ?? undefined}
           />
           <Textarea label="Description" rows={3} value={form.description} onChange={(e) => set('description', e.target.value)} />
-          <Input label="Image path" value={form.imageSrc} onChange={(e) => set('imageSrc', e.target.value)} />
+          <MediaUploadInput
+            label="Banner Image"
+            mediaType="image"
+            value={form.imageSrc}
+            onChange={(url) => set('imageSrc', url)}
+            onRemove={() => set('imageSrc', '')}
+            hint="Upload promotional banner graphic"
+          />
           <Input
             label="Image alt text"
             value={form.imageAlt}

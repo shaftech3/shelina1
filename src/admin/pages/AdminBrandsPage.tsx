@@ -17,6 +17,7 @@ import { brandService, ServiceError, type BrandInput } from '@/services';
 import type { Brand } from '@/types';
 import { AdminLayout } from '../components/AdminLayout';
 import { ConfirmDeleteModal } from '../components/ConfirmDeleteModal';
+import { MediaUploadInput } from '../components/MediaUploadInput';
 import { useAdminBrands } from '../hooks/useAdminData';
 
 interface FormState {
@@ -282,11 +283,13 @@ export function AdminBrandsPage() {
             value={form.description}
             onChange={(event) => set('description', event.target.value)}
           />
-          <Input
-            label="Logo path"
+          <MediaUploadInput
+            label="Brand Logo"
+            mediaType="image"
             value={form.logoSrc}
-            onChange={(event) => set('logoSrc', event.target.value)}
-            placeholder="/images/brands/my-brand.jpg"
+            onChange={(url) => set('logoSrc', url)}
+            onRemove={() => set('logoSrc', '')}
+            hint="Upload brand logo (PNG, JPG, WebP, SVG)"
           />
           <Input
             label="Logo alt text"

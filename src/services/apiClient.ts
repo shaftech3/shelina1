@@ -115,7 +115,11 @@ async function requestEnvelope<T>(path: string, init?: RequestInit): Promise<Api
     ...(init?.headers as Record<string, string> | undefined),
   };
 
-  if (init?.body !== undefined && !headers['Content-Type']) {
+  if (
+    init?.body !== undefined &&
+    !(typeof FormData !== 'undefined' && init.body instanceof FormData) &&
+    !headers['Content-Type']
+  ) {
     headers['Content-Type'] = 'application/json';
   }
 
@@ -202,6 +206,8 @@ export const api = {
   get: <T>(path: string) => request<T>(path),
   post: <T>(path: string, body?: unknown) =>
     request<T>(path, { method: 'POST', body: body === undefined ? undefined : JSON.stringify(body) }),
+  upload: <T>(path: string, formData: FormData) =>
+    request<T>(path, { method: 'POST', body: formData }),
   put: <T>(path: string, body?: unknown) =>
     request<T>(path, { method: 'PUT', body: body === undefined ? undefined : JSON.stringify(body) }),
   patch: <T>(path: string, body?: unknown) =>

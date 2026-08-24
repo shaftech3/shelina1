@@ -171,20 +171,42 @@ export function AdminOrderDetailPage() {
             </section>
 
             <section className="surface-card p-5">
-              <h2 className="text-h5 text-ink">Shipping</h2>
+              <h2 className="text-h5 text-ink">Shipping & Delivery</h2>
               <dl className="mt-3 flex flex-col gap-2 text-body-sm">
+                {order.streetAddress && (
+                  <div className="flex gap-2">
+                    <dt className="w-24 shrink-0 text-ink-muted">Street / House</dt>
+                    <dd className="font-medium text-ink">{order.streetAddress}</dd>
+                  </div>
+                )}
+                {order.area && (
+                  <div className="flex gap-2">
+                    <dt className="w-24 shrink-0 text-ink-muted">Area / Sector</dt>
+                    <dd className="text-ink">{order.area}</dd>
+                  </div>
+                )}
                 <div className="flex gap-2">
-                  <dt className="w-20 shrink-0 text-ink-muted">Address</dt>
-                  <dd className="whitespace-pre-line text-ink">{order.shippingAddress}</dd>
-                </div>
-                <div className="flex gap-2">
-                  <dt className="w-20 shrink-0 text-ink-muted">City</dt>
+                  <dt className="w-24 shrink-0 text-ink-muted">City</dt>
                   <dd className="text-ink">{order.city}</dd>
                 </div>
-                {order.notes && (
+                {order.province && (
                   <div className="flex gap-2">
-                    <dt className="w-20 shrink-0 text-ink-muted">Notes</dt>
-                    <dd className="whitespace-pre-line text-ink">{order.notes}</dd>
+                    <dt className="w-24 shrink-0 text-ink-muted">Province</dt>
+                    <dd className="text-ink">{order.province}</dd>
+                  </div>
+                )}
+                <div className="flex gap-2">
+                  <dt className="w-24 shrink-0 text-ink-muted">Full Address</dt>
+                  <dd className="whitespace-pre-line text-ink font-mono text-xs bg-cream/70 p-2 rounded">
+                    {order.shippingAddress}
+                  </dd>
+                </div>
+                {order.notes && (
+                  <div className="flex gap-2 mt-1">
+                    <dt className="w-24 shrink-0 text-ink-muted">Order Notes</dt>
+                    <dd className="whitespace-pre-line text-ink bg-primary-deep/5 text-primary-deep p-2 rounded text-xs font-medium">
+                      {order.notes}
+                    </dd>
                   </div>
                 )}
               </dl>

@@ -26,6 +26,7 @@ interface ProductRow {
   description: string | null;
   price: number;
   salePrice: number | null;
+  deliveryCharge?: number | null;
   stock: number;
   stockStatus: string;
   status: string;
@@ -69,6 +70,7 @@ export function serializeProduct(row: ProductRow) {
     categoryId: row.categoryId,
     price: row.price,
     salePrice: row.salePrice,
+    deliveryCharge: row.deliveryCharge ?? 0,
     images,
     // Free-form, exactly as stored. No transformation of any kind.
     sizes: asArray<{ value: string; available: boolean }>(row.sizes),
@@ -298,8 +300,11 @@ interface OrderRow {
   customerName: string;
   customerEmail: string;
   customerPhone: string;
-  shippingAddress: string;
+  province?: string | null;
   city: string;
+  area?: string | null;
+  streetAddress?: string | null;
+  shippingAddress: string;
   notes: string | null;
   subtotal: number;
   shippingFee: number;
@@ -341,8 +346,11 @@ export function serializeOrder(row: OrderRow) {
     customerName: row.customerName,
     customerEmail: row.customerEmail,
     customerPhone: row.customerPhone,
-    shippingAddress: row.shippingAddress,
+    province: row.province ?? undefined,
     city: row.city,
+    area: row.area ?? undefined,
+    streetAddress: row.streetAddress ?? undefined,
+    shippingAddress: row.shippingAddress,
     notes: row.notes,
     subtotal: row.subtotal,
     shippingFee: row.shippingFee,

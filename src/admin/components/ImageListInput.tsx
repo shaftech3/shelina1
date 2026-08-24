@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, type DragEvent } from 'react';
 import { Button, Icon, IconButton, Input } from '@/components/ui';
 import { mediaService } from '@/services';
 import type { ImageAsset } from '@/types';
@@ -8,44 +8,19 @@ interface ImageListInputProps {
   onChange: (images: ImageAsset[]) => void;
 }
 
-/**
- * Product image manager.
- *
- * Two honest ways to add an image, because there is no storage backend yet:
- *   • a path to a file already published under /public (persists), or
- *   • a browser file, previewed via an object URL (does NOT persist).
- *
- * Both funnel through `mediaService`, so when `POST /api/media` exists the
- * upload path starts returning a real URL and nothing here changes. Temporary
- * blobs are labelled in the UI rather than silently pretending to be saved.
- */
 export function ImageListInput({ images, onChange }: ImageListInputProps) {
-  const [path, setPath] = useState('');
+  const [isDragging, setIsDragging] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  function addByPath() {
-    const trimmed = path.trim();
-    if (!trimmed) return;
-    if (images.some((image) => image.src === trimmed)) {
-      setError('That image has already been added.');
-      return;
-    }
-    try {
-      const asset = mediaService.selectExisting(trimmed);
-      onChange([...images, { src: asset.url, alt: asset.alt }]);
-      setPath('');
-      setError(null);
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Could not add that image.');
-    }
-  }
-
-  async function addByFile(files: FileList | null) {
-    if (!files?.length) return;
+  async function addFiles(files: FileList | File[]) {
+    if (!files || files.length === 0) return;
     setError(null);
+    setUploading(true);
     try {
-      const uploaded = await Promise.all(Array.from(files).map((file) => mediaService.upload(file)));
+      const fileArray = Array.from(files);
+      const uploaded = await mediaService.uploadMultiple(fileArray);
       onChange([
         ...images,
         ...uploaded.map((asset) => ({
@@ -55,11 +30,29 @@ export function ImageListInput({ images, onChange }: ImageListInputProps) {
           height: asset.height,
         })),
       ]);
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Could not read that file.');
+    } catch (cause: any) {
+      setError(cause instanceof Error ? cause.message : 'Could not upload selected files.');
     } finally {
-      // Allow re-selecting the same file after a removal.
+      setUploading(false);
       if (fileRef.current) fileRef.current.value = '';
+    }
+  }
+
+  function onDragOver(e: DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    setIsDragging(true);
+  }
+
+  function onDragLeave(e: DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    setIsDragging(false);
+  }
+
+  function onDrop(e: DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    setIsDragging(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      void addFiles(e.dataTransfer.files);
     }
   }
 
@@ -73,7 +66,6 @@ export function ImageListInput({ images, onChange }: ImageListInputProps) {
     onChange(images.filter((_, position) => position !== index));
   }
 
-  /** Reordering is buttons, not drag-and-drop: keyboard-accessible and dependency-free. */
   function move(index: number, direction: -1 | 1) {
     const target = index + direction;
     if (target < 0 || target >= images.length) return;
@@ -84,128 +76,132 @@ export function ImageListInput({ images, onChange }: ImageListInputProps) {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-3 rounded-md border border-border bg-cream p-4">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
-          <Input
-            label="Image path"
-            placeholder="/images/products/my-product.jpg"
-            value={path}
-            onChange={(event) => {
-              setPath(event.target.value);
-              setError(null);
-            }}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter') {
-                event.preventDefault();
-                addByPath();
-              }
-            }}
-            hint="A file already published in the site's /public folder."
-            wrapperClassName="flex-1"
-          />
-          <Button type="button" variant="outline" onClick={addByPath} disabled={!path.trim()} className="h-12 shrink-0">
-            Add
-          </Button>
-        </div>
+      {/* Upload Dropzone */}
+      <input
+        ref={fileRef}
+        type="file"
+        accept={mediaService.acceptedImageTypes.join(',')}
+        multiple
+        onChange={(event) => void addFiles(event.target.files ?? [])}
+        className="sr-only"
+        id="product-image-upload"
+        aria-label="Upload product images"
+      />
 
-        <div className="flex items-center gap-3">
-          <span className="h-px flex-1 bg-border" />
-          <span className="text-caption text-ink-subtle">or</span>
-          <span className="h-px flex-1 bg-border" />
-        </div>
-
-        <div>
-          <input
-            ref={fileRef}
-            type="file"
-            accept={mediaService.acceptedImageTypes.join(',')}
-            multiple
-            onChange={(event) => void addByFile(event.target.files)}
-            className="sr-only"
-            id="product-image-upload"
-            // Visually hidden but still in the a11y tree, so it needs its own
-            // name: the visible trigger is a separate button.
-            aria-label="Choose product image files"
-          />
-          <Button
-            type="button"
-            variant="outline"
-            fullWidth
-            iconLeft={<Icon name="upload" size={17} />}
-            onClick={() => fileRef.current?.click()}
-          >
-            Choose image files
-          </Button>
-          <p className="mt-2 text-caption text-ink-subtle">
-            Preview only — files are not uploaded to a server in this build and will disappear when the
-            page reloads. Use an image path above for content you want to keep.
-          </p>
-        </div>
-
-        {error && (
-          <p role="alert" className="text-caption text-error">
-            {error}
-          </p>
+      <div
+        onDragOver={onDragOver}
+        onDragLeave={onDragLeave}
+        onDrop={onDrop}
+        onClick={() => !uploading && fileRef.current?.click()}
+        className={`relative flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-6 text-center transition-all ${
+          isDragging
+            ? 'border-primary bg-primary/5 shadow-xs'
+            : 'border-border/80 bg-cream/40 hover:border-ink-muted hover:bg-cream'
+        }`}
+      >
+        {uploading ? (
+          <div className="flex flex-col items-center gap-2 py-3">
+            <span className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+            <span className="text-caption font-medium text-ink">Uploading images...</span>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center gap-2.5">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-ink-muted shadow-xs">
+              <Icon name="upload" size={20} />
+            </div>
+            <div className="flex flex-col gap-0.5">
+              <p className="text-body-sm font-medium text-ink">
+                Click to upload images <span className="text-ink-subtle font-normal">or drag & drop</span>
+              </p>
+              <p className="text-caption text-ink-subtle">
+                Upload main and gallery photos (JPG, PNG, WebP, SVG up to 50MB)
+              </p>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              iconLeft={<Icon name="plus" size={15} />}
+              onClick={(e) => {
+                e.stopPropagation();
+                fileRef.current?.click();
+              }}
+              className="mt-1"
+            >
+              Choose Images
+            </Button>
+          </div>
         )}
       </div>
 
+      {error && (
+        <p role="alert" className="flex items-center gap-1.5 text-caption text-burgundy">
+          <Icon name="alert" size={14} />
+          {error}
+        </p>
+      )}
+
+      {/* Image list */}
       {images.length === 0 ? (
         <p className="rounded-md border border-dashed border-border bg-surface px-4 py-6 text-center text-body-sm text-ink-subtle">
-          No images yet. The first image you add becomes the main product image.
+          No images uploaded yet. The first image uploaded will serve as the primary product cover.
         </p>
       ) : (
         <ul className="flex flex-col gap-3">
           {images.map((image, index) => (
             <li
               key={`${image.src}-${index}`}
-              className="flex flex-col gap-3 rounded-md border border-border bg-surface p-3 sm:flex-row"
+              className="flex flex-col gap-3 rounded-lg border border-border bg-white p-3.5 shadow-xs sm:flex-row"
             >
-              <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-md bg-cream">
-                {/* Plain <img>: these are admin previews, including blob: URLs
-                    that the storefront Image component's ratio box would fight. */}
-                <img src={image.src} alt="" className="h-full w-full object-cover" />
+              <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-md bg-cream border border-border/60">
+                <img
+                  src={image.src}
+                  alt={image.alt || 'Product thumbnail'}
+                  className="h-full w-full object-cover"
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).src = '/images/placeholder.png';
+                  }}
+                />
                 {index === 0 && (
-                  <span className="absolute inset-x-0 bottom-0 bg-ink/75 py-0.5 text-center text-caption text-white">
-                    Main
+                  <span className="absolute inset-x-0 bottom-0 bg-primary/90 py-0.5 text-center text-[10px] font-semibold uppercase tracking-wider text-white">
+                    Primary Cover
                   </span>
                 )}
               </div>
 
-              <div className="flex min-w-0 flex-1 flex-col gap-2">
-                <p className="truncate text-caption text-ink-subtle" title={image.src}>
+              <div className="flex min-w-0 flex-1 flex-col justify-center gap-2">
+                <p className="truncate text-caption text-ink-subtle font-mono text-xs" title={image.src}>
                   {image.src}
-                  {mediaService.isTemporary(image.src) && (
-                    <span className="ml-2 rounded-full bg-warning/12 px-2 py-0.5 text-warning">temporary</span>
-                  )}
                 </p>
                 <Input
-                  label="Alt text"
+                  label="Alt text (for accessibility & SEO)"
                   value={image.alt}
                   onChange={(event) => update(index, { alt: event.target.value })}
-                  placeholder="Describe the image for screen readers"
+                  placeholder="e.g. Leather Oxford Shoes — Side View"
                 />
               </div>
 
-              <div className="flex shrink-0 items-start gap-1">
+              <div className="flex shrink-0 items-center sm:items-start gap-1 pt-1">
                 <IconButton
-                  label={`Move ${image.alt || 'image'} up`}
+                  label={`Move up`}
                   icon={<Icon name="chevron-down" size={17} className="rotate-180" />}
                   size="sm"
                   disabled={index === 0}
                   onClick={() => move(index, -1)}
                 />
                 <IconButton
-                  label={`Move ${image.alt || 'image'} down`}
+                  label={`Move down`}
                   icon={<Icon name="chevron-down" size={17} />}
                   size="sm"
                   disabled={index === images.length - 1}
                   onClick={() => move(index, 1)}
                 />
                 <IconButton
-                  label={`Remove ${image.alt || 'image'}`}
+                  label={`Remove image`}
                   icon={<Icon name="trash" size={17} />}
                   size="sm"
                   onClick={() => remove(index)}
+                  className="text-burgundy hover:bg-burgundy/10"
                 />
               </div>
             </li>

@@ -105,6 +105,7 @@ function toApiPayload(input: ProductInput & { brandId?: string }) {
     featured: Boolean(input.featured),
     newArrival: Boolean(input.isNew),
     onSale: salePrice !== null && salePrice < input.price,
+    deliveryCharge: typeof input.deliveryCharge === 'number' ? Math.max(0, input.deliveryCharge) : 0,
     sizes: input.sizes,
     colors: input.colors.map((color) => ({
       name: color.name,

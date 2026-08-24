@@ -3,11 +3,12 @@ import { Link } from 'react-router-dom';
 import { cn } from '@/lib/cn';
 import { slugify } from '@/data/repository';
 import { Button, ButtonLink, Checkbox, Icon, Input, Select, Textarea } from '@/components/ui';
-import { mediaService, type ProductInput } from '@/services';
+import type { ProductInput } from '@/services';
 import type { Brand, Category, Product, ProductStatus, StockStatus } from '@/types';
 import { ChipListInput } from './ChipListInput';
 import { FormSection } from './FormSection';
 import { ImageListInput } from './ImageListInput';
+import { MediaUploadInput } from './MediaUploadInput';
 
 interface ProductFormProps {
   /** Undefined when creating. */
@@ -30,6 +31,7 @@ interface FormState {
   description: string;
   price: string;
   salePrice: string;
+  deliveryCharge: string;
   stockCount: string;
   stockStatus: StockStatus;
   status: ProductStatus;
@@ -71,6 +73,7 @@ function toFormState(product?: Product): FormState {
     description: product?.description ?? '',
     price: product ? String(product.price) : '',
     salePrice: product?.salePrice ? String(product.salePrice) : '',
+    deliveryCharge: product?.deliveryCharge != null ? String(product.deliveryCharge) : '0',
     stockCount: product?.stockCount != null ? String(product.stockCount) : '',
     stockStatus: product?.stockStatus ?? 'in-stock',
     status: product?.status ?? 'active',
@@ -198,6 +201,7 @@ export function ProductForm({
         description: form.description.trim() || undefined,
         price: Number(form.price),
         salePrice: form.salePrice.trim() ? Number(form.salePrice) : null,
+        deliveryCharge: form.deliveryCharge.trim() ? Number(form.deliveryCharge) : 0,
         stockCount: form.stockCount.trim() ? Number(form.stockCount) : undefined,
         stockStatus: form.stockStatus,
         status: form.status,
@@ -226,7 +230,7 @@ export function ProductForm({
           ? {
               src: form.videoSrc.trim(),
               poster: form.videoPoster.trim() || undefined,
-              title: form.videoTitle.trim(),
+              title: form.videoTitle.trim() || 'Product video',
             }
           : undefined,
         seo:
@@ -335,8 +339,8 @@ export function ProductForm({
         </div>
       </FormSection>
 
-      <FormSection title="Pricing">
-        <div className="grid gap-4 sm:grid-cols-2">
+      <FormSection title="Pricing & Delivery">
+        <div className="grid gap-4 sm:grid-cols-3">
           <Input
             label="Price"
             required
@@ -357,7 +361,18 @@ export function ProductForm({
             value={form.salePrice}
             onChange={(event) => set('salePrice', event.target.value)}
             error={errors.salePrice}
-            hint="Leave empty if this product is not on sale."
+            hint="Optional. Leave empty if not on sale."
+          />
+          <Input
+            label="Delivery charge (PKR)"
+            type="number"
+            min="0"
+            step="1"
+            inputMode="numeric"
+            value={form.deliveryCharge}
+            onChange={(event) => set('deliveryCharge', event.target.value)}
+            error={errors.deliveryCharge}
+            hint="Set 0 for free or to use store default delivery fee."
           />
         </div>
       </FormSection>
@@ -409,42 +424,43 @@ export function ProductForm({
         </div>
       </FormSection>
 
-      <FormSection title="Media" description="The first image is used as the main product image.">
+      <FormSection title="Media" description="Direct file uploads. The first image is used as the main product cover.">
         <div className="flex flex-col gap-6">
           <ImageListInput images={form.images} onChange={(images) => set('images', images)} />
 
           <div className="border-t border-border pt-5">
             <h3 className="text-label font-medium text-ink">Product video</h3>
             <p className="mt-1 text-caption text-ink-muted">
-              Optional. Leave empty and no video player is shown for this product.
+              Optional product video showcase. Upload MP4 or WebM video file.
             </p>
-            <div className="mt-3 flex flex-col gap-4">
-              <Input
-                label="Video URL"
+            <div className="mt-4 flex flex-col gap-4">
+              <MediaUploadInput
+                label="Product Video File"
+                mediaType="video"
                 value={form.videoSrc}
-                onChange={(event) => set('videoSrc', event.target.value)}
-                error={errors.videoSrc}
-                placeholder="/videos/my-product.mp4"
+                onChange={(url) => set('videoSrc', url)}
+                onRemove={() => set('videoSrc', '')}
+                hint="Upload product showcase video (MP4 or WebM up to 50MB)"
               />
+
               <div className="grid gap-4 sm:grid-cols-2">
-                <Input
-                  label="Poster image"
+                <MediaUploadInput
+                  label="Video Poster Image"
+                  mediaType="image"
                   value={form.videoPoster}
-                  onChange={(event) => set('videoPoster', event.target.value)}
-                  hint="Shown before the video plays."
-                  placeholder="/videos/my-product-poster.jpg"
+                  onChange={(url) => set('videoPoster', url)}
+                  onRemove={() => set('videoPoster', '')}
+                  hint="Thumbnail shown before video is played"
                 />
                 <Input
-                  label="Video description"
+                  label="Video Title / Description"
                   value={form.videoTitle}
                   onChange={(event) => set('videoTitle', event.target.value)}
                   error={errors.videoTitle}
-                  hint="Describes the footage for screen readers."
+                  hint="Describes the footage for screen readers & SEO."
+                  placeholder="e.g. Model walking wearing Oxford shoes"
                 />
               </div>
-              <p className="text-caption text-ink-subtle">
-                Accepted formats: {mediaService.acceptedVideoTypes.join(', ')}.
-              </p>
             </div>
           </div>
         </div>
