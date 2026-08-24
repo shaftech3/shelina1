@@ -18,7 +18,7 @@ adminNexoraRouter.use(requireAdmin);
  *
  * Fetches the active NEXORA integration state, active/past keys, and recent audit logs.
  */
-adminNexoraRouter.get('/', async (req, res, next) => {
+adminNexoraRouter.get('/', async (_req, res, next) => {
   try {
     const [activeKey, allKeys, auditLogs, totalProducts, totalOrders, totalCustomers] = await Promise.all([
       prisma.apiKey.findFirst({
