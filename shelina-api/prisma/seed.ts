@@ -360,6 +360,21 @@ async function main() {
   });
   console.log('[seed] SEO settings');
 
+  /* ── Store Settings ── */
+  const settingsData = {
+    shippingFee: 250,
+    freeShippingThreshold: 0,
+    contactPhone: '+92 300 1234567',
+    contactEmail: 'support@shelina.pk',
+    whatsappNumber: '+923001234567',
+  };
+  await prisma.storeSettings.upsert({
+    where: { id: 'settings' },
+    update: {},
+    create: { id: 'settings', ...settingsData },
+  });
+  console.log('[seed] Store settings');
+
   console.log('[seed] done.');
 }
 

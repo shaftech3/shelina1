@@ -361,3 +361,26 @@ export function serializeOrder(row: OrderRow) {
     updatedAt: row.updatedAt.toISOString(),
   };
 }
+
+export interface StoreSettingsRow {
+  id: string;
+  shippingFee: number;
+  freeShippingThreshold: number;
+  contactPhone: string | null;
+  contactEmail: string | null;
+  whatsappNumber: string | null;
+  updatedAt: Date;
+}
+
+export function serializeSettings(row: StoreSettingsRow) {
+  return {
+    id: row.id,
+    shippingFee: row.shippingFee,
+    freeShippingThreshold: row.freeShippingThreshold,
+    contactPhone: row.contactPhone ?? '+92 300 1234567',
+    contactEmail: row.contactEmail ?? 'support@shelina.pk',
+    whatsappNumber: row.whatsappNumber ?? '+923001234567',
+    updatedAt: row.updatedAt.toISOString(),
+  };
+}
+

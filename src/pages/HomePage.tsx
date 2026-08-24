@@ -60,7 +60,7 @@ export function HomePage() {
     <Layout overHero>
       {/* 1 — Hero */}
       {heroSlide ? (
-        <Hero slide={heroSlide} />
+        <Hero slide={heroSlide} slides={hero.data || undefined} />
       ) : (
         <Skeleton className="h-[44vh] min-h-[264px] w-full rounded-none lg:h-[620px]" />
       )}

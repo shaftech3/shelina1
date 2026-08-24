@@ -83,11 +83,13 @@ function matchOption(selected: string | null | undefined, authored: string[]): s
 /**
  * Calculates delivery fee:
  * Uses per-product delivery charges when authored on items,
- * or standard store flat shipping fee (with free shipping threshold support).
+ * or standard store flat shipping fee (with free shipping threshold support)
+ * fetched from the database store settings or fallback environment variable.
  */
 export function calculateShipping(
   subtotal: number,
   itemsWithDelivery?: { deliveryCharge?: number | null; quantity: number }[],
+  options?: { defaultFee?: number; freeThreshold?: number },
 ): number {
   if (subtotal <= 0) return 0;
 
@@ -105,8 +107,11 @@ export function calculateShipping(
     }
   }
 
-  if (env.freeShippingThreshold > 0 && subtotal >= env.freeShippingThreshold) return 0;
-  return env.shippingFee;
+  const freeThreshold = options?.freeThreshold !== undefined ? options.freeThreshold : env.freeShippingThreshold;
+  const standardFee = options?.defaultFee !== undefined ? options.defaultFee : env.shippingFee;
+
+  if (freeThreshold > 0 && subtotal >= freeThreshold) return 0;
+  return standardFee;
 }
 
 /**
@@ -242,12 +247,27 @@ export async function createOrder(input: CreateOrderInput) {
     }
 
     const subtotal = lines.reduce((total, line) => total + line.lineTotal, 0);
+
+    // Fetch store-wide shipping settings from database if configured
+    let storeShippingFee: number | undefined;
+    let storeFreeThreshold: number | undefined;
+    try {
+      const settings = await tx.storeSettings.findUnique({ where: { id: 'settings' } });
+      if (settings) {
+        storeShippingFee = settings.shippingFee;
+        storeFreeThreshold = settings.freeShippingThreshold;
+      }
+    } catch {
+      // Fallback to env default if store settings table is not yet seeded
+    }
+
     const shippingFee = calculateShipping(
       subtotal,
       lines.map((line) => {
         const prod = byId.get(line.productId);
         return { deliveryCharge: prod?.deliveryCharge, quantity: line.quantity };
       }),
+      { defaultFee: storeShippingFee, freeThreshold: storeFreeThreshold },
     );
     const grandTotal = subtotal + shippingFee;
 

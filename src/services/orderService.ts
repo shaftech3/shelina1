@@ -64,9 +64,16 @@ export const orderService = {
    * The shipping fee the server will actually charge for this subtotal.
    * Asking the backend keeps the displayed fee and the charged fee in sync.
    */
-  async shippingQuote(subtotal: number): Promise<{ shippingFee: number; freeShippingThreshold: number }> {
+  async shippingQuote(
+    subtotal: number,
+    items?: { productId: string; quantity: number }[],
+  ): Promise<{ shippingFee: number; freeShippingThreshold: number }> {
+    const query: Record<string, string | number> = { subtotal };
+    if (items && items.length > 0) {
+      query.items = JSON.stringify(items);
+    }
     return api.get<{ shippingFee: number; freeShippingThreshold: number }>(
-      `/orders/shipping-quote${toQuery({ subtotal })}`,
+      `/orders/shipping-quote${toQuery(query)}`,
     );
   },
 

@@ -138,6 +138,7 @@ async function requestEnvelope<T>(path: string, init?: RequestInit): Promise<Api
         path.startsWith('/homepage') ||
         path.startsWith('/banners') ||
         path.startsWith('/seo') ||
+        path.startsWith('/settings') ||
         path.startsWith('/media'))
     ) {
       headers['Authorization'] = `Bearer ${adminToken}`;

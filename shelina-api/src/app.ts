@@ -12,6 +12,7 @@ import { brandsRouter, categoriesRouter } from './routes/taxonomy.js';
 import { bannersRouter, homepageRouter, seoRouter } from './routes/content.js';
 import { mediaRouter } from './routes/media.js';
 import { adminOrdersRouter, ordersRouter } from './routes/orders.js';
+import { settingsRouter } from './routes/settings.js';
 
 export function createApp() {
   const app = express();
@@ -102,6 +103,7 @@ export function createApp() {
   app.use('/api/banners', bannersRouter);
   app.use('/api/seo', seoRouter);
   app.use('/api/media', mediaRouter);
+  app.use('/api/settings', settingsRouter);
   app.use('/api/orders', ordersRouter);
   app.use('/api/admin/orders', adminOrdersRouter);
 

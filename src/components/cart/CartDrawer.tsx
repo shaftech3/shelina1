@@ -1,5 +1,6 @@
+import { useNavigate } from 'react-router-dom';
 import { formatPrice } from '@/lib/format';
-import { ButtonLink, Drawer, Icon } from '@/components/ui';
+import { Button, ButtonLink, Drawer, Icon } from '@/components/ui';
 import { useCart } from '@/cart';
 import { CartLine } from './CartLine';
 
@@ -11,6 +12,7 @@ import { CartLine } from './CartLine';
  * reimplemented.
  */
 export function CartDrawer() {
+  const navigate = useNavigate();
   const { items, totals, isOpen, closeCart, updateQuantity, removeItem } = useCart();
 
   const isEmpty = items.length === 0;
@@ -51,12 +53,26 @@ export function CartDrawer() {
             </p>
 
             <div className="flex flex-col gap-2">
-              <ButtonLink href="/checkout" onClick={closeCart} fullWidth variant="primary">
+              <Button
+                onClick={() => {
+                  closeCart();
+                  navigate('/checkout');
+                }}
+                fullWidth
+                variant="primary"
+              >
                 Proceed to Checkout
-              </ButtonLink>
-              <ButtonLink href="/cart" onClick={closeCart} fullWidth variant="outline">
+              </Button>
+              <Button
+                onClick={() => {
+                  closeCart();
+                  navigate('/cart');
+                }}
+                fullWidth
+                variant="outline"
+              >
                 View Bag
-              </ButtonLink>
+              </Button>
             </div>
           </div>
         )

@@ -363,3 +363,18 @@ model OrderItem {
   @@index([productId])
   @@map("order_items")
 }
+
+// ─────────────────────────── Store Settings ───────────────────────────
+
+model StoreSettings {
+  id                    String   @id @default("settings")
+  shippingFee           Int      @default(250)
+  freeShippingThreshold Int      @default(0) // 0 means standard shipping applies to all orders
+  contactPhone          String?  @default("+92 300 1234567")
+  contactEmail          String?  @default("support@shelina.pk")
+  whatsappNumber        String?  @default("+923001234567")
+  updatedAt             DateTime @updatedAt
+
+  @@map("store_settings")
+}
+

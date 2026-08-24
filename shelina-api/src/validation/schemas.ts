@@ -235,3 +235,19 @@ export const checkoutSchema = z.object({
 export const orderStatusSchema = z.object({
   status: z.enum(['PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED']),
 });
+
+export const settingsInputSchema = z.object({
+  shippingFee: z
+    .number({ message: 'Shipping fee must be a number.' })
+    .int('Shipping fee must be a whole number.')
+    .min(0, 'Shipping fee cannot be negative.'),
+  freeShippingThreshold: z
+    .number({ message: 'Free shipping threshold must be a number.' })
+    .int('Threshold must be a whole number.')
+    .min(0, 'Threshold cannot be negative.')
+    .default(0),
+  contactPhone: trimmed(60).optional().nullable(),
+  contactEmail: z.string().trim().email('Enter a valid contact email.').optional().nullable(),
+  whatsappNumber: trimmed(60).optional().nullable(),
+});
+

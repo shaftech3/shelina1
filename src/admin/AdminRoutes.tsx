@@ -13,6 +13,7 @@ import { AdminProductsPage } from './pages/AdminProductsPage';
 import { AdminOrdersPage } from './pages/AdminOrdersPage';
 import { AdminOrderDetailPage } from './pages/AdminOrderDetailPage';
 import { AdminSeoPage } from './pages/AdminSeoPage';
+import { AdminSettingsPage } from './pages/AdminSettingsPage';
 
 /**
  * The whole /admin subtree.
@@ -103,6 +104,14 @@ export function AdminRoutes() {
           element={
             <RequireAdmin>
               <AdminSeoPage />
+            </RequireAdmin>
+          }
+        />
+        <Route
+          path="settings"
+          element={
+            <RequireAdmin>
+              <AdminSettingsPage />
             </RequireAdmin>
           }
         />

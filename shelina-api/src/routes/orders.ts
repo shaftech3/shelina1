@@ -60,12 +60,31 @@ ordersRouter.get('/shipping-quote', async (req, res, next) => {
       }
     }
 
+    let storeShippingFee: number | undefined;
+    let storeFreeThreshold: number | undefined;
+    try {
+      const settings = await prisma.storeSettings.findUnique({ where: { id: 'settings' } });
+      if (settings) {
+        storeShippingFee = settings.shippingFee;
+        storeFreeThreshold = settings.freeShippingThreshold;
+      }
+    } catch {
+      // Fallback
+    }
+
+    const freeThreshold = storeFreeThreshold !== undefined ? storeFreeThreshold : env.freeShippingThreshold;
+    const shippingFee = calculateShipping(
+      safeSubtotal,
+      itemsWithDelivery,
+      { defaultFee: storeShippingFee, freeThreshold: storeFreeThreshold },
+    );
+
     res.json({
       success: true,
       data: {
         subtotal: safeSubtotal,
-        shippingFee: calculateShipping(safeSubtotal, itemsWithDelivery),
-        freeShippingThreshold: env.freeShippingThreshold,
+        shippingFee,
+        freeShippingThreshold: freeThreshold,
       },
     });
   } catch (error) {

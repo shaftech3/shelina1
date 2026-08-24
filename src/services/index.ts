@@ -15,6 +15,8 @@ export { seoService } from './seoService';
 export { contentService } from './contentService';
 export { mediaService } from './mediaService';
 export type { UploadResult } from './mediaService';
+export { settingsService } from './settingsService';
+export type { StoreSettingsData } from './settingsService';
 export { authService } from './authService';
 export { customerAccountService } from './customerAccountService';
 export type { CustomerCredentials, CustomerRegistration } from './customerAccountService';
