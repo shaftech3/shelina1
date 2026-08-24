@@ -1,38 +1,37 @@
 import { useRef, useState, useEffect } from 'react';
 import { cn } from '@/lib/cn';
-import type { Category } from '@/types';
+import type { Product } from '@/types';
 import { EmptyState, ErrorState, Icon, IconButton, Reveal, Skeleton } from '@/components/ui';
-import { DiamondCategoryCard } from './DiamondCategoryCard';
+import { ProductCard } from './ProductCard';
 
-interface CategoryShowcaseProps {
-  categories: Category[] | null;
+interface ProductCarouselProps {
+  products: Product[] | null;
   loading?: boolean;
   error?: Error | null;
   onRetry?: () => void;
+  emptyMessage?: string;
   className?: string;
   priority?: boolean;
 }
 
 /**
- * Horizontal scrolling diamond category showcase.
- *
- * Implements compact, distinctive diamond-shaped category cards with left/right
- * desktop controls and smooth touch-swipe snap on mobile.
+ * Premium horizontal product carousel with desktop arrows and mobile swipe snap.
  */
-export function CategoryShowcase({
-  categories,
+export function ProductCarousel({
+  products,
   loading,
   error,
   onRetry,
+  emptyMessage = 'No products found.',
   className,
   priority = false,
-}: CategoryShowcaseProps) {
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
+}: ProductCarouselProps) {
+  const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
 
   function checkScroll() {
-    const el = scrollContainerRef.current;
+    const el = scrollRef.current;
     if (!el) return;
     setCanScrollLeft(el.scrollLeft > 10);
     setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 10);
@@ -42,39 +41,40 @@ export function CategoryShowcase({
     checkScroll();
     window.addEventListener('resize', checkScroll);
     return () => window.removeEventListener('resize', checkScroll);
-  }, [categories]);
+  }, [products]);
 
   function scroll(direction: 'left' | 'right') {
-    const el = scrollContainerRef.current;
+    const el = scrollRef.current;
     if (!el) return;
-    const amount = el.clientWidth * 0.75;
+    const amount = el.clientWidth * 0.8;
     el.scrollBy({
       left: direction === 'left' ? -amount : amount,
       behavior: 'smooth',
     });
   }
 
-  if (error) return <ErrorState title="We couldn’t load categories" onRetry={onRetry} />;
+  if (error) return <ErrorState title="We couldn’t load products" onRetry={onRetry} />;
 
   if (loading) {
     return (
-      <div className={cn('flex gap-6 overflow-hidden py-4', className)} aria-busy="true">
-        {Array.from({ length: 6 }).map((_, index) => (
-          <div key={index} className="flex flex-col items-center gap-3 shrink-0">
-            <Skeleton className="h-28 w-28 sm:h-32 sm:w-32 rotate-45 rounded-2xl" />
-            <Skeleton className="h-4 w-20 mt-2" />
+      <div className={cn('flex gap-4 sm:gap-6 overflow-hidden py-2', className)} aria-busy="true">
+        {Array.from({ length: 4 }).map((_, index) => (
+          <div key={index} className="w-[260px] sm:w-[290px] shrink-0">
+            <Skeleton className="aspect-[4/5] w-full rounded-lg" />
+            <Skeleton className="h-4 w-3/4 mt-3" />
+            <Skeleton className="h-4 w-1/3 mt-2" />
           </div>
         ))}
       </div>
     );
   }
 
-  if (!categories || categories.length === 0) {
-    return <EmptyState title="No categories yet" description="Categories will appear here once published." />;
+  if (!products || products.length === 0) {
+    return <EmptyState title="No products in this section" description={emptyMessage} />;
   }
 
   return (
-    <div className={cn('relative group/carousel', className)}>
+    <div className={cn('relative group/product-carousel', className)}>
       {/* Desktop navigation buttons */}
       <div className="absolute -top-14 right-0 hidden sm:flex items-center gap-2 z-10">
         <IconButton
@@ -84,7 +84,7 @@ export function CategoryShowcase({
           variant="outline"
           disabled={!canScrollLeft}
           onClick={() => scroll('left')}
-          className="rounded-full shadow-xs disabled:opacity-30"
+          className="rounded-full shadow-xs disabled:opacity-30 hover:bg-cream"
         />
         <IconButton
           label="Scroll right"
@@ -93,21 +93,24 @@ export function CategoryShowcase({
           variant="outline"
           disabled={!canScrollRight}
           onClick={() => scroll('right')}
-          className="rounded-full shadow-xs disabled:opacity-30"
+          className="rounded-full shadow-xs disabled:opacity-30 hover:bg-cream"
         />
       </div>
 
-      {/* Horizontal scrolling diamond container */}
+      {/* Horizontally scrolling product row */}
       <div
-        ref={scrollContainerRef}
+        ref={scrollRef}
         onScroll={checkScroll}
-        className="flex items-center gap-4 sm:gap-8 overflow-x-auto scroll-smooth snap-x snap-mandatory py-4 px-2 no-scrollbar"
+        className="flex gap-4 sm:gap-6 overflow-x-auto scroll-smooth snap-x snap-mandatory py-2 pb-4 no-scrollbar"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
-        {categories.map((category, index) => (
-          <div key={category.id} className="shrink-0 snap-start">
-            <Reveal delay={index * 60}>
-              <DiamondCategoryCard category={category} priority={priority && index < 4} />
+        {products.map((product, index) => (
+          <div
+            key={product.id}
+            className="w-[240px] xs:w-[260px] sm:w-[280px] md:w-[300px] shrink-0 snap-start"
+          >
+            <Reveal delay={index * 50}>
+              <ProductCard product={product} priority={priority && index < 2} />
             </Reveal>
           </div>
         ))}

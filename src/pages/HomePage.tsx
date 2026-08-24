@@ -11,7 +11,7 @@ import {
 } from '@/hooks';
 import { Layout } from '@/components/layout';
 import { CategoryShowcase } from '@/components/category/CategoryShowcase';
-import { ProductGrid } from '@/components/product/ProductGrid';
+import { ProductCarousel } from '@/components/product/ProductCarousel';
 import {
   ButtonLink,
   Container,
@@ -25,29 +25,24 @@ import {
 /**
  * Shelina storefront homepage.
  *
- * All content is resolved through hooks → services → data. Nothing here
- * imports mock data directly, so a real backend can be connected in a later
- * stage without touching this file.
- *
- * Section rhythm alternates surface/cream backgrounds and layout shapes
- * (showcase grid → product grid → split banner → grid → full-bleed editorial)
- * so the page reads as an editorial sequence rather than repeated rows.
+ * Implements a cinematic, luxury layout featuring:
+ * - Full-bleed video/image hero with responsive atmospheric scrims
+ * - Distinctive diamond-shaped category carousel with smooth touch snap
+ * - Horizontally scrollable curated & new arrivals carousels
+ * - Atmospheric brand showcase & editorial storytelling
  */
 export function HomePage() {
   useSeo({
-    title: 'Premium footwear, made in Pakistan',
+    title: 'Premium Handcrafted Footwear — Shelina Atelier',
     description:
-      'Discover Shelina — leather chappals, shoes and sneakers for women and men. Hand-finished, contoured for comfort and delivered across Pakistan.',
+      'Discover Shelina — luxury leather chappals, bespoke shoes, and sneakers for women and men. Hand-finished and contoured for supreme comfort.',
     path: '/',
   });
 
   const hero = useHeroSlides();
   const categories = useCategories({ featured: true });
-  const featured = useProducts({ featured: true, limit: 4 });
-  const newIn = useProducts({ isNew: true, limit: 4 });
-  // Banner slots are filled by position from the active banner list rather
-  // than by hardcoded id, so banners added or disabled in the admin appear or
-  // vanish here without a code change.
+  const featured = useProducts({ featured: true, limit: 8 });
+  const newIn = useProducts({ isNew: true, limit: 8 });
   const banners = useBanners();
   const [firstBanner, secondBanner] = banners.data ?? [];
   const brands = useBrands();
@@ -58,24 +53,24 @@ export function HomePage() {
 
   return (
     <Layout overHero>
-      {/* 1 — Hero */}
+      {/* 1 — Cinematic Hero */}
       {heroSlide ? (
         <Hero slide={heroSlide} slides={hero.data || undefined} />
       ) : (
-        <Skeleton className="h-[44vh] min-h-[264px] w-full rounded-none lg:h-[620px]" />
+        <Skeleton className="h-[48vh] min-h-[300px] w-full rounded-none lg:h-[680px]" />
       )}
 
-      {/* 2 — Featured categories (editorial showcase grid) */}
-      <Section aria-labelledby="categories-heading">
-        <Container className="flex flex-col gap-10">
+      {/* 2 — Diamond Categories Carousel */}
+      <Section aria-labelledby="categories-heading" className="overflow-hidden border-b border-border/40">
+        <Container className="flex flex-col gap-6">
           <Reveal>
             <SectionHeader
-              eyebrow="Browse"
-              title="Shop by category"
-              description="From everyday chappals to occasion heels — find the pair that fits how you live."
+              eyebrow="Curated Silhouettes"
+              title="Shop by Category"
+              description="Explore our hand-finished collections, contoured for comfort."
               action={
                 <ButtonLink href="/shop" variant="ghost" iconRight={<Icon name="arrow-right" size={17} />}>
-                  All categories
+                  All Collections
                 </ButtonLink>
               }
             />
@@ -85,26 +80,27 @@ export function HomePage() {
             loading={categories.loading}
             error={categories.error}
             onRetry={categories.retry}
+            priority
           />
         </Container>
       </Section>
 
-      {/* 3 — Featured products */}
-      <Section tone="cream" aria-labelledby="featured-heading">
-        <Container className="flex flex-col gap-10">
+      {/* 3 — Featured Collections (Horizontal Carousel) */}
+      <Section tone="cream" aria-labelledby="featured-heading" className="overflow-hidden">
+        <Container className="flex flex-col gap-8">
           <Reveal>
             <SectionHeader
-              eyebrow="Curated"
-              title="Featured this season"
-              description="The pairs our customers keep coming back for."
+              eyebrow="Season's Choice"
+              title="Featured Footwear"
+              description="Iconic pairs and timeless craftsmanship, favored by our atelier."
               action={
                 <ButtonLink href="/shop" variant="outline">
-                  Shop all
+                  View All
                 </ButtonLink>
               }
             />
           </Reveal>
-          <ProductGrid
+          <ProductCarousel
             products={featured.data}
             loading={featured.loading}
             error={featured.error}
@@ -113,50 +109,49 @@ export function HomePage() {
         </Container>
       </Section>
 
-      {/* 4 — Promotional banner (media right) */}
+      {/* 4 — Promotional Banner */}
       {firstBanner && <Banner banner={firstBanner} />}
 
-      {/* 5 — New arrivals: centred header + cream cards on white for contrast
-              with the featured row above. */}
-      <Section aria-labelledby="new-heading">
-        <Container className="flex flex-col gap-10">
+      {/* 5 — New Arrivals (Horizontal Carousel) */}
+      <Section aria-labelledby="new-heading" className="overflow-hidden">
+        <Container className="flex flex-col gap-8">
           <Reveal>
             <SectionHeader
               align="center"
-              eyebrow="Just landed"
-              title="New arrivals"
-              description="Fresh silhouettes added to the atelier line this month."
+              eyebrow="Just Landed"
+              title="New Arrivals"
+              description="Fresh silhouettes and refined leathers released this month."
             />
           </Reveal>
-          <ProductGrid
+          <ProductCarousel
             products={newIn.data}
             loading={newIn.loading}
             error={newIn.error}
             onRetry={newIn.retry}
-            emptyMessage="New styles are on their way."
+            emptyMessage="New bespoke styles are on their way."
           />
-          <Reveal className="flex justify-center">
+          <Reveal className="flex justify-center pt-2">
             <ButtonLink href="/new-arrivals" size="lg" iconRight={<Icon name="arrow-right" size={18} />}>
-              View the collection
+              Explore Full Collection
             </ButtonLink>
           </Reveal>
         </Container>
       </Section>
 
-      {/* 6 — Second promotional section (media left — different composition) */}
+      {/* 6 — Second Promotional Banner */}
       {secondBanner && <Banner banner={secondBanner} />}
 
-      {/* 7 — Brand showcase */}
+      {/* 7 — Brand Showcase */}
       <Section aria-labelledby="brands-heading">
         <Container className="flex flex-col gap-10">
           <Reveal>
             <SectionHeader
-              eyebrow="Our lines"
-              title="Shelina brands"
-              description="Four lines, one workshop — each with its own character."
+              eyebrow="Our Signature Lines"
+              title="Shelina Brands"
+              description="Distinctive ateliers united under our master craftsmanship standard."
               action={
                 <ButtonLink href="/shop" variant="ghost" iconRight={<Icon name="arrow-right" size={17} />}>
-                  All brands
+                  Explore Brands
                 </ButtonLink>
               }
             />
@@ -170,17 +165,17 @@ export function HomePage() {
         </Container>
       </Section>
 
-      {/* 8 — Full-bleed editorial */}
+      {/* 8 — Full-Bleed Editorial Story */}
       <EditorialFeature feature={editorial.data} loading={editorial.loading} />
 
-      {/* 9 — Trust values */}
+      {/* 9 — Trust Values & Heritage */}
       <Section tone="cream" spacing="tight" aria-labelledby="trust-heading">
         <Container className="flex flex-col gap-10">
           <Reveal>
             <SectionHeader
               align="center"
-              eyebrow="Why Shelina"
-              title="Made to be worn, not just bought"
+              eyebrow="The Shelina Promise"
+              title="Handcrafted to be Treasured"
               as="h2"
             />
           </Reveal>
@@ -188,7 +183,7 @@ export function HomePage() {
         </Container>
       </Section>
 
-      {/* 10 — Newsletter */}
+      {/* 10 — VIP Club Newsletter */}
       <Newsletter />
     </Layout>
   );

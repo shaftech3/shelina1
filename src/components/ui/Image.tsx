@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { cn } from '@/lib/cn';
+import { normalizeMediaUrl } from '@/lib/media';
 import { Icon } from './Icon';
 
-export type AspectRatio = 'product' | 'category' | 'banner' | 'hero' | 'square' | 'wide' | 'auto';
+export type AspectRatio = 'product' | 'category' | 'banner' | 'hero' | 'square' | 'wide' | 'diamond' | 'auto';
 
 interface ImageProps {
   src: string;
@@ -16,6 +17,7 @@ interface ImageProps {
   width?: number;
   height?: number;
   sizes?: string;
+  fallbackText?: string;
 }
 
 const RATIOS: Record<AspectRatio, string> = {
@@ -25,13 +27,14 @@ const RATIOS: Record<AspectRatio, string> = {
   hero: 'aspect-[4/3]',
   square: 'aspect-square',
   wide: 'aspect-[21/9]',
+  diamond: 'aspect-square',
   auto: '',
 };
 
 /**
  * Aspect-ratio-locked image container.
  * Reserves layout space up front (no CLS), lazy-loads by default, fades in on
- * decode and degrades to a branded fallback if the asset is missing.
+ * decode and degrades to an elegant branded fallback if the asset fails to load.
  */
 export function Image({
   src,
@@ -44,8 +47,19 @@ export function Image({
   width,
   height,
   sizes,
+  fallbackText = 'Image unavailable',
 }: ImageProps) {
   const [status, setStatus] = useState<'loading' | 'loaded' | 'error'>('loading');
+  const normalizedSrc = normalizeMediaUrl(src);
+
+  // Reset status whenever the src changes
+  useEffect(() => {
+    if (!normalizedSrc) {
+      setStatus('error');
+    } else {
+      setStatus('loading');
+    }
+  }, [normalizedSrc]);
 
   return (
     <div className={cn('relative overflow-hidden bg-cream', RATIOS[ratio], className)}>
@@ -55,14 +69,14 @@ export function Image({
         </div>
       )}
 
-      {status === 'error' ? (
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-cream text-ink-subtle">
-          <Icon name="image" size={26} />
-          <span className="px-3 text-center text-caption">Image unavailable</span>
+      {status === 'error' || !normalizedSrc ? (
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-cream-dark/60 text-ink-subtle p-3 text-center select-none">
+          <Icon name="image" size={24} className="opacity-40 text-primary-deep" />
+          <span className="text-caption font-medium tracking-wide text-ink-muted/80">{fallbackText}</span>
         </div>
       ) : (
         <img
-          src={src}
+          src={normalizedSrc}
           alt={alt}
           width={width}
           height={height}
@@ -71,7 +85,12 @@ export function Image({
           decoding={priority ? 'sync' : 'async'}
           fetchPriority={priority ? 'high' : 'auto'}
           onLoad={() => setStatus('loaded')}
-          onError={() => setStatus('error')}
+          onError={() => {
+            if (process.env.NODE_ENV !== 'production') {
+              console.warn(`[Image] Failed to load image from: ${normalizedSrc}`);
+            }
+            setStatus('error');
+          }}
           className={cn(
             'h-full w-full transition-opacity duration-slow ease-elegant',
             objectFit === 'cover' ? 'object-cover' : 'object-contain',

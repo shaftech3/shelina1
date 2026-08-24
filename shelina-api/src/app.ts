@@ -2,15 +2,13 @@ import express from 'express';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import helmet from 'helmet';
-import path from 'path';
-import fs from 'fs';
 import { env } from './lib/env.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import { authRouter } from './routes/auth.js';
 import { productsRouter } from './routes/products.js';
 import { brandsRouter, categoriesRouter } from './routes/taxonomy.js';
 import { bannersRouter, homepageRouter, seoRouter } from './routes/content.js';
-import { mediaRouter } from './routes/media.js';
+import { mediaRouter, resolveUploadsDirectory } from './routes/media.js';
 import { adminOrdersRouter, ordersRouter } from './routes/orders.js';
 import { settingsRouter } from './routes/settings.js';
 
@@ -20,12 +18,18 @@ export function createApp() {
   // Behind the sandbox proxy; needed for correct client IPs in rate limiting.
   app.set('trust proxy', 1);
 
-  // Serve uploaded media files statically
-  const uploadsDir = path.resolve(process.cwd(), 'public/uploads');
-  if (!fs.existsSync(uploadsDir)) {
-    fs.mkdirSync(uploadsDir, { recursive: true });
-  }
-  app.use('/uploads', express.static(uploadsDir));
+  // Serve uploaded media files statically from resolved directory
+  const uploadsDir = resolveUploadsDirectory();
+
+  const staticOptions = {
+    maxAge: '1d',
+    setHeaders: (res: express.Response) => {
+      res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+      res.setHeader('Access-Control-Allow-Origin', '*');
+    },
+  };
+  app.use('/uploads', express.static(uploadsDir, staticOptions));
+  app.use('/api/uploads', express.static(uploadsDir, staticOptions));
 
   // Sensible security headers. crossOriginResourcePolicy is relaxed because
   // the API is consumed from a different origin than it is served from.

@@ -8,14 +8,23 @@ import { ApiError } from '../lib/errors.js';
 
 export const mediaRouter = Router();
 
-const uploadDir = path.resolve(process.cwd(), 'public/uploads');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
+export function resolveUploadsDirectory(): string {
+  const candidates = [
+    path.resolve(process.cwd(), 'public/uploads'),
+    path.resolve(process.cwd(), '../public/uploads'),
+    path.resolve(process.cwd(), 'shelina-api/public/uploads'),
+  ];
+  for (const candidate of candidates) {
+    if (fs.existsSync(candidate)) return candidate;
+  }
+  const defaultDir = path.resolve(process.cwd(), 'public/uploads');
+  fs.mkdirSync(defaultDir, { recursive: true });
+  return defaultDir;
 }
 
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => {
-    cb(null, uploadDir);
+    cb(null, resolveUploadsDirectory());
   },
   filename: (_req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + crypto.randomBytes(6).toString('hex');
@@ -76,6 +85,26 @@ mediaRouter.get('/config', requireAdmin, (_req, res) => {
   });
 });
 
+/** Direct public media retrieval handler for /api/media/file/:filename */
+mediaRouter.get('/file/:filename', (req, res, next) => {
+  try {
+    const filename = path.basename(req.params.filename);
+    const dir = resolveUploadsDirectory();
+    const filePath = path.join(dir, filename);
+
+    if (!fs.existsSync(filePath)) {
+      throw ApiError.notFound('Media file not found.');
+    }
+
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    res.sendFile(filePath);
+  } catch (error) {
+    next(error);
+  }
+});
+
 /** Single media upload for admin. */
 mediaRouter.post('/', requireAdmin, upload.single('file'), (req, res, next) => {
   try {
@@ -120,3 +149,4 @@ mediaRouter.post('/multiple', requireAdmin, upload.array('files', 12), (req, res
     next(error);
   }
 });
+

@@ -1,6 +1,7 @@
 import { useRef, useState, type DragEvent } from 'react';
 import { Button, Icon, IconButton, Input } from '@/components/ui';
 import { mediaService } from '@/services';
+import { normalizeMediaUrl } from '@/lib/media';
 import type { ImageAsset } from '@/types';
 
 interface ImageListInputProps {
@@ -18,8 +19,9 @@ export function ImageListInput({ images, onChange }: ImageListInputProps) {
     if (!files || files.length === 0) return;
     setError(null);
     setUploading(true);
+
+    const fileArray = Array.from(files);
     try {
-      const fileArray = Array.from(files);
       const uploaded = await mediaService.uploadMultiple(fileArray);
       onChange([
         ...images,
@@ -148,64 +150,75 @@ export function ImageListInput({ images, onChange }: ImageListInputProps) {
         </p>
       ) : (
         <ul className="flex flex-col gap-3">
-          {images.map((image, index) => (
-            <li
-              key={`${image.src}-${index}`}
-              className="flex flex-col gap-3 rounded-lg border border-border bg-white p-3.5 shadow-xs sm:flex-row"
-            >
-              <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-md bg-cream border border-border/60">
-                <img
-                  src={image.src}
-                  alt={image.alt || 'Product thumbnail'}
-                  className="h-full w-full object-cover"
-                  onError={(e) => {
-                    (e.currentTarget as HTMLImageElement).src = '/images/placeholder.png';
-                  }}
-                />
-                {index === 0 && (
-                  <span className="absolute inset-x-0 bottom-0 bg-primary/90 py-0.5 text-center text-[10px] font-semibold uppercase tracking-wider text-white">
-                    Primary Cover
-                  </span>
-                )}
-              </div>
+          {images.map((image, index) => {
+            const normalizedSrc = normalizeMediaUrl(image.src);
+            return (
+              <li
+                key={`${image.src}-${index}`}
+                className="flex flex-col gap-3 rounded-lg border border-border bg-white p-3.5 shadow-xs sm:flex-row"
+              >
+                <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-md bg-cream border border-border/60">
+                  <img
+                    src={normalizedSrc}
+                    alt={image.alt || 'Product thumbnail'}
+                    className="h-full w-full object-cover"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).style.display = 'none';
+                      const parent = e.currentTarget.parentElement;
+                      if (parent) {
+                        const fallback = document.createElement('div');
+                        fallback.className =
+                          'h-full w-full flex items-center justify-center bg-cream-dark/50 text-[10px] text-ink-muted text-center p-1';
+                        fallback.innerText = 'Preview pending';
+                        parent.appendChild(fallback);
+                      }
+                    }}
+                  />
+                  {index === 0 && (
+                    <span className="absolute inset-x-0 bottom-0 bg-primary/90 py-0.5 text-center text-[10px] font-semibold uppercase tracking-wider text-white">
+                      Primary Cover
+                    </span>
+                  )}
+                </div>
 
-              <div className="flex min-w-0 flex-1 flex-col justify-center gap-2">
-                <p className="truncate text-caption text-ink-subtle font-mono text-xs" title={image.src}>
-                  {image.src}
-                </p>
-                <Input
-                  label="Alt text (for accessibility & SEO)"
-                  value={image.alt}
-                  onChange={(event) => update(index, { alt: event.target.value })}
-                  placeholder="e.g. Leather Oxford Shoes — Side View"
-                />
-              </div>
+                <div className="flex min-w-0 flex-1 flex-col justify-center gap-2">
+                  <p className="truncate text-caption text-ink-subtle font-mono text-xs" title={image.src}>
+                    {image.src}
+                  </p>
+                  <Input
+                    label="Alt text (for accessibility & SEO)"
+                    value={image.alt}
+                    onChange={(event) => update(index, { alt: event.target.value })}
+                    placeholder="e.g. Leather Oxford Shoes — Side View"
+                  />
+                </div>
 
-              <div className="flex shrink-0 items-center sm:items-start gap-1 pt-1">
-                <IconButton
-                  label={`Move up`}
-                  icon={<Icon name="chevron-down" size={17} className="rotate-180" />}
-                  size="sm"
-                  disabled={index === 0}
-                  onClick={() => move(index, -1)}
-                />
-                <IconButton
-                  label={`Move down`}
-                  icon={<Icon name="chevron-down" size={17} />}
-                  size="sm"
-                  disabled={index === images.length - 1}
-                  onClick={() => move(index, 1)}
-                />
-                <IconButton
-                  label={`Remove image`}
-                  icon={<Icon name="trash" size={17} />}
-                  size="sm"
-                  onClick={() => remove(index)}
-                  className="text-burgundy hover:bg-burgundy/10"
-                />
-              </div>
-            </li>
-          ))}
+                <div className="flex shrink-0 items-center sm:items-start gap-1 pt-1">
+                  <IconButton
+                    label={`Move up`}
+                    icon={<Icon name="chevron-down" size={17} className="rotate-180" />}
+                    size="sm"
+                    disabled={index === 0}
+                    onClick={() => move(index, -1)}
+                  />
+                  <IconButton
+                    label={`Move down`}
+                    icon={<Icon name="chevron-down" size={17} />}
+                    size="sm"
+                    disabled={index === images.length - 1}
+                    onClick={() => move(index, 1)}
+                  />
+                  <IconButton
+                    label={`Remove image`}
+                    icon={<Icon name="trash" size={17} />}
+                    size="sm"
+                    onClick={() => remove(index)}
+                    className="text-burgundy hover:bg-burgundy/10"
+                  />
+                </div>
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>

@@ -1,6 +1,7 @@
-import { useRef, useState, type DragEvent } from 'react';
+import { useEffect, useRef, useState, type DragEvent } from 'react';
 import { Button, Icon } from '@/components/ui';
 import { mediaService } from '@/services';
+import { isVideoMedia, normalizeMediaUrl } from '@/lib/media';
 
 interface MediaUploadInputProps {
   label?: string;
@@ -24,12 +25,21 @@ export function MediaUploadInput({
 }: MediaUploadInputProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [mediaLoadError, setMediaLoadError] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Sync preview url whenever value changes
+  useEffect(() => {
+    setPreviewUrl(value ? normalizeMediaUrl(value) : null);
+    setMediaLoadError(false);
+  }, [value]);
 
   const isVideo =
     mediaType === 'video' ||
-    (value && (value.endsWith('.mp4') || value.endsWith('.webm') || value.includes('video')));
+    isVideoMedia(value) ||
+    isVideoMedia(previewUrl);
 
   const acceptTypes =
     mediaType === 'video'
@@ -40,14 +50,29 @@ export function MediaUploadInput({
 
   async function handleFile(file: File) {
     setError(null);
+    setMediaLoadError(false);
+
+    // Instant local preview
+    const localBlobUrl = URL.createObjectURL(file);
+    setPreviewUrl(localBlobUrl);
     setUploading(true);
+
     try {
       const result = await mediaService.upload(file);
-      onChange(result.url);
+      const finalUrl = result.url;
+      onChange(finalUrl);
+      setPreviewUrl(normalizeMediaUrl(finalUrl));
     } catch (err: any) {
       setError(err?.message || 'Failed to upload file.');
+      // Revert if value wasn't present
+      if (!value) {
+        setPreviewUrl(null);
+      } else {
+        setPreviewUrl(normalizeMediaUrl(value));
+      }
     } finally {
       setUploading(false);
+      URL.revokeObjectURL(localBlobUrl);
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
   }
@@ -74,10 +99,14 @@ export function MediaUploadInput({
     if (value) {
       mediaService.release(value);
     }
+    setPreviewUrl(null);
     if (onRemove) onRemove();
     else onChange('');
     setError(null);
+    setMediaLoadError(false);
   }
+
+  const hasMedia = Boolean(previewUrl || value);
 
   return (
     <div className={`flex flex-col gap-1.5 ${className}`}>
@@ -100,22 +129,29 @@ export function MediaUploadInput({
         aria-label={label || 'Upload media'}
       />
 
-      {value ? (
+      {hasMedia ? (
         <div className="group relative flex flex-col gap-3 rounded-lg border border-border bg-white p-3 shadow-xs">
-          <div className="relative flex items-center justify-center overflow-hidden rounded-md bg-cream-dark/50 min-h-[160px] max-h-[260px]">
+          <div className="relative flex items-center justify-center overflow-hidden rounded-md bg-cream-dark/40 min-h-[160px] max-h-[280px]">
             {isVideo ? (
               <video
-                src={value}
+                src={previewUrl || normalizeMediaUrl(value)}
                 controls
-                className="max-h-[240px] w-full rounded object-contain"
+                playsInline
+                className="max-h-[260px] w-full rounded object-contain"
+                onError={() => setMediaLoadError(true)}
               />
+            ) : mediaLoadError ? (
+              <div className="flex flex-col items-center justify-center gap-2 p-6 text-ink-subtle">
+                <Icon name="image" size={32} className="opacity-40" />
+                <span className="text-caption text-ink-muted">Image unavailable or pending processing</span>
+              </div>
             ) : (
               <img
-                src={value}
+                src={previewUrl || normalizeMediaUrl(value)}
                 alt={label || 'Uploaded preview'}
-                className="max-h-[240px] w-full rounded object-contain"
-                onError={(e) => {
-                  (e.currentTarget as HTMLImageElement).src = '/images/placeholder.png';
+                className="max-h-[260px] w-full rounded object-contain"
+                onError={() => {
+                  setMediaLoadError(true);
                 }}
               />
             )}
@@ -124,15 +160,15 @@ export function MediaUploadInput({
               <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-xs">
                 <div className="flex items-center gap-2 rounded-md bg-white px-3 py-1.5 text-caption font-medium text-ink shadow-md">
                   <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                  Uploading...
+                  Uploading media...
                 </div>
               </div>
             )}
           </div>
 
           <div className="flex items-center justify-between gap-2 pt-1 border-t border-border/60">
-            <span className="truncate text-caption text-ink-subtle font-mono text-xs max-w-[200px] sm:max-w-xs">
-              {value}
+            <span className="truncate text-caption text-ink-subtle font-mono text-xs max-w-[200px] sm:max-w-xs" title={value || ''}>
+              {value || 'Local file selected'}
             </span>
             <div className="flex items-center gap-2">
               <Button
@@ -190,7 +226,7 @@ export function MediaUploadInput({
                   {mediaType === 'video'
                     ? 'MP4 or WebM up to 50MB'
                     : mediaType === 'image'
-                      ? 'JPG, PNG, WebP or SVG up to 50MB'
+                      ? 'JPG, PNG, WebP, SVG, AVIF up to 50MB'
                       : 'Images or Videos up to 50MB'}
                 </p>
               </div>
