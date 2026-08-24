@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
+import { normalizeMediaUrl } from '@/lib/media';
 import {
   Button,
   Checkbox,
@@ -419,7 +420,12 @@ function BannersEditor({ banners }: { banners: Banner[] }) {
                 >
                   <div className="h-14 w-20 shrink-0 overflow-hidden rounded-md bg-cream">
                     {banner.image?.src ? (
-                      <img src={banner.image.src} alt="" className="h-full w-full object-cover" loading="lazy" />
+                      <img
+                        src={normalizeMediaUrl(banner.image.src)}
+                        alt=""
+                        className="h-full w-full object-cover"
+                        loading="lazy"
+                      />
                     ) : (
                       <span className="flex h-full w-full items-center justify-center text-ink-subtle">
                         <Icon name="image" size={16} />

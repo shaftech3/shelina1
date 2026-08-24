@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { slugify } from '@/data/repository';
+import { normalizeMediaUrl } from '@/lib/media';
 import {
   Button,
   EmptyState,
@@ -212,7 +213,12 @@ export function AdminBrandsPage() {
             >
               <div className="h-16 w-16 shrink-0 overflow-hidden rounded-md bg-cream">
                 {brand.logo?.src ? (
-                  <img src={brand.logo.src} alt="" className="h-full w-full object-cover" loading="lazy" />
+                  <img
+                    src={normalizeMediaUrl(brand.logo.src)}
+                    alt=""
+                    className="h-full w-full object-cover"
+                    loading="lazy"
+                  />
                 ) : (
                   <span className="flex h-full w-full items-center justify-center text-ink-subtle">
                     <Icon name="tag" size={18} />

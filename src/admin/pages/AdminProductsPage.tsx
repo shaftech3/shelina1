@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/cn';
 import { formatPrice } from '@/lib/format';
+import { normalizeMediaUrl } from '@/lib/media';
 import {
   Badge,
   Button,
@@ -224,7 +225,7 @@ export function AdminProductsPage() {
                         <div className="h-12 w-12 shrink-0 overflow-hidden rounded-md bg-cream">
                           {product.images[0] ? (
                             <img
-                              src={product.images[0].src}
+                              src={normalizeMediaUrl(product.images[0].src)}
                               alt=""
                               className="h-full w-full object-cover"
                               loading="lazy"
@@ -305,7 +306,7 @@ export function AdminProductsPage() {
                   <div className="h-20 w-20 shrink-0 overflow-hidden rounded-md bg-cream">
                     {product.images[0] ? (
                       <img
-                        src={product.images[0].src}
+                        src={normalizeMediaUrl(product.images[0].src)}
                         alt=""
                         className="h-full w-full object-cover"
                         loading="lazy"

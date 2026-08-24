@@ -50,8 +50,13 @@ export function getBackendOrigin(): string {
  */
 export function normalizeMediaUrl(url?: string | null): string {
   if (!url || typeof url !== 'string') return '';
-  const trimmed = url.trim();
+  let trimmed = url.trim();
   if (!trimmed) return '';
+
+  // Fix accidentally doubled URLs (e.g. https://shelina1.onrender.com/https://...)
+  if (trimmed.startsWith('https://shelina1.onrender.com/http://') || trimmed.startsWith('https://shelina1.onrender.com/https://')) {
+    trimmed = trimmed.replace('https://shelina1.onrender.com/', '');
+  }
 
   // 1. Absolute web URLs, blob URLs, and inline base64/SVG data URIs
   if (
@@ -68,12 +73,14 @@ export function normalizeMediaUrl(url?: string | null): string {
     return trimmed;
   }
 
-  // 3. Uploaded backend assets (/uploads/... or uploads/... or /api/uploads/...)
+  // 3. Uploaded backend assets (/uploads/..., /api/uploads/..., /api/media/..., etc.)
   if (
     trimmed.startsWith('/uploads/') ||
     trimmed.startsWith('uploads/') ||
     trimmed.startsWith('/api/uploads/') ||
-    trimmed.startsWith('api/uploads/')
+    trimmed.startsWith('api/uploads/') ||
+    trimmed.startsWith('/api/media/') ||
+    trimmed.startsWith('api/media/')
   ) {
     const cleanPath = trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
     const origin = getBackendOrigin();
@@ -86,7 +93,16 @@ export function normalizeMediaUrl(url?: string | null): string {
     return `${origin}${cleanPath}`;
   }
 
-  // 4. Any other leading slash path
+  // 4. Standalone media filename (e.g. "product-123.jpg")
+  if (!trimmed.startsWith('/') && (isVideoMedia(trimmed) || /\.(jpe?g|png|webp|gif|svg|avif)$/i.test(trimmed))) {
+    const origin = getBackendOrigin();
+    if (typeof window !== 'undefined' && origin === window.location.origin) {
+      return `/uploads/${trimmed}`;
+    }
+    return `${origin}/uploads/${trimmed}`;
+  }
+
+  // 5. Any other leading slash path
   if (trimmed.startsWith('/')) {
     return trimmed;
   }

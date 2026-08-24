@@ -8,7 +8,7 @@ import { authRouter } from './routes/auth.js';
 import { productsRouter } from './routes/products.js';
 import { brandsRouter, categoriesRouter } from './routes/taxonomy.js';
 import { bannersRouter, homepageRouter, seoRouter } from './routes/content.js';
-import { mediaRouter, resolveUploadsDirectory } from './routes/media.js';
+import { handleServeMediaFile, mediaRouter, resolveUploadsDirectory } from './routes/media.js';
 import { adminOrdersRouter, ordersRouter } from './routes/orders.js';
 import { settingsRouter } from './routes/settings.js';
 
@@ -18,14 +18,17 @@ export function createApp() {
   // Behind the sandbox proxy; needed for correct client IPs in rate limiting.
   app.set('trust proxy', 1);
 
-  // Serve uploaded media files statically from resolved directory
-  const uploadsDir = resolveUploadsDirectory();
+  // Serve uploaded media files with full HTTP 206 Range streaming and CORS headers
+  app.get('/uploads/:filename', handleServeMediaFile);
+  app.get('/api/uploads/:filename', handleServeMediaFile);
 
+  const uploadsDir = resolveUploadsDirectory();
   const staticOptions = {
     maxAge: '1d',
     setHeaders: (res: express.Response) => {
       res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
       res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Accept-Ranges', 'bytes');
     },
   };
   app.use('/uploads', express.static(uploadsDir, staticOptions));

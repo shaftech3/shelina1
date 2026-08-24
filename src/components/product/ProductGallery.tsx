@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/cn';
 import { Icon, Image } from '@/components/ui';
+import { normalizeMediaUrl } from '@/lib/media';
 import type { ImageAsset, ProductVideo } from '@/types';
 
 interface ProductGalleryProps {
@@ -31,6 +32,7 @@ export function ProductGallery({ images, video, productName, className }: Produc
 
   const [index, setIndex] = useState(0);
   const [videoActivated, setVideoActivated] = useState(false);
+  const [videoError, setVideoError] = useState(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const thumbRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
@@ -40,7 +42,10 @@ export function ProductGallery({ images, video, productName, className }: Produc
   // Moving away from the video slide must stop playback — otherwise audio
   // keeps running behind an image the customer is now looking at.
   useEffect(() => {
-    if (active?.kind !== 'video') videoRef.current?.pause();
+    if (active?.kind !== 'video') {
+      videoRef.current?.pause();
+      setVideoError(false);
+    }
   }, [active]);
 
   if (slides.length === 0) {
@@ -80,11 +85,11 @@ export function ProductGallery({ images, video, productName, className }: Produc
             sizes="(max-width: 1023px) 100vw, 50vw"
             imgClassName="motion-safe:animate-fade-in"
           />
-        ) : videoActivated ? (
+        ) : videoActivated && !videoError ? (
           <video
             ref={videoRef}
-            src={active.video.src}
-            poster={active.video.poster}
+            src={normalizeMediaUrl(active.video.src)}
+            poster={normalizeMediaUrl(active.video.poster || images[0]?.src)}
             controls
             playsInline
             // Never autoplay with sound. Playback starts muted and only after
@@ -93,8 +98,27 @@ export function ProductGallery({ images, video, productName, className }: Produc
             autoPlay
             preload="metadata"
             aria-label={active.video.title}
+            onError={() => setVideoError(true)}
             className="aspect-[4/5] w-full bg-ink object-cover"
           />
+        ) : videoError ? (
+          <div className="flex aspect-[4/5] w-full flex-col items-center justify-center gap-3 bg-cream p-6 text-center">
+            <Icon name="video" size={32} className="text-ink-subtle opacity-60" />
+            <p className="text-body-sm font-medium text-ink">Video could not be played</p>
+            <p className="max-w-xs text-caption text-ink-muted">
+              The media format may not be supported by your browser or the file is temporarily unavailable.
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                setVideoError(false);
+                setVideoActivated(true);
+              }}
+              className="mt-2 rounded-md bg-ink px-4 py-2 text-caption font-medium text-surface transition-opacity hover:opacity-90"
+            >
+              Retry Playback
+            </button>
+          </div>
         ) : (
           <button
             type="button"
@@ -103,8 +127,8 @@ export function ProductGallery({ images, video, productName, className }: Produc
             aria-label={`Play video: ${active.video.title}`}
           >
             <Image
-              src={active.video.poster ?? ''}
-              alt=""
+              src={active.video.poster || images[0]?.src || ''}
+              alt={active.video.title || productName}
               ratio="product"
               sizes="(max-width: 1023px) 100vw, 50vw"
             />
@@ -171,7 +195,7 @@ export function ProductGallery({ images, video, productName, className }: Produc
                 )}
               >
                 <Image
-                  src={slide.kind === 'image' ? slide.image.src : (slide.video.poster ?? '')}
+                  src={slide.kind === 'image' ? slide.image.src : (slide.video.poster || images[0]?.src || '')}
                   alt=""
                   ratio="product"
                   sizes="68px"
