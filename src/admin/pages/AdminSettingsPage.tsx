@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
+import { Link } from 'react-router-dom';
 import {
   Button,
   Checkbox,
@@ -100,8 +101,37 @@ export function AdminSettingsPage() {
           <p className="mt-3 text-body-sm text-ink-muted">Loading settings from database...</p>
         </div>
       ) : (
-        <form onSubmit={handleSubmit} className="flex flex-col gap-8 max-w-4xl">
-          {/* Delivery & Shipping Rates */}
+        <div className="flex flex-col gap-8 max-w-4xl">
+          {/* Integrations Banner: Settings -> Integrations -> NEXORA */}
+          <div className="rounded-editorial border border-border bg-surface p-6 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-start gap-3.5">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-ink text-surface">
+                <Icon name="link" size={22} />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="font-serif text-body-lg font-semibold text-ink">Integrations & API Connections</h2>
+                  <span className="rounded-full bg-primary-soft px-2 py-0.5 text-caption font-medium text-primary-deep">
+                    NEXORA
+                  </span>
+                </div>
+                <p className="mt-1 text-body-sm text-ink-muted">
+                  Connect to NEXORA via secure API keys to synchronize products, catalog, orders, and inventory.
+                </p>
+              </div>
+            </div>
+
+            <Link
+              to="/admin/integrations/nexora"
+              className="inline-flex items-center gap-2 rounded-md bg-ink px-4 py-2.5 text-body-sm font-medium text-surface shadow-sm hover:bg-ink/90 transition-colors whitespace-nowrap"
+            >
+              <span>Manage NEXORA</span>
+              <Icon name="chevron-right" size={16} />
+            </Link>
+          </div>
+
+          <form onSubmit={handleSubmit} className="flex flex-col gap-8">
+            {/* Delivery & Shipping Rates */}
           <FormSection
             title="Nationwide Shipping & Delivery Charges"
             description="Control the delivery charge calculated during checkout and applied to Cash on Delivery orders."
@@ -219,7 +249,8 @@ export function AdminSettingsPage() {
             </Button>
           </div>
         </form>
-      )}
-    </AdminLayout>
-  );
+      </div>
+    )}
+  </AdminLayout>
+);
 }

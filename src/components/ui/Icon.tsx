@@ -45,7 +45,10 @@ export type IconName =
   | 'eye-off'
   // Order glyphs (Stage 6).
   | 'download'
-  | 'receipt';
+  | 'receipt'
+  // Integration glyphs
+  | 'key'
+  | 'link';
 
 interface IconProps extends SVGProps<SVGSVGElement> {
   name: IconName;
@@ -231,6 +234,18 @@ const PATHS: Record<IconName, ReactElement> = {
       <path d="M14.1 14.1a3 3 0 01-4.2-4.2" />
       <path d="M4.3 6.3A14.9 14.9 0 002.6 10.2s3.4 6.2 9.4 6.2c1.7 0 3.1-.4 4.3-1" />
       <path d="M3 3l18 18" />
+    </>
+  ),
+  key: (
+    <>
+      <path d="M21 2l-2 2m-1.5 1.5L14 9l-1.5-1.5L11 9l1.5 1.5L11 12l-1.5-1.5L8 12l1.5 1.5-1.1 1.1" />
+      <circle cx="7.5" cy="16.5" r="4.5" />
+    </>
+  ),
+  link: (
+    <>
+      <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" />
+      <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" />
     </>
   ),
 };

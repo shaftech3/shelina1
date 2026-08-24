@@ -378,3 +378,43 @@ model StoreSettings {
   @@map("store_settings")
 }
 
+// ─────────────────────────── Integrations & API Keys ───────────────────────────
+
+model ApiKey {
+  id          String    @id @default(cuid())
+  name        String    @default("NEXORA Integration")
+  keyPrefix   String    // e.g. "nex_live_8a91..."
+  keyHash     String    @unique // SHA-256 hash of the complete secret token
+  permissions String[]  @default(["products:read", "customers:read", "orders:read", "inventory:read"])
+  createdBy   String?   // Admin ID or email
+  status      String    @default("ACTIVE") // ACTIVE | REVOKED | EXPIRED
+  lastUsedAt  DateTime?
+  expiresAt   DateTime?
+  revokedAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  auditLogs AuditLog[]
+
+  @@index([keyHash])
+  @@index([status])
+  @@map("api_keys")
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String   // NEXORA_API_KEY_CREATED | NEXORA_API_KEY_REVOKED | NEXORA_API_KEY_REGENERATED | NEXORA_API_KEY_USED
+  apiKeyId  String?
+  apiKey    ApiKey?  @relation(fields: [apiKeyId], references: [id], onDelete: SetNull)
+  actorId   String?  // Admin ID or identifier
+  actorType String   @default("admin") // admin | system | api_key
+  ipAddress String?
+  metadata  Json?    @default("{}")
+  createdAt DateTime @default(now())
+
+  @@index([action])
+  @@index([apiKeyId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+

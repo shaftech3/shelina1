@@ -1,6 +1,6 @@
 {
   "name": "Shelina",
-  "description": "Shelina handcrafted leather footwear atelier storefront and management platform.",
+  "description": "Shelina handcrafted leather footwear atelier storefront and management platform with secure NEXORA integration.",
   "requestFramePermissions": [],
   "majorCapabilities": [
     "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"

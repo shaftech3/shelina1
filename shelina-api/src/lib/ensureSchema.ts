@@ -21,6 +21,7 @@ export async function ensureSchemaMigrations(): Promise<void> {
     '20260816143808_stage6_orders',
     '20260816144023_stage6_order_idempotency',
     '20260817000000_store_settings_and_delivery',
+    '20260824000000_nexora_api_keys_and_audit',
   ];
 
   try {

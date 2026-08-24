@@ -14,6 +14,7 @@ import { AdminOrdersPage } from './pages/AdminOrdersPage';
 import { AdminOrderDetailPage } from './pages/AdminOrderDetailPage';
 import { AdminSeoPage } from './pages/AdminSeoPage';
 import { AdminSettingsPage } from './pages/AdminSettingsPage';
+import { AdminNexoraPage } from './pages/AdminNexoraPage';
 
 /**
  * The whole /admin subtree.
@@ -112,6 +113,30 @@ export function AdminRoutes() {
           element={
             <RequireAdmin>
               <AdminSettingsPage />
+            </RequireAdmin>
+          }
+        />
+        <Route
+          path="settings/integrations/nexora"
+          element={
+            <RequireAdmin>
+              <AdminNexoraPage />
+            </RequireAdmin>
+          }
+        />
+        <Route
+          path="integrations"
+          element={
+            <RequireAdmin>
+              <AdminNexoraPage />
+            </RequireAdmin>
+          }
+        />
+        <Route
+          path="integrations/nexora"
+          element={
+            <RequireAdmin>
+              <AdminNexoraPage />
             </RequireAdmin>
           }
         />
