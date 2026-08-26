@@ -21,6 +21,7 @@ export interface HeroInput {
   heading: string;
   subheading?: string;
   image: { src: string; alt: string };
+  mobileImage?: { src: string; alt?: string };
   primaryCta?: { label: string; href: string };
   secondaryCta?: { label: string; href: string };
   badge?: string;
@@ -121,6 +122,7 @@ export const homepageService = {
       badge: input.badge?.trim() || null,
       image: input.image.src.trim() || null,
       imageAlt: input.image.alt.trim() || null,
+      secondaryImage: input.mobileImage?.src?.trim() || null,
       ctaText: cleanCta(input.primaryCta)?.label ?? null,
       ctaLink: cleanCta(input.primaryCta)?.href ?? null,
       secondaryCtaText: cleanCta(input.secondaryCta)?.label ?? null,

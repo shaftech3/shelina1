@@ -151,6 +151,10 @@ export default {
           from: { opacity: '0', transform: 'scale(1.04)' },
           to: { opacity: '1', transform: 'scale(1)' },
         },
+        marquee: {
+          from: { transform: 'translateX(0%)' },
+          to: { transform: 'translateX(-50%)' },
+        },
         shimmer: { from: { transform: 'translateX(-100%)' }, to: { transform: 'translateX(100%)' } },
         spin: { to: { transform: 'rotate(360deg)' } },
       },
@@ -161,6 +165,7 @@ export default {
         'scale-in': 'scale-in var(--dur-base) var(--ease-entrance) both',
         'slide-in-right': 'slide-in-right var(--dur-base) var(--ease-entrance) both',
         'slide-in-left': 'slide-in-left var(--dur-base) var(--ease-entrance) both',
+        marquee: 'marquee 25s linear infinite',
         shimmer: 'shimmer 1.6s infinite',
         spin: 'spin 0.7s linear infinite',
       },

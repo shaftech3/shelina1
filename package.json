@@ -8,8 +8,12 @@
     "postinstall": "prisma generate --schema=./shelina-api/prisma/schema.prisma",
     "build": "prisma generate --schema=./shelina-api/prisma/schema.prisma && vite build && esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server.cjs",
     "start": "node dist/server.cjs",
+    "migrate:deploy": "cd shelina-api && npm run migrate:deploy",
     "lint": "oxlint",
     "preview": "vite preview"
+  },
+  "engines": {
+    "node": ">=20.0.0"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.6",

@@ -225,6 +225,7 @@ export function serializeHomepage(row: HomepageRow) {
       subheading: row.subheading ?? undefined,
       badge: row.badge ?? undefined,
       image: { src: row.image ?? '', alt: row.imageAlt ?? '' },
+      mobileImage: row.secondaryImage ? { src: row.secondaryImage, alt: row.imageAlt ?? '' } : undefined,
       secondaryImage: row.secondaryImage ?? undefined,
       ...(row.ctaText && row.ctaLink ? { primaryCta: { label: row.ctaText, href: row.ctaLink } } : {}),
       ...(row.secondaryCtaText && row.secondaryCtaLink

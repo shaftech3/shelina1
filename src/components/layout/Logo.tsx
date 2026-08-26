@@ -20,9 +20,9 @@ const SOURCES: Record<LogoSlot, string> = {
 };
 
 const SIZES: Record<LogoSlot, string> = {
-  desktop: 'h-13 w-13 sm:h-14 sm:w-14 md:h-14 md:w-14 lg:h-15 lg:w-15',
-  mobile: 'h-11 w-11 sm:h-12 sm:w-12',
-  footer: 'h-14 w-14 sm:h-16 sm:w-16',
+  desktop: 'h-14 w-14 sm:h-16 sm:w-16 md:h-16 md:w-16 lg:h-16 lg:w-16',
+  mobile: 'h-12 w-12 sm:h-13 sm:w-13',
+  footer: 'h-16 w-16 sm:h-18 sm:w-18',
 };
 
 /**
@@ -35,15 +35,15 @@ export function Logo({ slot = 'desktop', className, showWordmark = false, invert
   const logoSrc = normalizeMediaUrl(SOURCES[slot]);
 
   return (
-    <span className={cn('inline-flex items-center gap-3', className)}>
+    <span className={cn('inline-flex items-center gap-3 sm:gap-3.5', className)}>
       <img
         src={logoSrc}
         alt={`${STORE_CONFIG.name} logo`}
         loading={priority ? 'eager' : 'lazy'}
         decoding={priority ? 'sync' : 'async'}
         className={cn(
-          'shrink-0 rounded-full object-cover shadow-xs ring-1 transition-transform duration-300 hover:scale-105',
-          invert ? 'ring-white/20' : 'ring-primary/25',
+          'shrink-0 rounded-full object-cover shadow-sm ring-1.5 transition-transform duration-300 hover:scale-105',
+          invert ? 'ring-white/30' : 'ring-primary/30',
           SIZES[slot],
         )}
       />
@@ -51,7 +51,7 @@ export function Logo({ slot = 'desktop', className, showWordmark = false, invert
         <span className="flex flex-col leading-none">
           <span
             className={cn(
-              'font-display text-[1.45rem] sm:text-[1.6rem] font-bold tracking-[0.04em] uppercase',
+              'font-display text-[1.55rem] sm:text-[1.75rem] font-bold tracking-[0.05em] uppercase',
               invert ? 'text-cream' : 'text-primary-deep',
             )}
           >
@@ -59,7 +59,7 @@ export function Logo({ slot = 'desktop', className, showWordmark = false, invert
           </span>
           <span
             className={cn(
-              'mt-1 text-[0.62rem] sm:text-[0.68rem] uppercase tracking-[0.32em] font-medium',
+              'mt-1 text-[0.64rem] sm:text-[0.7rem] uppercase tracking-[0.32em] font-medium',
               invert ? 'text-cream/70' : 'text-ink-muted',
             )}
           >

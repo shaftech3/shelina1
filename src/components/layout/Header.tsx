@@ -2,12 +2,12 @@ import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/cn';
 import { STORE_CONFIG } from '@/lib/constants';
-import { formatPrice } from '@/lib/format';
 import { primaryNav } from '@/data/mock/navigation';
 import { useScrolledPast } from '@/hooks';
 import { useCart } from '@/cart';
 import { Container, Dropdown, DropdownItem, Icon, IconButton } from '@/components/ui';
 import { Logo } from './Logo';
+import { AnnouncementBar } from './AnnouncementBar';
 import { AccountMenu } from './AccountMenu';
 import { MobileNav } from './MobileNav';
 import { SearchOverlay } from './SearchOverlay';
@@ -30,14 +30,7 @@ export function Header({ overHero = false }: HeaderProps) {
 
   return (
     <>
-      {/* Announcement strip — content later comes from the banner service. */}
-      <div className="bg-primary-deep text-white">
-        <Container className="flex h-9 items-center justify-center">
-          <p className="truncate text-center text-caption tracking-[0.06em]">
-            Complimentary delivery on orders over {formatPrice(STORE_CONFIG.freeShippingThreshold)}
-          </p>
-        </Container>
-      </div>
+      <AnnouncementBar />
 
       <header
         className={cn(

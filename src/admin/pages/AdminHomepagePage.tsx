@@ -34,6 +34,7 @@ function HeroEditor({ slide }: { slide: HeroSlide }) {
     badge: slide.badge ?? '',
     imageSrc: slide.image.src,
     imageAlt: slide.image.alt,
+    mobileImageSrc: slide.mobileImage?.src ?? '',
     primaryLabel: slide.primaryCta?.label ?? '',
     primaryHref: slide.primaryCta?.href ?? '',
     secondaryLabel: slide.secondaryCta?.label ?? '',
@@ -49,6 +50,7 @@ function HeroEditor({ slide }: { slide: HeroSlide }) {
       badge: slide.badge ?? '',
       imageSrc: slide.image.src,
       imageAlt: slide.image.alt,
+      mobileImageSrc: slide.mobileImage?.src ?? '',
       primaryLabel: slide.primaryCta?.label ?? '',
       primaryHref: slide.primaryCta?.href ?? '',
       secondaryLabel: slide.secondaryCta?.label ?? '',
@@ -73,6 +75,7 @@ function HeroEditor({ slide }: { slide: HeroSlide }) {
         subheading: form.subheading,
         badge: form.badge,
         image: { src: form.imageSrc, alt: form.imageAlt },
+        mobileImage: form.mobileImageSrc ? { src: form.mobileImageSrc, alt: form.imageAlt } : undefined,
         primaryCta: { label: form.primaryLabel, href: form.primaryHref },
         secondaryCta: { label: form.secondaryLabel, href: form.secondaryHref },
       });
@@ -113,12 +116,20 @@ function HeroEditor({ slide }: { slide: HeroSlide }) {
 
           <div className="flex flex-col gap-3">
             <MediaUploadInput
-              label="Hero Image"
+              label="Hero Image (Desktop)"
               mediaType="image"
               value={form.imageSrc}
               onChange={(url) => set('imageSrc', url)}
               onRemove={() => set('imageSrc', '')}
               hint="Upload high-resolution hero showcase image (JPG, PNG, WebP)"
+            />
+            <MediaUploadInput
+              label="Mobile Hero Image (Optional)"
+              mediaType="image"
+              value={form.mobileImageSrc}
+              onChange={(url) => set('mobileImageSrc', url)}
+              onRemove={() => set('mobileImageSrc', '')}
+              hint="Optional portrait / compact hero image tailored for mobile viewports (≤ 640px)"
             />
             <Input
               label="Hero image alt text"

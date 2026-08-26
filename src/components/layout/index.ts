@@ -1,5 +1,6 @@
 export { Layout } from './Layout';
 export { Header } from './Header';
+export { AnnouncementBar } from './AnnouncementBar';
 export { Footer } from './Footer';
 export { Logo } from './Logo';
 export { MobileNav } from './MobileNav';

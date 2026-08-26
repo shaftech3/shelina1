@@ -5,6 +5,29 @@ import crypto from 'node:crypto';
 import { prisma } from './prisma.js';
 
 /**
+ * Safely releases any stale advisory locks held on objid 72707369 (Prisma migration lock)
+ * by idle database sessions to prevent P1002 timeouts.
+ */
+async function clearStaleAdvisoryLocks(): Promise<void> {
+  try {
+    const locks: Array<{ pid: number; state: string | null }> = await prisma.$queryRawUnsafe(`
+      SELECT l.pid, a.state
+      FROM pg_locks l
+      LEFT JOIN pg_stat_activity a ON l.pid = a.pid
+      WHERE l.locktype = 'advisory' AND (l.objid = 72707369 OR (l.classid = 0 AND l.objid = 72707369))
+        AND (a.state = 'idle' OR a.state IS NULL);
+    `);
+
+    for (const lock of locks) {
+      console.log(`[schema] Clearing stale advisory lock from idle backend PID ${lock.pid}...`);
+      await prisma.$queryRawUnsafe(`SELECT pg_terminate_backend($1);`, lock.pid);
+    }
+  } catch {
+    // Non-fatal if pg_locks or permissions are restricted
+  }
+}
+
+/**
  * Ensures all Prisma migration files are applied to the connected PostgreSQL database
  * (including external Neon PostgreSQL) on server boot without relying on external npx binaries.
  */
@@ -16,13 +39,15 @@ export async function ensureSchemaMigrations(): Promise<void> {
     return;
   }
 
-  const migrationDirs = [
-    '20260816121115_init',
-    '20260816143808_stage6_orders',
-    '20260816144023_stage6_order_idempotency',
-    '20260817000000_store_settings_and_delivery',
-    '20260824000000_nexora_api_keys_and_audit',
-  ];
+  // Clear any stale advisory locks from idle sessions
+  await clearStaleAdvisoryLocks();
+
+  // Dynamically discover all migration directories containing migration.sql, sorted chronologically
+  const migrationDirs = fs
+    .readdirSync(migrationsDir, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory() && fs.existsSync(path.join(migrationsDir, entry.name, 'migration.sql')))
+    .map((entry) => entry.name)
+    .sort();
 
   try {
     // 1. Create _prisma_migrations table if missing
@@ -56,7 +81,7 @@ export async function ensureSchemaMigrations(): Promise<void> {
       console.log(`[schema] Applying migration: ${dirName}...`);
       const sqlContent = fs.readFileSync(sqlPath, 'utf8');
 
-      // Execute migration SQL inside a transaction
+      // Execute migration SQL
       await prisma.$executeRawUnsafe(sqlContent);
 
       const migrationId = crypto.randomUUID();
