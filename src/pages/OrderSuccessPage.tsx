@@ -164,10 +164,10 @@ export function OrderSuccessPage() {
                         <img
                           src={item.productImage}
                           alt={item.productName}
-                          className="h-18 w-16 shrink-0 rounded-md border border-border/60 bg-cream object-cover"
+                          className="h-18 w-16 shrink-0 rounded-md border border-border/60 bg-[#faf8f5] object-contain p-1"
                         />
                       ) : (
-                        <div className="h-18 w-16 shrink-0 rounded-md border border-border/60 bg-cream flex items-center justify-center text-ink-subtle">
+                        <div className="h-18 w-16 shrink-0 rounded-md border border-border/60 bg-[#faf8f5] flex items-center justify-center text-ink-subtle">
                           <Icon name="cart" size={20} />
                         </div>
                       )}

@@ -40,14 +40,14 @@ export const DiamondCategoryCard = memo(function DiamondCategoryCard({
 
         <div className="relative flex h-24 w-24 sm:h-28 sm:w-28 md:h-32 md:w-32 items-center justify-center overflow-hidden rounded-[1.35rem] sm:rounded-[1.75rem] border-2 border-primary/25 bg-cream-dark/40 shadow-sm transition-all duration-500 ease-out rotate-45 group-hover:rotate-45 group-hover:scale-105 group-hover:border-primary group-hover:shadow-md">
           {/* Counter-rotated image container so footwear remains upright */}
-          <div className="absolute inset-[-25%] flex items-center justify-center -rotate-45 overflow-hidden">
+          <div className="absolute inset-[-10%] flex items-center justify-center -rotate-45 overflow-hidden">
             {imageSrc ? (
               <img
                 src={imageSrc}
                 alt={image.alt || name}
                 loading={priority ? 'eager' : 'lazy'}
                 decoding={priority ? 'sync' : 'async'}
-                className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+                className="h-full w-full object-contain p-2.5 transition-transform duration-700 ease-out group-hover:scale-105"
                 onError={(e) => {
                   (e.currentTarget as HTMLImageElement).src =
                     'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" fill="%23ece6de"><rect width="200" height="200"/><text x="100" y="105" fill="%238a7e72" font-size="20" font-family="serif" text-anchor="middle">SHELINA</text></svg>';

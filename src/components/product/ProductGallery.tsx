@@ -50,8 +50,8 @@ export function ProductGallery({ images, video, productName, className }: Produc
 
   if (slides.length === 0) {
     return (
-      <div className={cn('overflow-hidden rounded-lg border border-border bg-cream', className)}>
-        <Image src="" alt={productName} ratio="product" />
+      <div className={cn('overflow-hidden rounded-lg border border-border/70 bg-[#faf8f5]', className)}>
+        <Image src="" alt={productName} ratio="product" objectFit="contain" />
       </div>
     );
   }
@@ -72,7 +72,7 @@ export function ProductGallery({ images, video, productName, className }: Produc
 
   return (
     <div className={cn('flex flex-col gap-3', className)}>
-      <div className="relative overflow-hidden rounded-lg border border-border bg-cream">
+      <div className="relative overflow-hidden rounded-lg border border-border/70 bg-[#faf8f5]">
         {active.kind === 'image' ? (
           <Image
             // Keying on src makes React swap the element, which replays the
@@ -81,9 +81,10 @@ export function ProductGallery({ images, video, productName, className }: Produc
             src={active.image.src}
             alt={active.image.alt || productName}
             ratio="product"
+            objectFit="contain"
             priority={index === 0}
             sizes="(max-width: 1023px) 100vw, 50vw"
-            imgClassName="motion-safe:animate-fade-in"
+            imgClassName="p-4 sm:p-8 motion-safe:animate-fade-in"
           />
         ) : videoActivated && !videoError ? (
           <video
@@ -99,10 +100,10 @@ export function ProductGallery({ images, video, productName, className }: Produc
             preload="metadata"
             aria-label={active.video.title}
             onError={() => setVideoError(true)}
-            className="aspect-[4/5] w-full bg-ink object-cover"
+            className="aspect-[4/5] w-full bg-ink object-contain"
           />
         ) : videoError ? (
-          <div className="flex aspect-[4/5] w-full flex-col items-center justify-center gap-3 bg-cream p-6 text-center">
+          <div className="flex aspect-[4/5] w-full flex-col items-center justify-center gap-3 bg-[#faf8f5] p-6 text-center">
             <Icon name="video" size={32} className="text-ink-subtle opacity-60" />
             <p className="text-body-sm font-medium text-ink">Video could not be played</p>
             <p className="max-w-xs text-caption text-ink-muted">
@@ -130,7 +131,9 @@ export function ProductGallery({ images, video, productName, className }: Produc
               src={active.video.poster || images[0]?.src || ''}
               alt={active.video.title || productName}
               ratio="product"
+              objectFit="contain"
               sizes="(max-width: 1023px) 100vw, 50vw"
+              imgClassName="p-4 sm:p-8"
             />
             <span aria-hidden className="absolute inset-0 bg-ink/25 transition-colors group-hover:bg-ink/35" />
             <span
@@ -189,16 +192,18 @@ export function ProductGallery({ images, video, productName, className }: Produc
                 }
                 aria-current={isActive}
                 className={cn(
-                  'relative w-[68px] shrink-0 overflow-hidden rounded-md border-2 transition-colors duration-fast',
+                  'relative w-[68px] shrink-0 overflow-hidden rounded-md border-2 bg-[#faf8f5] transition-colors duration-fast',
                   'focus-visible:outline-none focus-visible:shadow-focus',
-                  isActive ? 'border-ink' : 'border-transparent hover:border-border-strong',
+                  isActive ? 'border-ink shadow-xs' : 'border-transparent hover:border-border-strong',
                 )}
               >
                 <Image
                   src={slide.kind === 'image' ? slide.image.src : (slide.video.poster || images[0]?.src || '')}
                   alt=""
                   ratio="product"
+                  objectFit="contain"
                   sizes="68px"
+                  imgClassName="p-1"
                 />
                 {slide.kind === 'video' && (
                   <span

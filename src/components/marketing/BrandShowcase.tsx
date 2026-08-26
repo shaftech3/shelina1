@@ -54,8 +54,9 @@ export function BrandShowcase({ brands, loading, error, onRetry, className }: Br
                 src={brand.logo.src}
                 alt={brand.logo.alt}
                 ratio="banner"
+                objectFit="contain"
                 sizes="(max-width: 1023px) 50vw, 24vw"
-                imgClassName="transition-transform duration-[900ms] ease-elegant motion-safe:group-hover:scale-[1.05]"
+                imgClassName="p-3 transition-transform duration-[700ms] ease-elegant motion-safe:group-hover:scale-[1.05]"
               />
             ) : (
               <span

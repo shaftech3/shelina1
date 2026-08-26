@@ -33,7 +33,7 @@ export function ProductGrid({
   priority = false,
 }: ProductGridProps) {
   const gridClasses = cn(
-    'grid grid-cols-2 gap-x-4 gap-y-9 sm:gap-x-6 md:grid-cols-3 md:gap-y-12',
+    'grid grid-cols-2 gap-x-3 gap-y-7 sm:gap-x-5 sm:gap-y-9 md:grid-cols-3 md:gap-y-10 lg:gap-x-6',
     columns === 4 ? 'xl:grid-cols-4' : 'xl:grid-cols-3',
     className,
   );

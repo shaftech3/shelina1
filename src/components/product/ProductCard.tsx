@@ -41,55 +41,75 @@ export const ProductCard = memo(function ProductCard({
 
   return (
     <article className={cn('group relative flex flex-col', className)}>
-      <div className="relative overflow-hidden rounded-lg border border-border bg-cream">
+      {/* Product Image Frame: Aspect ratio locked with 100% full contain (no cropping) */}
+      <div className="relative aspect-[4/5] w-full overflow-hidden rounded-md sm:rounded-lg border border-border/70 bg-[#faf8f5] transition-all duration-300 group-hover:border-border-strong group-hover:shadow-sm">
+        {/* Primary Product Image */}
         <Image
           src={primaryImage?.src ?? ''}
           alt={primaryImage?.alt ?? name}
-          ratio="product"
+          ratio="auto"
+          objectFit="contain"
           priority={priority}
-          sizes="(max-width: 767px) 50vw, (max-width: 1279px) 33vw, 25vw"
+          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+          className="h-full w-full bg-transparent"
           imgClassName={cn(
-            'transition-transform duration-[900ms] ease-elegant motion-safe:group-hover:scale-[1.045]',
+            'p-2 sm:p-3 transition-all duration-500 ease-out motion-safe:group-hover:scale-[1.03]',
             secondaryImage && 'motion-safe:group-hover:opacity-0 motion-safe:group-focus-within:opacity-0',
-            soldOut && 'opacity-80',
+            soldOut && 'opacity-75 grayscale-[20%]',
           )}
         />
 
+        {/* Secondary Image on Desktop Hover (if available) */}
         {secondaryImage && (
-          /* Positioned wrapper: the Image root owns `relative`, so overlaying
-             must happen on a parent rather than by overriding its class. */
-          <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-slow ease-elegant motion-safe:group-hover:opacity-100 motion-safe:group-focus-within:opacity-100">
+          <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 ease-out motion-safe:group-hover:opacity-100 motion-safe:group-focus-within:opacity-100">
             <Image
               src={secondaryImage.src}
-              alt=""
+              alt={secondaryImage.alt || `${name} - alternate angle`}
               ratio="auto"
-              className="h-full w-full"
-              imgClassName="transition-transform duration-[900ms] ease-elegant motion-safe:group-hover:scale-[1.045]"
+              objectFit="contain"
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+              className="h-full w-full bg-transparent"
+              imgClassName="p-2 sm:p-3 transition-transform duration-500 ease-out motion-safe:group-hover:scale-[1.03]"
             />
           </div>
         )}
 
-        <div className="pointer-events-none absolute left-3 top-3 flex flex-col items-start gap-1.5">
-          {discount !== null && <Badge tone="secondary">-{discount}%</Badge>}
-          {isNew && !discount && <Badge tone="primary">New</Badge>}
-          {featured && !isNew && !discount && <Badge tone="dark">Featured</Badge>}
+        {/* Badges */}
+        <div className="pointer-events-none absolute left-2 top-2 sm:left-2.5 sm:top-2.5 flex flex-col items-start gap-1 z-10">
+          {discount !== null && (
+            <Badge tone="secondary" className="px-1.5 py-0.5 text-[10px] sm:text-xs font-semibold shadow-2xs">
+              -{discount}%
+            </Badge>
+          )}
+          {isNew && !discount && (
+            <Badge tone="primary" className="px-1.5 py-0.5 text-[10px] sm:text-xs font-semibold shadow-2xs">
+              New
+            </Badge>
+          )}
+          {featured && !isNew && !discount && (
+            <Badge tone="dark" className="px-1.5 py-0.5 text-[10px] sm:text-xs font-semibold shadow-2xs">
+              Featured
+            </Badge>
+          )}
         </div>
 
+        {/* Sold out overlay */}
         {soldOut && (
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-surface/92 py-2 text-center text-caption font-medium uppercase tracking-[0.14em] text-ink-muted backdrop-blur-sm">
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-surface/92 py-1.5 text-center text-[10px] sm:text-caption font-semibold uppercase tracking-[0.14em] text-ink-muted backdrop-blur-xs">
             Sold out
           </div>
         )}
       </div>
 
-      <div className="flex flex-1 flex-col gap-1.5 px-0.5 pt-3.5">
-        {/* Reserved single line: keeps every card the same height regardless of
-            brand-name length. */}
-        <span className="line-clamp-1 min-h-[1.45em] text-caption uppercase tracking-[0.12em] text-ink-subtle">
-          {brand}
-        </span>
+      {/* Product Information */}
+      <div className="flex flex-1 flex-col gap-1 px-0.5 pt-2.5 sm:pt-3">
+        {brand && (
+          <span className="line-clamp-1 text-[10px] sm:text-[11px] font-medium uppercase tracking-[0.14em] text-ink-subtle">
+            {brand}
+          </span>
+        )}
 
-        <h3 className="min-h-[2.75em] font-sans text-body-sm font-medium leading-snug text-ink">
+        <h3 className="line-clamp-2 min-h-[2.4em] font-sans text-xs sm:text-body-sm font-medium leading-snug text-ink">
           <SmartLink
             href={`/product/${slug}`}
             onClick={(event) => {
@@ -100,22 +120,24 @@ export const ProductCard = memo(function ProductCard({
             }}
             className="rounded-xs transition-colors duration-fast hover:text-primary-deep focus-visible:outline-none focus-visible:text-primary-deep"
           >
-            {/* Stretched hit area keeps the whole card clickable and accessible. */}
+            {/* Stretched hit area */}
             <span className="absolute inset-0" aria-hidden />
-            <span className="line-clamp-2">{name}</span>
+            {name}
           </SmartLink>
         </h3>
 
-        <div className="flex flex-wrap items-baseline gap-2">
-          <span className={cn('text-body-sm font-semibold', discount !== null ? 'text-secondary-deep' : 'text-ink')}>
+        <div className="flex flex-wrap items-baseline gap-1.5 sm:gap-2">
+          <span className={cn('text-xs sm:text-body-sm font-semibold', discount !== null ? 'text-secondary-deep' : 'text-ink')}>
             {formatPrice(payable)}
           </span>
           {discount !== null && (
-            <span className="text-caption text-ink-subtle line-through">{formatPrice(price)}</span>
+            <span className="text-[10px] sm:text-caption text-ink-subtle line-through">
+              {formatPrice(price)}
+            </span>
           )}
         </div>
 
-        <div className="mt-auto flex items-center justify-between gap-3 pt-2">
+        <div className="mt-auto flex items-center justify-between gap-2 pt-1.5">
           <ColorSwatches colors={colors} />
           <StockLabel status={stockStatus} />
         </div>

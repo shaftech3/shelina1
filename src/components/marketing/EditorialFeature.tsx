@@ -31,6 +31,7 @@ export function EditorialFeature({ feature, loading, className }: EditorialFeatu
         src={image.src}
         alt={image.alt}
         ratio="auto"
+        objectFit="cover"
         sizes="100vw"
         className="h-[300px] w-full sm:h-[380px] lg:h-[620px]"
       />

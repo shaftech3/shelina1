@@ -54,16 +54,23 @@ export function Banner({ banner, className }: BannerProps) {
 
   if (variant === 'image') {
     return (
-      <section className={cn('relative overflow-hidden', className)}>
+      <section className={cn('relative isolate overflow-hidden min-h-[260px] sm:min-h-[320px] lg:min-h-[380px] flex items-center', className)}>
         {image && (
-          <Image src={image.src} alt={image.alt} ratio="banner" className="w-full" sizes="100vw" />
+          <Image
+            src={image.src}
+            alt={image.alt}
+            ratio="auto"
+            objectFit="cover"
+            className="absolute inset-0 h-full w-full -z-10"
+            sizes="100vw"
+          />
         )}
-        <span aria-hidden className="absolute inset-0 bg-gradient-to-r from-ink/70 to-ink/10" />
-        <Container className="absolute inset-0 flex items-center">
-          <Reveal className="flex max-w-lg flex-col gap-3.5">
+        <span aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-t from-ink/90 via-ink/60 to-ink/30 sm:bg-gradient-to-r sm:from-ink/85 sm:via-ink/60 sm:to-transparent" />
+        <Container className="relative z-10 py-10 sm:py-14 flex items-center">
+          <Reveal className="flex max-w-lg flex-col gap-3 sm:gap-4">
             {eyebrow && <span className="eyebrow text-white">{eyebrow}</span>}
-            <h2 className="text-h2 text-white">{heading}</h2>
-            {description && <p className="text-body-sm text-white">{description}</p>}
+            <h2 className="text-h3 sm:text-h2 text-white">{heading}</h2>
+            {description && <p className="text-body-sm sm:text-body text-white/90">{description}</p>}
             {cta && (
               <ButtonLink href={cta.href} variant="light" className="mt-2 w-fit">
                 {cta.label}
@@ -81,7 +88,7 @@ export function Banner({ banner, className }: BannerProps) {
       <Container>
         <div
           className={cn(
-            'grid items-center gap-8 py-14 md:gap-14 md:py-20 lg:grid-cols-2 lg:gap-20',
+            'grid items-center gap-8 py-12 md:gap-12 md:py-16 lg:grid-cols-2 lg:gap-16',
             mediaSide === 'right' && 'lg:[&>*:first-child]:order-2',
           )}
         >
@@ -90,10 +97,11 @@ export function Banner({ banner, className }: BannerProps) {
               <Image
                 src={image.src}
                 alt={image.alt}
-                ratio="banner"
-                className="rounded-xl shadow-sm sm:rounded-2xl"
+                ratio="auto"
+                objectFit="contain"
+                className="aspect-[4/3] sm:aspect-[16/10] w-full rounded-xl sm:rounded-2xl border border-border/70 bg-[#faf8f5] shadow-xs"
                 sizes="(max-width: 1023px) 100vw, 50vw"
-                imgClassName="transition-transform duration-[1200ms] ease-elegant hover:scale-[1.03]"
+                imgClassName="p-4 sm:p-6 transition-transform duration-[800ms] ease-elegant hover:scale-[1.02]"
               />
             )}
           </Reveal>

@@ -46,25 +46,47 @@ function parseUpdatedSince(val: unknown): Date | null {
  *
  * Used by NEXORA Custom REST Adapter to test connection and detect available capabilities.
  */
-nexoraRouter.get('/test', requireNexoraScope(), async (req, res) => {
-  const permissions = req.nexoraApiKey?.permissions || [];
-  const capabilities = [
-    ...(permissions.includes('products:read') ? ['products'] : []),
-    ...(permissions.includes('customers:read') ? ['customers'] : []),
-    ...(permissions.includes('orders:read') ? ['orders'] : []),
-    ...(permissions.includes('inventory:read') ? ['inventory'] : []),
-  ];
+nexoraRouter.get('/test', requireNexoraScope(), async (req, res, next) => {
+  try {
+    const permissions = req.nexoraApiKey?.permissions || [];
+    const capabilities = [
+      ...(permissions.includes('products:read') ? ['products', 'products:read'] : []),
+      ...(permissions.includes('customers:read') ? ['customers', 'customers:read'] : []),
+      ...(permissions.includes('orders:read') ? ['orders', 'orders:read'] : []),
+      ...(permissions.includes('inventory:read') ? ['inventory', 'inventory:read'] : []),
+    ];
 
-  res.json({
-    success: true,
-    connected: true,
-    store: 'Shelina Footwear',
-    storeId: 'shelina-store',
-    apiVersion: 'v1',
-    capabilities,
-    permissions,
-    timestamp: new Date().toISOString(),
-  });
+    const [productsCount, ordersCount, customersCount] = await Promise.all([
+      prisma.product.count(),
+      prisma.order.count(),
+      prisma.customerUser.count(),
+    ]);
+
+    const resultPayload = {
+      connected: true,
+      store: 'Shelina Footwear',
+      storeId: 'shelina-store',
+      apiVersion: 'v1',
+      activeKeyPrefix: req.nexoraApiKey?.keyPrefix,
+      capabilities,
+      permissions,
+      stats: {
+        products: productsCount,
+        orders: ordersCount,
+        customers: customersCount,
+        inventory: productsCount,
+      },
+      timestamp: new Date().toISOString(),
+    };
+
+    res.json({
+      success: true,
+      ...resultPayload,
+      data: resultPayload,
+    });
+  } catch (error) {
+    next(error);
+  }
 });
 
 /* ─────────────────────────── Store Metadata ─────────────────────────── */
@@ -84,22 +106,25 @@ nexoraRouter.get('/store', requireNexoraScope(), async (_req, res, next) => {
       settings = await prisma.storeSettings.findFirst();
     }
 
+    const storePayload = {
+      id: 'shelina-store',
+      name: 'Shelina Footwear',
+      currency: 'PKR',
+      timezone: 'Asia/Karachi',
+      country: 'Pakistan',
+      contactEmail: settings?.contactEmail || 'support@shelina.pk',
+      contactPhone: settings?.contactPhone || '+92 300 1234567',
+      whatsappNumber: settings?.whatsappNumber || '+923001234567',
+      defaultDeliveryFee: settings?.shippingFee ?? 250,
+      freeShippingThreshold: settings?.freeShippingThreshold ?? 0,
+      codEnabled: true,
+      apiVersion: 'v1',
+    };
+
     res.json({
       success: true,
-      data: {
-        id: 'shelina-store',
-        name: 'Shelina Footwear',
-        currency: 'PKR',
-        timezone: 'Asia/Karachi',
-        country: 'Pakistan',
-        contactEmail: settings?.contactEmail || 'support@shelina.pk',
-        contactPhone: settings?.contactPhone || '+92 300 1234567',
-        whatsappNumber: settings?.whatsappNumber || '+923001234567',
-        defaultDeliveryFee: settings?.shippingFee ?? 250,
-        freeShippingThreshold: settings?.freeShippingThreshold ?? 0,
-        codEnabled: true,
-        apiVersion: 'v1',
-      },
+      data: storePayload,
+      store: storePayload,
     });
   } catch (error) {
     next(error);
@@ -206,17 +231,22 @@ nexoraRouter.get('/products', requireNexoraScope('products:read'), async (req, r
       updatedAt: p.updatedAt.toISOString(),
     }));
 
+    const pagination = {
+      page,
+      limit,
+      total,
+      totalPages,
+      hasNextPage: page < totalPages,
+      hasPrevPage: page > 1,
+    };
+
     res.json({
       success: true,
       data,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages,
-        hasNextPage: page < totalPages,
-        hasPrevPage: page > 1,
-      },
+      products: data,
+      items: data,
+      pagination,
+      meta: pagination,
     });
   } catch (error) {
     next(error);
@@ -297,17 +327,22 @@ nexoraRouter.get('/customers', requireNexoraScope('customers:read'), async (req,
       };
     });
 
+    const pagination = {
+      page,
+      limit,
+      total,
+      totalPages,
+      hasNextPage: page < totalPages,
+      hasPrevPage: page > 1,
+    };
+
     res.json({
       success: true,
       data,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages,
-        hasNextPage: page < totalPages,
-        hasPrevPage: page > 1,
-      },
+      customers: data,
+      items: data,
+      pagination,
+      meta: pagination,
     });
   } catch (error) {
     next(error);
@@ -396,17 +431,22 @@ nexoraRouter.get('/orders', requireNexoraScope('orders:read'), async (req, res, 
       })),
     }));
 
+    const pagination = {
+      page,
+      limit,
+      total,
+      totalPages,
+      hasNextPage: page < totalPages,
+      hasPrevPage: page > 1,
+    };
+
     res.json({
       success: true,
       data,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages,
-        hasNextPage: page < totalPages,
-        hasPrevPage: page > 1,
-      },
+      orders: data,
+      items: data,
+      pagination,
+      meta: pagination,
     });
   } catch (error) {
     next(error);
@@ -478,17 +518,22 @@ nexoraRouter.get('/inventory', requireNexoraScope('inventory:read'), async (req,
       updatedAt: p.updatedAt.toISOString(),
     }));
 
+    const pagination = {
+      page,
+      limit,
+      total,
+      totalPages,
+      hasNextPage: page < totalPages,
+      hasPrevPage: page > 1,
+    };
+
     res.json({
       success: true,
       data,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages,
-        hasNextPage: page < totalPages,
-        hasPrevPage: page > 1,
-      },
+      inventory: data,
+      items: data,
+      pagination,
+      meta: pagination,
     });
   } catch (error) {
     next(error);

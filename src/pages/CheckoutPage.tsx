@@ -406,10 +406,10 @@ export function CheckoutPage() {
                           src={item.image.src}
                           alt={item.productName}
                           loading="lazy"
-                          className="h-16 w-14 shrink-0 rounded-md bg-cream object-cover border border-border/60"
+                          className="h-16 w-14 shrink-0 rounded-md bg-[#faf8f5] object-contain p-1 border border-border/60"
                         />
                       ) : (
-                        <div className="h-16 w-14 shrink-0 rounded-md bg-cream border border-border/60" aria-hidden="true" />
+                        <div className="h-16 w-14 shrink-0 rounded-md bg-[#faf8f5] border border-border/60" aria-hidden="true" />
                       )}
                       <div className="min-w-0 flex-1">
                         <p className="text-body-sm font-medium text-ink line-clamp-1">{item.productName}</p>

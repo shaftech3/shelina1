@@ -13,7 +13,7 @@ interface ImageProps {
   imgClassName?: string;
   /** Above-the-fold images should set this to skip lazy loading. */
   priority?: boolean;
-  objectFit?: 'cover' | 'contain';
+  objectFit?: 'cover' | 'contain' | 'none' | 'scale-down';
   width?: number;
   height?: number;
   sizes?: string;
@@ -43,7 +43,7 @@ export function Image({
   className,
   imgClassName,
   priority = false,
-  objectFit = 'cover',
+  objectFit = 'contain',
   width,
   height,
   sizes,
@@ -61,16 +61,25 @@ export function Image({
     }
   }, [normalizedSrc]);
 
+  const fitClass =
+    objectFit === 'cover'
+      ? 'object-cover'
+      : objectFit === 'contain'
+        ? 'object-contain'
+        : objectFit === 'scale-down'
+          ? 'object-scale-down'
+          : 'object-none';
+
   return (
-    <div className={cn('relative overflow-hidden bg-cream', RATIOS[ratio], className)}>
+    <div className={cn('relative overflow-hidden bg-cream/70 flex items-center justify-center', RATIOS[ratio], className)}>
       {status === 'loading' && (
-        <div className="absolute inset-0 bg-cream">
+        <div className="absolute inset-0 bg-cream/80">
           <div className="absolute inset-0 motion-safe:animate-shimmer bg-gradient-to-r from-transparent via-white/60 to-transparent" />
         </div>
       )}
 
       {status === 'error' || !normalizedSrc ? (
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-cream-dark/60 text-ink-subtle p-3 text-center select-none">
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-cream-dark/40 text-ink-subtle p-3 text-center select-none">
           <Icon name="image" size={24} className="opacity-40 text-primary-deep" />
           <span className="text-caption font-medium tracking-wide text-ink-muted/80">{fallbackText}</span>
         </div>
@@ -92,8 +101,8 @@ export function Image({
             setStatus('error');
           }}
           className={cn(
-            'h-full w-full transition-opacity duration-slow ease-elegant',
-            objectFit === 'cover' ? 'object-cover' : 'object-contain',
+            'h-full w-full transition-all duration-base ease-elegant',
+            fitClass,
             status === 'loaded' ? 'opacity-100' : 'opacity-0',
             imgClassName,
           )}

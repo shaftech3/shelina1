@@ -33,10 +33,10 @@ export function OrderItemsTable({ items }: OrderItemsTableProps) {
                 src={item.productImage}
                 alt=""
                 loading="lazy"
-                className="h-20 w-16 shrink-0 rounded-md bg-cream object-cover"
+                className="h-20 w-16 shrink-0 rounded-md bg-[#faf8f5] object-contain p-1 border border-border/60"
               />
             ) : (
-              <div className="h-20 w-16 shrink-0 rounded-md bg-cream" aria-hidden="true" />
+              <div className="h-20 w-16 shrink-0 rounded-md bg-[#faf8f5] border border-border/60" aria-hidden="true" />
             )}
 
             <div className="min-w-0 flex-1">
@@ -111,10 +111,10 @@ export function OrderItemsTable({ items }: OrderItemsTableProps) {
                         src={item.productImage}
                         alt=""
                         loading="lazy"
-                        className="h-14 w-12 shrink-0 rounded-md bg-cream object-cover"
+                        className="h-14 w-12 shrink-0 rounded-md bg-[#faf8f5] object-contain p-1 border border-border/60"
                       />
                     ) : (
-                      <div className="h-14 w-12 shrink-0 rounded-md bg-cream" aria-hidden="true" />
+                      <div className="h-14 w-12 shrink-0 rounded-md bg-[#faf8f5] border border-border/60" aria-hidden="true" />
                     )}
                     <div className="min-w-0">
                       <p className="text-body-sm font-medium text-ink">{item.productName}</p>

@@ -222,12 +222,12 @@ export function AdminProductsPage() {
                   <tr key={product.id} className="border-b border-border last:border-0 hover:bg-cream/60">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
-                        <div className="h-12 w-12 shrink-0 overflow-hidden rounded-md bg-cream">
+                        <div className="h-12 w-12 shrink-0 overflow-hidden rounded-md bg-[#faf8f5] border border-border/60">
                           {product.images[0] ? (
                             <img
                               src={normalizeMediaUrl(product.images[0].src)}
                               alt=""
-                              className="h-full w-full object-cover"
+                              className="h-full w-full object-contain p-0.5"
                               loading="lazy"
                             />
                           ) : (
@@ -303,12 +303,12 @@ export function AdminProductsPage() {
             {list.map((product) => (
               <li key={product.id} className="rounded-lg border border-border bg-surface p-3">
                 <div className="flex gap-3">
-                  <div className="h-20 w-20 shrink-0 overflow-hidden rounded-md bg-cream">
+                  <div className="h-20 w-20 shrink-0 overflow-hidden rounded-md bg-[#faf8f5] border border-border/60">
                     {product.images[0] ? (
                       <img
                         src={normalizeMediaUrl(product.images[0].src)}
                         alt=""
-                        className="h-full w-full object-cover"
+                        className="h-full w-full object-contain p-1"
                         loading="lazy"
                       />
                     ) : (

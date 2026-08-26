@@ -12,6 +12,7 @@ export interface HeroSlide {
   heading: string;
   subheading?: string;
   image: ImageAsset;
+  mobileImage?: ImageAsset;
   primaryCta?: CallToAction;
   secondaryCta?: CallToAction;
   badge?: string;
@@ -33,6 +34,7 @@ export interface Banner {
   heading: string;
   description?: string;
   image?: ImageAsset;
+  mobileImage?: ImageAsset;
   cta?: CallToAction;
   badge?: string;
   /** Places the media on the left or right in split layouts. */

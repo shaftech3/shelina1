@@ -314,10 +314,14 @@ adminNexoraRouter.post('/test', async (_req, res, next) => {
     });
 
     if (!activeKey) {
-      res.json({
-        success: false,
+      const inactiveResult = {
         connected: false,
         message: 'No active NEXORA API key configured. Generate an API key to connect NEXORA.',
+      };
+      res.json({
+        success: false,
+        ...inactiveResult,
+        data: inactiveResult,
       });
       return;
     }
@@ -328,8 +332,7 @@ adminNexoraRouter.post('/test', async (_req, res, next) => {
       prisma.customerUser.count(),
     ]);
 
-    res.json({
-      success: true,
+    const activeResult = {
       connected: true,
       message: 'NEXORA integration connection test successful!',
       store: 'Shelina Footwear',
@@ -346,6 +349,12 @@ adminNexoraRouter.post('/test', async (_req, res, next) => {
         orders: ordersCount,
         customers: customersCount,
       },
+    };
+
+    res.json({
+      success: true,
+      ...activeResult,
+      data: activeResult,
     });
   } catch (error) {
     next(error);

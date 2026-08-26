@@ -34,6 +34,7 @@ export function Hero({ slide, slides, className }: HeroProps) {
     heading,
     subheading,
     image,
+    mobileImage,
     primaryCta,
     secondaryCta,
     badge,
@@ -44,6 +45,7 @@ export function Hero({ slide, slides, className }: HeroProps) {
 
   const hasMultiple = allSlides.length > 1;
   const mediaSrc = normalizeMediaUrl(image?.src);
+  const mobileMediaSrc = mobileImage?.src ? normalizeMediaUrl(mobileImage.src) : undefined;
   const isVideo = isVideoMedia(mediaSrc);
 
   return (
@@ -51,8 +53,8 @@ export function Hero({ slide, slides, className }: HeroProps) {
       className={cn('relative isolate bg-ink overflow-hidden', className)}
       aria-labelledby="hero-heading"
     >
-      {/* Media background — video or image */}
-      <div className="absolute inset-0 -z-10">
+      {/* Media background — responsive video or image */}
+      <div className="absolute inset-0 -z-10 bg-ink">
         {isVideo ? (
           <video
             key={mediaSrc}
@@ -61,30 +63,35 @@ export function Hero({ slide, slides, className }: HeroProps) {
             muted
             loop
             playsInline
-            className="h-full w-full object-cover object-center transition-opacity duration-1000 scale-105"
+            className="h-full w-full object-cover object-center transition-opacity duration-1000"
           />
         ) : (
-          <img
-            key={mediaSrc}
-            src={mediaSrc}
-            alt={image?.alt || heading}
-            loading="eager"
-            fetchPriority="high"
-            className="h-full w-full object-cover object-center sm:object-[center_35%] transition-all duration-1000 scale-100 motion-safe:animate-[hero-media_1.4s_var(--ease-entrance)_both]"
-          />
+          <picture className="h-full w-full block">
+            {mobileMediaSrc && (
+              <source media="(max-width: 640px)" srcSet={mobileMediaSrc} />
+            )}
+            <img
+              key={mediaSrc}
+              src={mediaSrc}
+              alt={image?.alt || heading}
+              loading="eager"
+              fetchPriority="high"
+              className="h-full w-full object-cover object-center sm:object-[center_35%] transition-all duration-1000 motion-safe:animate-[hero-media_1.4s_var(--ease-entrance)_both]"
+            />
+          </picture>
         )}
 
         {/* Cinematic Gradient Scrim: Dark-to-transparent for perfect text contrast on all devices */}
         <div
-          className="absolute inset-0 bg-gradient-to-t from-ink via-ink/65 to-ink/30 sm:bg-gradient-to-r sm:from-ink sm:via-ink/75 sm:to-transparent"
-          style={{ opacity: Math.max(overlayOpacity + 0.25, 0.65) }}
+          className="absolute inset-0 bg-gradient-to-t from-ink/95 via-ink/65 to-ink/40 sm:bg-gradient-to-r sm:from-ink/90 sm:via-ink/75 sm:to-transparent"
+          style={{ opacity: Math.max(overlayOpacity + 0.25, 0.7) }}
         />
 
         {/* Ambient warm light accent */}
         <div className="absolute -top-32 -left-32 h-96 w-96 rounded-full bg-primary/15 blur-3xl pointer-events-none" />
       </div>
 
-      <Container className="relative flex min-h-[520px] sm:min-h-[580px] lg:min-h-[clamp(580px,78vh,820px)] items-center py-16 sm:py-20 lg:py-28">
+      <Container className="relative flex min-h-[480px] sm:min-h-[540px] lg:min-h-[clamp(560px,76vh,800px)] items-center py-12 sm:py-16 lg:py-24">
         <div
           key={currentIndex}
           className={cn(

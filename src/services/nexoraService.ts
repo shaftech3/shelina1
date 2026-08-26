@@ -105,7 +105,23 @@ export const nexoraService = {
    * Tests the connection with NEXORA and validates syncing capabilities.
    */
   async testConnection(): Promise<NexoraTestResult> {
-    const res = await api.post<NexoraTestResult>('/admin/integrations/nexora/test');
-    return res;
+    try {
+      const res = await api.post<NexoraTestResult>('/admin/integrations/nexora/test');
+      const resolved = (((res as any)?.data || res) || {}) as Partial<NexoraTestResult>;
+      return {
+        success: resolved.success !== false,
+        connected: Boolean(resolved.connected),
+        message: resolved.message || (resolved.connected ? 'NEXORA integration connection test successful!' : 'Connection test inactive'),
+        activeKeyPrefix: resolved.activeKeyPrefix,
+        capabilities: resolved.capabilities || [],
+        stats: resolved.stats,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        connected: false,
+        message: error instanceof Error ? error.message : 'Connection test failed',
+      };
+    }
   },
 };

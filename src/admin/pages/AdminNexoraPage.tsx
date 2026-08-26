@@ -132,8 +132,13 @@ export function AdminNexoraPage() {
     setTestResult(null);
     try {
       const res = await nexoraService.testConnection();
-      setTestResult(res);
-      if (res.connected) {
+      const safeResult: NexoraTestResult = res && typeof res === 'object' ? res : {
+        success: false,
+        connected: false,
+        message: 'Invalid response from connection test',
+      };
+      setTestResult(safeResult);
+      if (safeResult.connected) {
         notify({
           title: 'Connection Successful',
           description: 'NEXORA integration test completed successfully.',
@@ -142,14 +147,20 @@ export function AdminNexoraPage() {
       } else {
         notify({
           title: 'Connection Test Inactive',
-          description: res.message,
+          description: safeResult.message || 'NEXORA connection is not active.',
           tone: 'warning',
         });
       }
     } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Error connecting to API';
+      setTestResult({
+        success: false,
+        connected: false,
+        message: errorMsg,
+      });
       notify({
         title: 'Connection Test Failed',
-        description: err instanceof Error ? err.message : 'Error connecting to API',
+        description: errorMsg,
         tone: 'error',
       });
     } finally {
