@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { formatPrice } from '@/lib/format';
+import { formatDate, formatPrice } from '@/lib/format';
 import {
   Button,
   EmptyState,
@@ -12,62 +11,54 @@ import {
   Skeleton,
   useToast,
 } from '@/components/ui';
-import { useAdminOrders, useSeo } from '@/hooks';
-import { orderService, ServiceError } from '@/services';
-import { ORDER_STATUSES, ORDER_STATUS_LABELS, type Order, type OrderSort, type OrderStatus } from '@/types';
-import { OrderStatusBadge } from '@/components/order';
+import { useAdminCustomers, useSeo } from '@/hooks';
+import { adminCustomerService, ServiceError } from '@/services';
+import type { AdminCustomer, AdminCustomerSort } from '@/types';
 import { AdminLayout } from '../components/AdminLayout';
-import { ConfirmOrderDeleteModal } from '../components/ConfirmOrderDeleteModal';
+import { ConfirmCustomerDeleteModal } from '../components/ConfirmCustomerDeleteModal';
 import { ConfirmBulkDeleteModal } from '../components/ConfirmBulkDeleteModal';
 
-/**
- * Admin order management.
- *
- * Provides search, status filtering, sorting, individual order deletion,
- * and bulk order deletion with safety confirmation modals.
- */
-const SORT_OPTIONS: { value: OrderSort; label: string }[] = [
-  { value: 'newest', label: 'Newest first' },
-  { value: 'oldest', label: 'Oldest first' },
-  { value: 'total-high', label: 'Highest total' },
-  { value: 'total-low', label: 'Lowest total' },
+const SORT_OPTIONS: { value: AdminCustomerSort; label: string }[] = [
+  { value: 'newest', label: 'Newest registered' },
+  { value: 'oldest', label: 'Oldest registered' },
+  { value: 'orders-high', label: 'Most orders' },
+  { value: 'spent-high', label: 'Highest spent' },
+  { value: 'name-asc', label: 'Name (A to Z)' },
 ];
 
-export function AdminOrdersPage() {
+export function AdminCustomersPage() {
   const [search, setSearch] = useState('');
-  const [status, setStatus] = useState<OrderStatus | ''>('');
-  const [sort, setSort] = useState<OrderSort>('newest');
+  const [sort, setSort] = useState<AdminCustomerSort>('newest');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [orderToDelete, setOrderToDelete] = useState<Order | null>(null);
+  const [customerToDelete, setCustomerToDelete] = useState<AdminCustomer | null>(null);
   const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
 
   const { notify } = useToast();
 
-  useSeo({ title: 'Orders', path: '/admin/orders', noIndex: true });
+  useSeo({ title: 'Customer Accounts', path: '/admin/customers', noIndex: true });
 
   const query = useMemo(
-    () => ({ search: search.trim() || undefined, status: status || undefined, sort }),
-    [search, status, sort],
+    () => ({ search: search.trim() || undefined, sort }),
+    [search, sort],
   );
 
-  const { data, loading, error, retry } = useAdminOrders(query);
-  const orders = data?.orders ?? [];
-  const isFiltered = Boolean(search.trim() || status);
+  const { data, loading, error, retry } = useAdminCustomers(query);
+  const customers = data?.customers ?? [];
+  const isFiltered = Boolean(search.trim());
 
   function clearFilters() {
     setSearch('');
-    setStatus('');
     setSort('newest');
   }
 
-  const allSelected = orders.length > 0 && orders.every((o) => selectedIds.includes(o.id));
+  const allSelected = customers.length > 0 && customers.every((c) => selectedIds.includes(c.id));
   const someSelected = selectedIds.length > 0;
 
   function handleToggleAll() {
     if (allSelected) {
       setSelectedIds([]);
     } else {
-      setSelectedIds(orders.map((o) => o.id));
+      setSelectedIds(customers.map((c) => c.id));
     }
   }
 
@@ -77,20 +68,20 @@ export function AdminOrdersPage() {
     );
   }
 
-  async function handleConfirmDeleteOrder() {
-    if (!orderToDelete) return;
+  async function handleConfirmDeleteCustomer() {
+    if (!customerToDelete) return;
     try {
-      await orderService.delete(orderToDelete.id);
+      await adminCustomerService.delete(customerToDelete.id);
       notify({
-        title: 'Order deleted',
-        description: `Order ${orderToDelete.orderNumber} was deleted successfully.`,
+        title: 'Customer deleted',
+        description: `Customer ${customerToDelete.name} was removed. Past orders were preserved.`,
         tone: 'success',
       });
-      setSelectedIds((prev) => prev.filter((id) => id !== orderToDelete.id));
+      setSelectedIds((prev) => prev.filter((id) => id !== customerToDelete.id));
       retry();
     } catch (cause) {
       notify({
-        title: 'Could not delete order',
+        title: 'Could not delete customer',
         description: cause instanceof ServiceError ? cause.message : 'Please try again.',
         tone: 'error',
       });
@@ -100,31 +91,31 @@ export function AdminOrdersPage() {
   async function handleConfirmBulkDelete() {
     if (selectedIds.length === 0) return;
     try {
-      const result = await orderService.bulkDelete(selectedIds);
+      const result = await adminCustomerService.bulkDelete(selectedIds);
       notify({
-        title: 'Orders deleted',
-        description: `Successfully deleted ${result.count} order(s).`,
+        title: 'Customers deleted',
+        description: `Successfully deleted ${result.count} customer account(s). Past orders were preserved.`,
         tone: 'success',
       });
       setSelectedIds([]);
       retry();
     } catch (cause) {
       notify({
-        title: 'Could not delete orders',
+        title: 'Could not delete customers',
         description: cause instanceof ServiceError ? cause.message : 'Please try again.',
         tone: 'error',
       });
     }
   }
 
-  const selectedOrdersSummary = orders
-    .filter((o) => selectedIds.includes(o.id))
-    .map((o) => `${o.orderNumber} (${o.customerName} - ${formatPrice(o.grandTotal)})`);
+  const selectedCustomersSummary = customers
+    .filter((c) => selectedIds.includes(c.id))
+    .map((c) => `${c.name} (${c.email} - ${c.orderCount} orders)`);
 
   return (
     <AdminLayout
-      title="Orders"
-      description="Search, review, progress, and manage customer orders."
+      title="Customers"
+      description="View registered customer accounts, review purchase totals, and manage user records."
       actions={
         someSelected ? (
           <div className="flex items-center gap-2">
@@ -148,28 +139,18 @@ export function AdminOrdersPage() {
       }
     >
       <div className="surface-card mb-6 flex flex-col gap-4 p-4">
-        <Input
-          label="Search"
-          placeholder="Order number, name, email or phone"
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-        />
-
         <div className="grid gap-4 sm:grid-cols-2">
-          <Select
-            label="Status"
-            value={status}
-            onChange={(event) => setStatus(event.target.value as OrderStatus | '')}
-            options={[
-              { value: '', label: 'All statuses' },
-              ...ORDER_STATUSES.map((value) => ({ value, label: ORDER_STATUS_LABELS[value] })),
-            ]}
+          <Input
+            label="Search"
+            placeholder="Customer name or email"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
           />
 
           <Select
             label="Sort by"
             value={sort}
-            onChange={(event) => setSort(event.target.value as OrderSort)}
+            onChange={(event) => setSort(event.target.value as AdminCustomerSort)}
             options={SORT_OPTIONS.map((option) => ({ value: option.value, label: option.label }))}
           />
         </div>
@@ -183,13 +164,13 @@ export function AdminOrdersPage() {
             )}
           </div>
 
-          {orders.length > 0 && (
+          {customers.length > 0 && (
             <button
               type="button"
               onClick={handleToggleAll}
               className="text-body-sm font-medium text-primary hover:underline"
             >
-              {allSelected ? 'Deselect all' : 'Select all orders'}
+              {allSelected ? 'Deselect all' : 'Select all customers'}
             </button>
           )}
         </div>
@@ -198,7 +179,7 @@ export function AdminOrdersPage() {
       {someSelected && (
         <div className="mb-4 flex items-center justify-between rounded-lg border border-red-200 bg-red-50/70 p-3 lg:hidden">
           <span className="text-body-sm font-medium text-red-900">
-            {selectedIds.length} order(s) selected
+            {selectedIds.length} customer(s) selected
           </span>
           <div className="flex items-center gap-2">
             <Button
@@ -225,32 +206,32 @@ export function AdminOrdersPage() {
 
       {!loading && error && (
         <ErrorState
-          title="Could not load orders"
+          title="Could not load customers"
           description="Please check your connection and try again."
           onRetry={retry}
         />
       )}
 
-      {!loading && !error && orders.length === 0 && (
+      {!loading && !error && customers.length === 0 && (
         <EmptyState
-          title={isFiltered ? 'No orders match those filters' : 'No orders yet'}
+          title={isFiltered ? 'No customers match your search' : 'No registered customers yet'}
           description={
             isFiltered
-              ? 'Try a different search term or status.'
-              : 'Customer orders will appear here as soon as they are placed.'
+              ? 'Try a different search term.'
+              : 'Registered customer accounts will appear here as soon as they sign up.'
           }
         />
       )}
 
-      {!loading && orders.length > 0 && (
+      {!loading && customers.length > 0 && (
         <>
           {/* Mobile: cards */}
           <ul className="flex flex-col gap-3 lg:hidden">
-            {orders.map((order) => {
-              const isSelected = selectedIds.includes(order.id);
+            {customers.map((customer) => {
+              const isSelected = selectedIds.includes(customer.id);
               return (
                 <li
-                  key={order.id}
+                  key={customer.id}
                   className={`surface-card p-4 transition-colors ${
                     isSelected ? 'border-primary/50 bg-primary/5' : ''
                   }`}
@@ -260,49 +241,38 @@ export function AdminOrdersPage() {
                       <input
                         type="checkbox"
                         checked={isSelected}
-                        onChange={() => handleToggleOne(order.id)}
+                        onChange={() => handleToggleOne(customer.id)}
                         className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
-                        aria-label={`Select order ${order.orderNumber}`}
+                        aria-label={`Select customer ${customer.name}`}
                       />
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-start justify-between gap-2">
-                        <Link
-                          to={`/admin/orders/${order.id}`}
-                          className="text-body-sm font-semibold text-ink underline-offset-4 hover:underline"
-                        >
-                          {order.orderNumber}
-                        </Link>
-                        <OrderStatusBadge status={order.status} size="sm" />
+                        <h3 className="text-body-sm font-semibold text-ink">{customer.name}</h3>
+                        <span className="rounded bg-sand px-2 py-0.5 text-caption font-medium text-ink">
+                          {customer.orderCount} {customer.orderCount === 1 ? 'order' : 'orders'}
+                        </span>
                       </div>
 
-                      <p className="mt-1 truncate text-caption text-ink-muted">
-                        {order.customerName} · {order.customerEmail}
-                      </p>
+                      <p className="mt-1 truncate text-caption text-ink-muted">{customer.email}</p>
+                      {customer.phone && (
+                        <p className="mt-0.5 text-caption text-ink-muted">{customer.phone}</p>
+                      )}
                       <p className="mt-0.5 text-caption text-ink-muted">
-                        {new Date(order.createdAt).toLocaleDateString('en-PK')} · {order.itemCount}{' '}
-                        {order.itemCount === 1 ? 'item' : 'items'}
+                        Joined {formatDate(customer.createdAt)}
                       </p>
 
                       <div className="mt-3 flex items-center justify-between border-t border-border/50 pt-2">
                         <span className="text-body-sm font-bold text-ink">
-                          {formatPrice(order.grandTotal)}
+                          {formatPrice(customer.totalSpent)}
                         </span>
-                        <div className="flex items-center gap-2">
-                          <Link
-                            to={`/admin/orders/${order.id}`}
-                            className="rounded px-2.5 py-1 text-caption font-medium text-ink bg-sand/60 hover:bg-sand"
-                          >
-                            View
-                          </Link>
-                          <IconButton
-                            label={`Delete order ${order.orderNumber}`}
-                            icon={<Icon name="trash" size={15} />}
-                            size="sm"
-                            className="text-red-600 hover:bg-red-50 hover:text-red-700"
-                            onClick={() => setOrderToDelete(order)}
-                          />
-                        </div>
+                        <IconButton
+                          label={`Delete customer ${customer.name}`}
+                          icon={<Icon name="trash" size={15} />}
+                          size="sm"
+                          className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                          onClick={() => setCustomerToDelete(customer)}
+                        />
                       </div>
                     </div>
                   </div>
@@ -322,26 +292,23 @@ export function AdminOrdersPage() {
                       checked={allSelected}
                       onChange={handleToggleAll}
                       className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
-                      aria-label="Select all orders"
+                      aria-label="Select all customers"
                     />
-                  </th>
-                  <th scope="col" className="px-4 py-3 text-caption font-semibold uppercase text-ink-muted">
-                    Order
                   </th>
                   <th scope="col" className="px-4 py-3 text-caption font-semibold uppercase text-ink-muted">
                     Customer
                   </th>
                   <th scope="col" className="px-4 py-3 text-caption font-semibold uppercase text-ink-muted">
-                    Date
+                    Contact
                   </th>
                   <th scope="col" className="px-4 py-3 text-caption font-semibold uppercase text-ink-muted">
-                    Items
+                    Registered
                   </th>
-                  <th scope="col" className="px-4 py-3 text-caption font-semibold uppercase text-ink-muted">
-                    Status
+                  <th scope="col" className="px-4 py-3 text-center text-caption font-semibold uppercase text-ink-muted">
+                    Orders
                   </th>
                   <th scope="col" className="px-4 py-3 text-right text-caption font-semibold uppercase text-ink-muted">
-                    Total
+                    Total Spent
                   </th>
                   <th scope="col" className="w-20 px-4 py-3 text-center text-caption font-semibold uppercase text-ink-muted">
                     Actions
@@ -349,11 +316,11 @@ export function AdminOrdersPage() {
                 </tr>
               </thead>
               <tbody>
-                {orders.map((order) => {
-                  const isSelected = selectedIds.includes(order.id);
+                {customers.map((customer) => {
+                  const isSelected = selectedIds.includes(customer.id);
                   return (
                     <tr
-                      key={order.id}
+                      key={customer.id}
                       className={`border-b border-border transition-colors last:border-0 hover:bg-sand/20 ${
                         isSelected ? 'bg-primary/5' : ''
                       }`}
@@ -362,54 +329,38 @@ export function AdminOrdersPage() {
                         <input
                           type="checkbox"
                           checked={isSelected}
-                          onChange={() => handleToggleOne(order.id)}
+                          onChange={() => handleToggleOne(customer.id)}
                           className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
-                          aria-label={`Select order ${order.orderNumber}`}
+                          aria-label={`Select customer ${customer.name}`}
                         />
                       </td>
                       <td className="px-4 py-4">
-                        <Link
-                          to={`/admin/orders/${order.id}`}
-                          className="text-body-sm font-semibold text-ink underline-offset-4 hover:underline"
-                        >
-                          {order.orderNumber}
-                        </Link>
-                      </td>
-                      <td className="px-4 py-4">
-                        <p className="text-body-sm text-ink">{order.customerName}</p>
-                        <p className="text-caption text-ink-muted">{order.customerEmail}</p>
-                        {order.customerPhone && (
-                          <p className="text-caption text-ink-muted">{order.customerPhone}</p>
-                        )}
+                        <p className="text-body-sm font-semibold text-ink">{customer.name}</p>
+                        <p className="text-caption text-ink-muted">{customer.email}</p>
                       </td>
                       <td className="px-4 py-4 text-body-sm text-ink-muted">
-                        {new Date(order.createdAt).toLocaleDateString('en-PK')}
+                        {customer.phone || '—'}
                       </td>
-                      <td className="px-4 py-4 text-body-sm text-ink-muted">{order.itemCount}</td>
-                      <td className="px-4 py-4">
-                        <OrderStatusBadge status={order.status} size="sm" />
-                      </td>
-                      <td className="px-4 py-4 text-right text-body-sm font-bold text-ink">
-                        {formatPrice(order.grandTotal)}
+                      <td className="px-4 py-4 text-body-sm text-ink-muted">
+                        {formatDate(customer.createdAt)}
                       </td>
                       <td className="px-4 py-4 text-center">
-                        <div className="flex items-center justify-center gap-1">
-                          <Link
-                            to={`/admin/orders/${order.id}`}
-                            className="rounded p-1.5 text-ink-muted transition-colors hover:bg-sand hover:text-ink"
-                            title="View Order Details"
-                          >
-                            <Icon name="eye" size={16} />
-                          </Link>
-                          <button
-                            type="button"
-                            onClick={() => setOrderToDelete(order)}
-                            className="rounded p-1.5 text-red-600 transition-colors hover:bg-red-50 hover:text-red-700"
-                            title="Delete Order"
-                          >
-                            <Icon name="trash" size={16} />
-                          </button>
-                        </div>
+                        <span className="inline-block rounded bg-sand px-2 py-0.5 text-caption font-medium text-ink">
+                          {customer.orderCount}
+                        </span>
+                      </td>
+                      <td className="px-4 py-4 text-right text-body-sm font-bold text-ink">
+                        {formatPrice(customer.totalSpent)}
+                      </td>
+                      <td className="px-4 py-4 text-center">
+                        <button
+                          type="button"
+                          onClick={() => setCustomerToDelete(customer)}
+                          className="rounded p-1.5 text-red-600 transition-colors hover:bg-red-50 hover:text-red-700"
+                          title="Delete Customer Account"
+                        >
+                          <Icon name="trash" size={16} />
+                        </button>
                       </td>
                     </tr>
                   );
@@ -420,28 +371,27 @@ export function AdminOrdersPage() {
 
           {data && (
             <p className="mt-5 text-caption text-ink-muted">
-              Showing {orders.length} of {data.meta.total} orders.
+              Showing {customers.length} of {data.meta.total} registered customers.
             </p>
           )}
         </>
       )}
 
-      <ConfirmOrderDeleteModal
-        open={Boolean(orderToDelete)}
-        onClose={() => setOrderToDelete(null)}
-        onConfirm={handleConfirmDeleteOrder}
-        order={orderToDelete}
+      <ConfirmCustomerDeleteModal
+        open={Boolean(customerToDelete)}
+        onClose={() => setCustomerToDelete(null)}
+        onConfirm={handleConfirmDeleteCustomer}
+        customer={customerToDelete}
       />
 
       <ConfirmBulkDeleteModal
         open={showBulkDeleteModal}
         onClose={() => setShowBulkDeleteModal(false)}
         onConfirm={handleConfirmBulkDelete}
-        itemType="orders"
+        itemType="customers"
         count={selectedIds.length}
-        itemsSummary={selectedOrdersSummary}
+        itemsSummary={selectedCustomersSummary}
       />
     </AdminLayout>
   );
 }
-

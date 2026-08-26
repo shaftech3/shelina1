@@ -71,3 +71,87 @@ export interface MediaAsset {
   width?: number;
   height?: number;
 }
+
+/** Admin view of a registered customer account with order summaries */
+export interface AdminCustomer {
+  id: string;
+  name: string;
+  email: string;
+  phone: string | null;
+  orderCount: number;
+  validOrderCount: number;
+  totalSpent: number;
+  lastOrderDate: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AdminCustomerListMeta {
+  total: number;
+  page: number;
+  pageSize: number;
+  pageCount: number;
+}
+
+export interface AdminCustomerList {
+  customers: AdminCustomer[];
+  meta: AdminCustomerListMeta;
+}
+
+export type AdminCustomerSort = 'newest' | 'oldest' | 'orders-high' | 'spent-high' | 'name-asc';
+
+export interface AdminCustomerQuery {
+  search?: string;
+  sort?: AdminCustomerSort;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface AdminCleanupStats {
+  orders: {
+    total: number;
+    pending: number;
+    confirmed: number;
+    processing: number;
+    shipped: number;
+    delivered: number;
+    cancelled: number;
+    guestOrders: number;
+    registeredCustomerOrders: number;
+  };
+  customers: {
+    total: number;
+    active: number;
+    inactive: number;
+  };
+  catalogue: {
+    products: number;
+    media: number;
+    categories: number;
+    brands: number;
+    orphanedMedia: number;
+  };
+  nexora: {
+    connected: boolean;
+    activeKey: {
+      id: string;
+      name: string;
+      keyPrefix: string;
+      permissions: string[];
+      status: string;
+      lastUsedAt: string | null;
+      createdAt: string;
+    } | null;
+    status: string;
+  };
+  recentAuditLogs: {
+    id: string;
+    action: string;
+    actorId: string | null;
+    actorType: string;
+    ipAddress: string | null;
+    metadata: Record<string, unknown> | null;
+    createdAt: string;
+  }[];
+}
+

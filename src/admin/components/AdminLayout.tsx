@@ -22,6 +22,8 @@ const NAV_ITEMS: AdminNavItem[] = [
   { to: '/admin', label: 'Dashboard', icon: 'home', end: true },
   { to: '/admin/products', label: 'Products', icon: 'grid' },
   { to: '/admin/orders', label: 'Orders', icon: 'receipt' },
+  { to: '/admin/customers', label: 'Customers', icon: 'user' },
+  { to: '/admin/cleanup', label: 'Data Cleanup', icon: 'trash' },
   { to: '/admin/categories', label: 'Categories', icon: 'layers' },
   { to: '/admin/brands', label: 'Brands', icon: 'tag' },
   { to: '/admin/homepage', label: 'Homepage', icon: 'image' },

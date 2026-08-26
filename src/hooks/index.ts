@@ -13,5 +13,7 @@ export { useCatalog, useProducts, useProduct, useRelatedProducts, useCategories 
 export { useHeroSlides, useBanner, useBanners, useBrands, useEditorial, useTrustValues } from './useContent';
 export { useDataRevision } from './useDataRevision';
 export { useMyOrders, useMyOrder, useAdminOrders, useAdminOrder } from './useOrders';
+export { useAdminCustomers, useAdminCustomer } from './useAdminCustomers';
+export { useAdminCleanupStats } from './useAdminCleanup';
 export { useShopFilters, SORT_OPTIONS } from './useShopFilters';
 export type { ShopFilters as ShopFilterState, UseShopFiltersResult } from './useShopFilters';

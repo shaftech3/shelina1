@@ -10,6 +10,8 @@ import { brandsRouter, categoriesRouter } from './routes/taxonomy.js';
 import { bannersRouter, homepageRouter, seoRouter } from './routes/content.js';
 import { handleServeMediaFile, mediaRouter, resolveUploadsDirectory } from './routes/media.js';
 import { adminOrdersRouter, ordersRouter } from './routes/orders.js';
+import { adminCustomersRouter } from './routes/adminCustomers.js';
+import { adminCleanupRouter } from './routes/adminCleanup.js';
 import { settingsRouter } from './routes/settings.js';
 import { nexoraRouter } from './routes/nexora.js';
 import { adminNexoraRouter } from './routes/adminNexora.js';
@@ -115,7 +117,10 @@ export function createApp() {
   app.use('/api/settings', settingsRouter);
   app.use('/api/orders', ordersRouter);
   app.use('/api/admin/orders', adminOrdersRouter);
+  app.use('/api/admin/customers', adminCustomersRouter);
+  app.use('/api/admin/cleanup', adminCleanupRouter);
   app.use('/api/admin/integrations/nexora', adminNexoraRouter);
+  app.use('/api/admin/nexora', adminCleanupRouter);
   app.use('/api/nexora/v1', nexoraRouter);
 
   app.use('/api', notFoundHandler);

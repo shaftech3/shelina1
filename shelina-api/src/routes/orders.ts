@@ -424,3 +424,170 @@ adminOrdersRouter.patch('/:id/status', requireAdmin, async (req, res, next) => {
     next(error);
   }
 });
+
+/**
+ * DELETE /api/admin/orders/bulk and POST /api/admin/orders/bulk-delete
+ *
+ * Allows an authorized admin to bulk-delete multiple selected orders safely.
+ * Placed before `/:id` so the literal word 'bulk' is not captured as an id.
+ */
+async function handleBulkDeleteOrders(
+  req: import('express').Request,
+  res: import('express').Response,
+  next: import('express').NextFunction,
+) {
+  try {
+    const rawIds = req.body?.ids || (req.query?.ids ? String(req.query.ids).split(',') : []);
+    const ids = Array.isArray(rawIds)
+      ? rawIds.map((id: unknown) => String(id).trim()).filter(Boolean)
+      : [];
+
+    if (ids.length === 0) {
+      throw ApiError.badRequest('No order IDs provided for deletion.');
+    }
+
+    const adminId = (req as unknown as { adminId?: string }).adminId || 'admin';
+
+    const result = await prisma.$transaction(async (tx) => {
+      // Find orders to be deleted
+      const orders = await tx.order.findMany({
+        where: {
+          OR: [{ id: { in: ids } }, { orderNumber: { in: ids } }],
+        },
+        select: {
+          id: true,
+          orderNumber: true,
+          grandTotal: true,
+          customerName: true,
+          customerEmail: true,
+          status: true,
+        },
+      });
+
+      if (orders.length === 0) {
+        return { count: 0, deletedIds: [] };
+      }
+
+      const foundIds = orders.map((o) => o.id);
+
+      // Explicitly delete order items first to ensure foreign-key constraints are satisfied
+      await tx.orderItem.deleteMany({
+        where: { orderId: { in: foundIds } },
+      });
+
+      // Delete the orders
+      const deleteResult = await tx.order.deleteMany({
+        where: { id: { in: foundIds } },
+      });
+
+      // Record audit log for destructive action
+      await tx.auditLog.create({
+        data: {
+          action: 'ORDERS_BULK_DELETED',
+          actorId: adminId,
+          actorType: 'admin',
+          ipAddress: req.ip || null,
+          metadata: {
+            deletedCount: deleteResult.count,
+            orders: orders.map((o) => ({
+              id: o.id,
+              orderNumber: o.orderNumber,
+              customerEmail: o.customerEmail,
+              grandTotal: o.grandTotal,
+              status: o.status,
+            })),
+          },
+        },
+      });
+
+      return { count: deleteResult.count, deletedIds: foundIds };
+    });
+
+    res.json({
+      success: true,
+      message: `Successfully deleted ${result.count} order(s).`,
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+adminOrdersRouter.delete('/bulk', requireAdmin, handleBulkDeleteOrders);
+adminOrdersRouter.post('/bulk-delete', requireAdmin, handleBulkDeleteOrders);
+
+/**
+ * DELETE /api/admin/orders/:id
+ *
+ * Permanently deletes a single order. Dependent OrderItems are removed cleanly,
+ * referential integrity is preserved, and an audit log is recorded.
+ */
+adminOrdersRouter.delete('/:id', requireAdmin, async (req, res, next) => {
+  try {
+    const idOrNumber = param(req.params.id, 'order id');
+    const adminId = (req as unknown as { adminId?: string }).adminId || 'admin';
+
+    const deleted = await prisma.$transaction(async (tx) => {
+      const order = await tx.order.findFirst({
+        where: { OR: [{ id: idOrNumber }, { orderNumber: idOrNumber }] },
+        select: {
+          id: true,
+          orderNumber: true,
+          customerName: true,
+          customerEmail: true,
+          customerPhone: true,
+          grandTotal: true,
+          status: true,
+          createdAt: true,
+        },
+      });
+
+      if (!order) {
+        throw ApiError.notFound('Order not found.');
+      }
+
+      // Delete order items
+      await tx.orderItem.deleteMany({
+        where: { orderId: order.id },
+      });
+
+      // Delete the order
+      await tx.order.delete({
+        where: { id: order.id },
+      });
+
+      // Record audit log
+      await tx.auditLog.create({
+        data: {
+          action: 'ORDER_DELETED',
+          actorId: adminId,
+          actorType: 'admin',
+          ipAddress: req.ip || null,
+          metadata: {
+            orderId: order.id,
+            orderNumber: order.orderNumber,
+            customerName: order.customerName,
+            customerEmail: order.customerEmail,
+            grandTotal: order.grandTotal,
+            status: order.status,
+            createdAt: order.createdAt.toISOString(),
+          },
+        },
+      });
+
+      return order;
+    });
+
+    res.json({
+      success: true,
+      message: `Order ${deleted.orderNumber} was deleted successfully.`,
+      data: {
+        id: deleted.id,
+        orderNumber: deleted.orderNumber,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+

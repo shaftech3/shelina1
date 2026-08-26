@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { formatPrice } from '@/lib/format';
 import { Button, ErrorState, Icon, Select, Skeleton, useToast } from '@/components/ui';
 import { useAdminOrder, useSeo } from '@/hooks';
@@ -7,22 +7,22 @@ import { orderService, ServiceError } from '@/services';
 import { ORDER_STATUS_LABELS, type OrderStatus } from '@/types';
 import { OrderItemsTable, OrderStatusBadge, OrderTotals } from '@/components/order';
 import { AdminLayout } from '../components/AdminLayout';
+import { ConfirmOrderDeleteModal } from '../components/ConfirmOrderDeleteModal';
 
 /**
  * Admin order detail.
  *
- * Shows the full order and lets an admin advance its status. The list of legal
- * next statuses comes from the SERVER (`allowedTransitions`), so this page
- * cannot offer a move the backend would reject — and the backend re-checks it
- * regardless.
+ * Shows the full order and lets an admin advance its status or permanently delete the order.
  */
 export function AdminOrderDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const { data: order, loading, error, retry } = useAdminOrder(id);
   const { notify } = useToast();
 
   const [nextStatus, setNextStatus] = useState<OrderStatus | ''>('');
   const [saving, setSaving] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   useSeo({
     title: order ? `Order ${order.orderNumber}` : 'Order',
@@ -60,19 +60,50 @@ export function AdminOrderDetailPage() {
     }
   }
 
+  async function handleDeleteOrder() {
+    if (!order) return;
+    try {
+      await orderService.delete(order.id);
+      notify({
+        title: 'Order deleted',
+        description: `Order ${order.orderNumber} was permanently removed.`,
+        tone: 'success',
+      });
+      navigate('/admin/orders');
+    } catch (cause) {
+      notify({
+        title: 'Could not delete order',
+        description:
+          cause instanceof ServiceError ? cause.message : 'Please try again.',
+        tone: 'error',
+      });
+    }
+  }
+
   return (
     <AdminLayout
       title={order ? order.orderNumber : 'Order'}
       description={order ? `Placed ${new Date(order.createdAt).toLocaleString('en-PK')}` : undefined}
       actions={
         order ? (
-          <a
-            href={orderService.invoiceUrl(order.id)}
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-border px-4 text-body-sm font-semibold text-ink transition-colors duration-fast hover:bg-cream focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-          >
-            <Icon name="download" size={16} />
-            Invoice
-          </a>
+          <div className="flex items-center gap-2">
+            <a
+              href={orderService.invoiceUrl(order.id)}
+              className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-border px-4 text-body-sm font-semibold text-ink transition-colors duration-fast hover:bg-cream focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            >
+              <Icon name="download" size={16} />
+              Invoice
+            </a>
+            <Button
+              variant="danger"
+              size="md"
+              onClick={() => setShowDeleteModal(true)}
+              className="flex items-center gap-2"
+            >
+              <Icon name="trash" size={16} />
+              Delete Order
+            </Button>
+          </div>
         ) : undefined
       }
     >
@@ -239,6 +270,13 @@ export function AdminOrderDetailPage() {
           </p>
         </div>
       )}
+
+      <ConfirmOrderDeleteModal
+        open={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleDeleteOrder}
+        order={order ?? null}
+      />
     </AdminLayout>
   );
 }

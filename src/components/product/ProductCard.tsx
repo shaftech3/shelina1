@@ -40,9 +40,15 @@ export const ProductCard = memo(function ProductCard({
   const soldOut = stockStatus === 'out-of-stock';
 
   return (
-    <article className={cn('group relative flex flex-col', className)}>
-      {/* Product Image Frame: Aspect ratio locked with 100% full contain (no cropping) */}
-      <div className="relative aspect-[4/5] w-full overflow-hidden rounded-md sm:rounded-lg border border-border/70 bg-[#faf8f5] transition-all duration-300 group-hover:border-border-strong group-hover:shadow-sm">
+    <article
+      className={cn(
+        'group relative flex flex-col h-full rounded-lg transition-all duration-300 ease-out',
+        'motion-safe:hover:-translate-y-1',
+        className,
+      )}
+    >
+      {/* Product Image Frame: Fixed aspect ratio with proportional containment and neutral background */}
+      <div className="relative aspect-[4/5] w-full overflow-hidden rounded-lg border border-border/80 bg-[#faf8f5] shadow-xs transition-all duration-300 ease-out group-hover:border-border-strong group-hover:shadow-sm">
         {/* Primary Product Image */}
         <Image
           src={primaryImage?.src ?? ''}
@@ -53,7 +59,7 @@ export const ProductCard = memo(function ProductCard({
           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
           className="h-full w-full bg-transparent"
           imgClassName={cn(
-            'p-2 sm:p-3 transition-all duration-500 ease-out motion-safe:group-hover:scale-[1.03]',
+            'p-2.5 sm:p-3.5 transition-all duration-500 ease-out motion-safe:group-hover:scale-[1.025]',
             secondaryImage && 'motion-safe:group-hover:opacity-0 motion-safe:group-focus-within:opacity-0',
             soldOut && 'opacity-75 grayscale-[20%]',
           )}
@@ -69,7 +75,7 @@ export const ProductCard = memo(function ProductCard({
               objectFit="contain"
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
               className="h-full w-full bg-transparent"
-              imgClassName="p-2 sm:p-3 transition-transform duration-500 ease-out motion-safe:group-hover:scale-[1.03]"
+              imgClassName="p-2.5 sm:p-3.5 transition-transform duration-500 ease-out motion-safe:group-hover:scale-[1.025]"
             />
           </div>
         )}
@@ -95,14 +101,14 @@ export const ProductCard = memo(function ProductCard({
 
         {/* Sold out overlay */}
         {soldOut && (
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-surface/92 py-1.5 text-center text-[10px] sm:text-caption font-semibold uppercase tracking-[0.14em] text-ink-muted backdrop-blur-xs">
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-surface/95 py-1.5 text-center text-[10px] sm:text-caption font-semibold uppercase tracking-[0.14em] text-ink-muted backdrop-blur-xs">
             Sold out
           </div>
         )}
       </div>
 
       {/* Product Information */}
-      <div className="flex flex-1 flex-col gap-1 px-0.5 pt-2.5 sm:pt-3">
+      <div className="flex flex-1 flex-col gap-1 px-0.5 pt-2 sm:pt-2.5">
         {brand && (
           <span className="line-clamp-1 text-[10px] sm:text-[11px] font-medium uppercase tracking-[0.14em] text-ink-subtle">
             {brand}

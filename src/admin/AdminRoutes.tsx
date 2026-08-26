@@ -12,6 +12,8 @@ import { AdminProductNewPage } from './pages/AdminProductNewPage';
 import { AdminProductsPage } from './pages/AdminProductsPage';
 import { AdminOrdersPage } from './pages/AdminOrdersPage';
 import { AdminOrderDetailPage } from './pages/AdminOrderDetailPage';
+import { AdminCustomersPage } from './pages/AdminCustomersPage';
+import { AdminCleanupPage } from './pages/AdminCleanupPage';
 import { AdminSeoPage } from './pages/AdminSeoPage';
 import { AdminSettingsPage } from './pages/AdminSettingsPage';
 import { AdminNexoraPage } from './pages/AdminNexoraPage';
@@ -73,6 +75,22 @@ export function AdminRoutes() {
           element={
             <RequireAdmin>
               <AdminOrderDetailPage />
+            </RequireAdmin>
+          }
+        />
+        <Route
+          path="customers"
+          element={
+            <RequireAdmin>
+              <AdminCustomersPage />
+            </RequireAdmin>
+          }
+        />
+        <Route
+          path="cleanup"
+          element={
+            <RequireAdmin>
+              <AdminCleanupPage />
             </RequireAdmin>
           }
         />

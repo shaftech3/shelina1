@@ -112,4 +112,17 @@ export const orderService = {
     repository.invalidate();
     return order;
   },
+
+  /** Admin-only: Permanently delete an order and its line items. */
+  async delete(idOrNumber: string): Promise<{ id: string; orderNumber: string }> {
+    return api.delete<{ id: string; orderNumber: string }>(
+      `/admin/orders/${encodeURIComponent(idOrNumber)}`,
+    );
+  },
+
+  /** Admin-only: Bulk delete multiple selected orders safely. */
+  async bulkDelete(ids: string[]): Promise<{ count: number; deletedIds: string[] }> {
+    return api.post<{ count: number; deletedIds: string[] }>('/admin/orders/bulk-delete', { ids });
+  },
 };
+
