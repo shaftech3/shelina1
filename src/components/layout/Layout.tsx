@@ -11,7 +11,7 @@ interface LayoutProps {
 /** App shell: skip link, header, main landmark, footer. */
 export function Layout({ children, overHero = false }: LayoutProps) {
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen w-full max-w-full flex-col overflow-x-hidden">
       <a
         href="#main"
         className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[200] focus:rounded-full focus:bg-primary-deep focus:px-5 focus:py-3 focus:text-button focus:text-white"
@@ -21,7 +21,7 @@ export function Layout({ children, overHero = false }: LayoutProps) {
 
       <Header overHero={overHero} />
 
-      <main id="main" className="flex-1">
+      <main id="main" className="flex-1 w-full min-w-0 max-w-full overflow-x-hidden">
         {children}
       </main>
 

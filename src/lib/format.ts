@@ -19,3 +19,16 @@ export function discountPercent(price: number, salePrice?: number | null): numbe
 export function effectivePrice(price: number, salePrice?: number | null): number {
   return salePrice && salePrice < price ? salePrice : price;
 }
+
+/** Formats an ISO date string or Date object into a localized display date. */
+export function formatDate(date: string | Date | number | null | undefined): string {
+  if (!date) return '—';
+  const d = typeof date === 'string' || typeof date === 'number' ? new Date(date) : date;
+  if (isNaN(d.getTime())) return '—';
+  return d.toLocaleDateString(STORE_CONFIG.locale, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
+}
+

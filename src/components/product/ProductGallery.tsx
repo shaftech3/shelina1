@@ -23,6 +23,9 @@ type Slide =
  * lazy. The video element is created only once the customer selects the video
  * slide — before that it is a poster image, so a product page costs zero video
  * bytes unless someone asks for it.
+ *
+ * Completely responsive and bounded: prevents horizontal layout overflow
+ * regardless of image aspect ratio or resolution.
  */
 export function ProductGallery({ images, video, productName, className }: ProductGalleryProps) {
   const slides: Slide[] = [
@@ -50,8 +53,8 @@ export function ProductGallery({ images, video, productName, className }: Produc
 
   if (slides.length === 0) {
     return (
-      <div className={cn('overflow-hidden rounded-lg border border-border/70 bg-[#faf8f5]', className)}>
-        <Image src="" alt={productName} ratio="product" objectFit="contain" />
+      <div className={cn('w-full min-w-0 max-w-full overflow-hidden rounded-lg border border-border/70 bg-[#faf8f5]', className)}>
+        <Image src="" alt={productName} ratio="product" objectFit="contain" className="w-full max-h-[75vh]" />
       </div>
     );
   }
@@ -71,8 +74,8 @@ export function ProductGallery({ images, video, productName, className }: Produc
   };
 
   return (
-    <div className={cn('flex flex-col gap-3', className)}>
-      <div className="relative overflow-hidden rounded-lg border border-border/70 bg-[#faf8f5]">
+    <div className={cn('flex w-full min-w-0 max-w-full flex-col gap-3.5 overflow-hidden', className)}>
+      <div className="relative flex w-full min-w-0 max-w-full items-center justify-center overflow-hidden rounded-lg border border-border/70 bg-[#faf8f5]">
         {active.kind === 'image' ? (
           <Image
             // Keying on src makes React swap the element, which replays the
@@ -84,7 +87,8 @@ export function ProductGallery({ images, video, productName, className }: Produc
             objectFit="contain"
             priority={index === 0}
             sizes="(max-width: 1023px) 100vw, 50vw"
-            imgClassName="p-4 sm:p-8 motion-safe:animate-fade-in"
+            className="w-full max-h-[75vh] max-w-full"
+            imgClassName="p-4 sm:p-8 max-h-[75vh] max-w-full object-contain motion-safe:animate-fade-in"
           />
         ) : videoActivated && !videoError ? (
           <video
@@ -100,10 +104,10 @@ export function ProductGallery({ images, video, productName, className }: Produc
             preload="metadata"
             aria-label={active.video.title}
             onError={() => setVideoError(true)}
-            className="aspect-[4/5] w-full bg-ink object-contain"
+            className="aspect-[4/5] max-h-[75vh] w-full max-w-full bg-ink object-contain"
           />
         ) : videoError ? (
-          <div className="flex aspect-[4/5] w-full flex-col items-center justify-center gap-3 bg-[#faf8f5] p-6 text-center">
+          <div className="flex aspect-[4/5] max-h-[75vh] w-full max-w-full flex-col items-center justify-center gap-3 bg-[#faf8f5] p-6 text-center">
             <Icon name="video" size={32} className="text-ink-subtle opacity-60" />
             <p className="text-body-sm font-medium text-ink">Video could not be played</p>
             <p className="max-w-xs text-caption text-ink-muted">
@@ -124,7 +128,7 @@ export function ProductGallery({ images, video, productName, className }: Produc
           <button
             type="button"
             onClick={() => setVideoActivated(true)}
-            className="group relative block w-full focus-visible:outline-none focus-visible:shadow-focus"
+            className="group relative block w-full max-w-full focus-visible:outline-none focus-visible:shadow-focus"
             aria-label={`Play video: ${active.video.title}`}
           >
             <Image
@@ -133,7 +137,8 @@ export function ProductGallery({ images, video, productName, className }: Produc
               ratio="product"
               objectFit="contain"
               sizes="(max-width: 1023px) 100vw, 50vw"
-              imgClassName="p-4 sm:p-8"
+              className="w-full max-h-[75vh] max-w-full"
+              imgClassName="p-4 sm:p-8 max-h-[75vh] max-w-full object-contain"
             />
             <span aria-hidden className="absolute inset-0 bg-ink/25 transition-colors group-hover:bg-ink/35" />
             <span
@@ -151,7 +156,7 @@ export function ProductGallery({ images, video, productName, className }: Produc
               type="button"
               onClick={() => go(index - 1)}
               aria-label="Previous image"
-              className="absolute left-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-surface/92 text-ink shadow-sm transition-colors hover:bg-surface focus-visible:outline-none focus-visible:shadow-focus"
+              className="absolute left-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-surface/92 text-ink shadow-sm transition-colors hover:bg-surface focus-visible:outline-none focus-visible:shadow-focus z-10"
             >
               <Icon name="chevron-left" size={20} />
             </button>
@@ -159,7 +164,7 @@ export function ProductGallery({ images, video, productName, className }: Produc
               type="button"
               onClick={() => go(index + 1)}
               aria-label="Next image"
-              className="absolute right-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-surface/92 text-ink shadow-sm transition-colors hover:bg-surface focus-visible:outline-none focus-visible:shadow-focus"
+              className="absolute right-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-surface/92 text-ink shadow-sm transition-colors hover:bg-surface focus-visible:outline-none focus-visible:shadow-focus z-10"
             >
               <Icon name="chevron-right" size={20} />
             </button>
@@ -175,7 +180,7 @@ export function ProductGallery({ images, video, productName, className }: Produc
       </div>
 
       {hasMultiple && (
-        <div className="flex gap-2.5 overflow-x-auto no-scrollbar" role="group" aria-label="Product media">
+        <div className="flex w-full min-w-0 max-w-full gap-2.5 overflow-x-auto no-scrollbar py-1" role="group" aria-label="Product media">
           {slides.map((slide, position) => {
             const isActive = position === index;
             return (
@@ -192,7 +197,7 @@ export function ProductGallery({ images, video, productName, className }: Produc
                 }
                 aria-current={isActive}
                 className={cn(
-                  'relative w-[68px] shrink-0 overflow-hidden rounded-md border-2 bg-[#faf8f5] transition-colors duration-fast',
+                  'relative w-16 sm:w-[68px] shrink-0 overflow-hidden rounded-md border-2 bg-[#faf8f5] transition-colors duration-fast',
                   'focus-visible:outline-none focus-visible:shadow-focus',
                   isActive ? 'border-ink shadow-xs' : 'border-transparent hover:border-border-strong',
                 )}
@@ -203,7 +208,7 @@ export function ProductGallery({ images, video, productName, className }: Produc
                   ratio="product"
                   objectFit="contain"
                   sizes="68px"
-                  imgClassName="p-1"
+                  imgClassName="p-1 max-h-full max-w-full object-contain"
                 />
                 {slide.kind === 'video' && (
                   <span

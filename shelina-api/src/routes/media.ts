@@ -2,55 +2,12 @@ import { Router, type Request, type Response, type NextFunction } from 'express'
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
-import crypto from 'crypto';
 import { requireAdmin } from '../middleware/authGuards.js';
 import { ApiError } from '../lib/errors.js';
+import { storageService, resolveUploadsDirectory } from '../services/storage.js';
 
 export const mediaRouter = Router();
-
-/**
- * Resolves the directory where uploaded media files are stored.
- * Checks persistent storage environment variables first for production platforms
- * like Render persistent disks (e.g. UPLOADS_DIR=/var/data/uploads), then falls
- * back to workspace uploads directories.
- */
-export function resolveUploadsDirectory(): string {
-  // 1. Explicit persistent directory path via environment variables
-  const envDir = (process.env.UPLOADS_DIR || process.env.MEDIA_STORAGE_PATH || '').trim();
-  if (envDir) {
-    if (!fs.existsSync(envDir)) {
-      try {
-        fs.mkdirSync(envDir, { recursive: true });
-      } catch {
-        // ignore and fallback
-      }
-    }
-    if (fs.existsSync(envDir)) {
-      return envDir;
-    }
-  }
-
-  // 2. Standard Render persistent disk mount paths
-  const persistentCandidates = ['/var/data/uploads', '/data/uploads'];
-  for (const candidate of persistentCandidates) {
-    if (fs.existsSync(candidate)) return candidate;
-  }
-
-  // 3. Application workspace directories
-  const candidates = [
-    path.resolve(process.cwd(), 'public/uploads'),
-    path.resolve(process.cwd(), '../public/uploads'),
-    path.resolve(process.cwd(), 'shelina-api/public/uploads'),
-    '/tmp/shelina-uploads',
-  ];
-  for (const candidate of candidates) {
-    if (fs.existsSync(candidate)) return candidate;
-  }
-
-  const defaultDir = path.resolve(process.cwd(), 'public/uploads');
-  fs.mkdirSync(defaultDir, { recursive: true });
-  return defaultDir;
-}
+export { resolveUploadsDirectory } from '../services/storage.js';
 
 const MIME_BY_EXT: Record<string, string> = {
   '.jpg': 'image/jpeg',
@@ -72,26 +29,7 @@ export function getMediaMimeType(filename: string): string {
   return MIME_BY_EXT[ext] || 'application/octet-stream';
 }
 
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => {
-    const dir = resolveUploadsDirectory();
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
-    }
-    cb(null, dir);
-  },
-  filename: (_req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + crypto.randomBytes(6).toString('hex');
-    const ext = path.extname(file.originalname).toLowerCase() || '.jpg';
-    const cleanName = path
-      .basename(file.originalname, ext)
-      .toLowerCase()
-      .replace(/[^a-z0-9]/g, '-')
-      .replace(/-+/g, '-')
-      .slice(0, 40);
-    cb(null, `${cleanName || 'media'}-${uniqueSuffix}${ext}`);
-  },
-});
+const memoryStorage = multer.memoryStorage();
 
 const ALLOWED_MIME_TYPES = new Set([
   'image/jpeg',
@@ -107,7 +45,7 @@ const ALLOWED_MIME_TYPES = new Set([
 ]);
 
 const upload = multer({
-  storage,
+  storage: memoryStorage,
   limits: {
     fileSize: 50 * 1024 * 1024, // 50 MB
   },
@@ -125,23 +63,64 @@ const upload = multer({
   },
 });
 
-/** Reports media upload configuration. */
+/**
+ * GET /api/media/config
+ * Reports media upload configuration, active storage provider (Cloudinary/Local),
+ * and persistence status.
+ */
 mediaRouter.get('/config', requireAdmin, (_req, res) => {
+  const status = storageService.getStatus();
   res.json({
     success: true,
     data: {
-      provider: 'local',
+      ...status,
       uploadsEnabled: true,
       acceptsUrlReferences: true,
-      maxFileSizeMb: 50,
-      allowedTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'video/mp4', 'video/webm'],
-      message: 'Direct media uploads are active and ready.',
+      message: status.persistent
+        ? `Persistent ${status.provider.toUpperCase()} cloud media storage is active.`
+        : 'Direct media uploads are active (using local fallback directory).',
     },
   });
 });
 
 /**
- * Robust handler to serve static media files with CORS, HTTP 206 Range streaming support,
+ * POST /api/media/migrate
+ * Migration utility: transfers existing local uploads to persistent Cloudinary storage
+ * and updates database rows atomically.
+ */
+mediaRouter.post('/migrate', requireAdmin, async (req, res, next) => {
+  try {
+    const adminId = (req as unknown as { adminId?: string }).adminId || 'admin';
+    const result = await storageService.migrateLocalMediaToCloud(adminId);
+    res.json({
+      success: true,
+      message: `Media migration complete. ${result.migratedCount} item(s) uploaded to persistent storage.`,
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * DELETE /api/media
+ * Safely deletes a media item from storage.
+ */
+mediaRouter.delete('/', requireAdmin, async (req, res, next) => {
+  try {
+    const url = (req.body?.url || req.query?.url) as string | undefined;
+    if (!url) {
+      throw ApiError.badRequest('Media URL is required for deletion.');
+    }
+    const success = await storageService.delete(url);
+    res.json({ success, message: success ? 'Media deleted.' : 'Media file could not be deleted or was already removed.' });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * Robust handler to serve static fallback media files with CORS, HTTP 206 Range streaming support,
  * accurate MIME types, and aggressive caching.
  */
 export function handleServeMediaFile(req: Request, res: Response, next: NextFunction) {
@@ -157,7 +136,7 @@ export function handleServeMediaFile(req: Request, res: Response, next: NextFunc
       rawParam = path.basename(req.url.split('?')[0]);
     }
 
-    if (!rawParam || rawParam === 'config' || rawParam === 'multiple') {
+    if (!rawParam || rawParam === 'config' || rawParam === 'multiple' || rawParam === 'migrate') {
       return next();
     }
     const filename = path.basename(rawParam);
@@ -236,22 +215,29 @@ mediaRouter.get('/file/:filename', handleServeMediaFile);
 mediaRouter.get('/:filename', handleServeMediaFile);
 
 /** Single media upload for admin. */
-mediaRouter.post('/', requireAdmin, upload.single('file'), (req, res, next) => {
+mediaRouter.post('/', requireAdmin, upload.single('file'), async (req, res, next) => {
   try {
     if (!req.file) {
       throw ApiError.badRequest('No media file was provided for upload.');
     }
-    const isVideo = req.file.mimetype.startsWith('video/');
-    const url = `/uploads/${req.file.filename}`;
+    const uploaded = await storageService.upload({
+      buffer: req.file.buffer,
+      originalname: req.file.originalname,
+      mimetype: req.file.mimetype,
+      size: req.file.size,
+    });
+
     res.status(201).json({
       success: true,
       data: {
-        url,
-        filename: req.file.filename,
+        url: uploaded.url,
+        filename: uploaded.filename,
         originalName: req.file.originalname,
-        size: req.file.size,
+        size: uploaded.bytes,
         mimetype: req.file.mimetype,
-        type: isVideo ? 'video' : 'image',
+        type: uploaded.resourceType,
+        persistent: uploaded.persistent,
+        provider: uploaded.provider,
       },
     });
   } catch (error) {
@@ -260,23 +246,37 @@ mediaRouter.post('/', requireAdmin, upload.single('file'), (req, res, next) => {
 });
 
 /** Multiple media uploads for gallery. */
-mediaRouter.post('/multiple', requireAdmin, upload.array('files', 12), (req, res, next) => {
+mediaRouter.post('/multiple', requireAdmin, upload.array('files', 12), async (req, res, next) => {
   try {
     const files = (req.files as Express.Multer.File[]) || [];
     if (files.length === 0) {
       throw ApiError.badRequest('No media files were provided for upload.');
     }
-    const data = files.map((f) => ({
-      url: `/uploads/${f.filename}`,
-      filename: f.filename,
-      originalName: f.originalname,
-      size: f.size,
-      mimetype: f.mimetype,
-      type: f.mimetype.startsWith('video/') ? 'video' : 'image',
-    }));
+
+    const data = await Promise.all(
+      files.map(async (f) => {
+        const uploaded = await storageService.upload({
+          buffer: f.buffer,
+          originalname: f.originalname,
+          mimetype: f.mimetype,
+          size: f.size,
+        });
+
+        return {
+          url: uploaded.url,
+          filename: uploaded.filename,
+          originalName: f.originalname,
+          size: uploaded.bytes,
+          mimetype: f.mimetype,
+          type: uploaded.resourceType,
+          persistent: uploaded.persistent,
+          provider: uploaded.provider,
+        };
+      }),
+    );
+
     res.status(201).json({ success: true, data });
   } catch (error) {
     next(error);
   }
 });
-

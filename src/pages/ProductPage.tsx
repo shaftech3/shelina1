@@ -19,9 +19,9 @@ import { STORE_CONFIG } from '@/lib/constants';
 /** Skeleton mirroring the real two-column layout to avoid a jarring swap. */
 function ProductSkeleton() {
   return (
-    <div className="grid gap-10 lg:grid-cols-2 lg:gap-14" aria-busy="true" aria-live="polite">
-      <Skeleton className="aspect-[4/5] w-full rounded-lg" />
-      <div className="flex flex-col gap-5 pt-2">
+    <div className="grid w-full min-w-0 max-w-full gap-10 lg:grid-cols-2 lg:gap-14 overflow-hidden" aria-busy="true" aria-live="polite">
+      <Skeleton className="aspect-[4/5] max-h-[75vh] w-full rounded-lg" />
+      <div className="flex w-full min-w-0 max-w-full flex-col gap-5 pt-2">
         <Skeleton className="h-4 w-28" />
         <Skeleton className="h-9 w-3/4" />
         <Skeleton className="h-6 w-32" />
@@ -74,14 +74,14 @@ export function ProductPage() {
 
   return (
     <Layout>
-      <Section spacing="tight">
-        <Container>
+      <Section spacing="tight" className="w-full max-w-full overflow-hidden">
+        <Container className="w-full min-w-0 max-w-full overflow-hidden">
           {loading || !product ? (
             <ProductSkeleton />
           ) : (
-            <>
+            <div className="w-full min-w-0 max-w-full overflow-hidden">
               <Breadcrumb
-                className="mb-6"
+                className="mb-6 w-full min-w-0 max-w-full overflow-hidden"
                 items={[
                   { label: 'Home', href: '/' },
                   { label: 'Shop', href: '/shop' },
@@ -90,9 +90,9 @@ export function ProductPage() {
               />
 
               {/* Mobile order is media → info, which the source order already
-                  gives us; lg splits it into two columns. */}
-              <div className="grid gap-10 lg:grid-cols-2 lg:gap-14">
-                <div className="motion-safe:animate-fade-in">
+                  gives us; lg splits it into two columns. min-w-0 prevents grid blowout. */}
+              <div className="grid w-full min-w-0 max-w-full gap-8 lg:grid-cols-2 lg:gap-14">
+                <div className="w-full min-w-0 max-w-full motion-safe:animate-fade-in overflow-hidden">
                   <ProductGallery
                     images={product.images}
                     video={product.video}
@@ -100,26 +100,28 @@ export function ProductPage() {
                   />
                 </div>
 
-                <ProductPurchasePanel product={product} className="lg:pt-2" />
+                <div className="w-full min-w-0 max-w-full overflow-hidden">
+                  <ProductPurchasePanel product={product} className="lg:pt-2" />
+                </div>
               </div>
 
               {product.description && (
-                <div className="mt-14 max-w-3xl lg:mt-20">
+                <div className="mt-14 w-full min-w-0 max-w-3xl overflow-hidden lg:mt-20">
                   <Divider className="mb-10" />
                   <h2 className="mb-4 font-display text-h3 text-ink">Details</h2>
-                  <p className="whitespace-pre-line text-body leading-relaxed text-ink-muted">
+                  <p className="whitespace-pre-line text-body leading-relaxed text-ink-muted break-words">
                     {product.description}
                   </p>
                 </div>
               )}
-            </>
+            </div>
           )}
         </Container>
       </Section>
 
       {product && (related.data?.length ?? 0) > 0 && (
-        <Section tone="cream">
-          <Container>
+        <Section tone="cream" className="w-full max-w-full overflow-hidden">
+          <Container className="w-full min-w-0 max-w-full overflow-hidden">
             <Reveal>
               <SectionHeader
                 eyebrow="You may also like"

@@ -77,13 +77,13 @@ export function ProductPurchasePanel({ product, className }: ProductPurchasePane
   };
 
   return (
-    <div className={cn('flex flex-col gap-7', className)}>
-      <div className="flex flex-col gap-3">
+    <div className={cn('flex w-full min-w-0 max-w-full flex-col gap-7 overflow-hidden', className)}>
+      <div className="flex w-full min-w-0 max-w-full flex-col gap-3">
         {product.brand && (
           <span className="eyebrow text-primary-deep">{product.brand}</span>
         )}
 
-        <h1 className="font-display text-h2 text-ink">{product.name}</h1>
+        <h1 className="font-display text-h2 text-ink break-words">{product.name}</h1>
 
         <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
           <span className={cn('text-h4 font-semibold', discount !== null ? 'text-secondary-deep' : 'text-ink')}>
@@ -100,12 +100,12 @@ export function ProductPurchasePanel({ product, className }: ProductPurchasePane
         <div className="flex flex-wrap items-center gap-3">
           <StockLabel status={product.stockStatus} />
           {product.sku && (
-            <span className="text-caption text-ink-subtle">SKU: {product.sku}</span>
+            <span className="text-caption text-ink-subtle break-all">SKU: {product.sku}</span>
           )}
         </div>
 
         {product.shortDescription && (
-          <p className="max-w-prose text-body text-ink-muted">{product.shortDescription}</p>
+          <p className="max-w-prose text-body text-ink-muted break-words">{product.shortDescription}</p>
         )}
       </div>
 

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { formatDate } from '@/lib/format';
 import {
+  Badge,
   Button,
   Card,
   EmptyState,
@@ -12,7 +13,7 @@ import {
 } from '@/components/ui';
 import { useAdminCleanupStats, useSeo } from '@/hooks';
 import { adminCleanupService, adminCustomerService, orderService, ServiceError } from '@/services';
-import type { AdminCustomer, Order } from '@/types';
+import type { AdminCustomer, MediaDiagnosticsReport, Order } from '@/types';
 import { AdminLayout } from '../components/AdminLayout';
 import { ConfirmOrderDeleteModal } from '../components/ConfirmOrderDeleteModal';
 import { ConfirmCustomerDeleteModal } from '../components/ConfirmCustomerDeleteModal';
@@ -39,7 +40,54 @@ export function AdminCleanupPage() {
   // Action busy states
   const [cleaningOrphans, setCleaningOrphans] = useState(false);
   const [syncingNexora, setSyncingNexora] = useState(false);
+  const [migratingMedia, setMigratingMedia] = useState(false);
+  const [scanningDiagnostics, setScanningDiagnostics] = useState(false);
+  const [diagnosticsReport, setDiagnosticsReport] = useState<MediaDiagnosticsReport | null>(null);
   const [bulkDeleteType, setBulkDeleteType] = useState<'cancelled-orders' | 'inactive-customers' | null>(null);
+
+  async function handleScanDiagnostics() {
+    setScanningDiagnostics(true);
+    try {
+      const report = await adminCleanupService.getMediaDiagnostics();
+      setDiagnosticsReport(report);
+      notify({
+        title: 'Media Diagnostic Scan Complete',
+        description: `Scanned ${report.totalMedia} media references (${report.permanentCloudinary} permanent cloud, ${report.legacyLocal} legacy local, ${report.missingOrBroken} missing/ephemeral).`,
+        tone: 'success',
+      });
+    } catch (cause) {
+      notify({
+        title: 'Diagnostic Scan Failed',
+        description: cause instanceof ServiceError ? cause.message : 'Please try again.',
+        tone: 'error',
+      });
+    } finally {
+      setScanningDiagnostics(false);
+    }
+  }
+
+  async function handleMigrateMedia() {
+    setMigratingMedia(true);
+    try {
+      const result = await adminCleanupService.migrateMedia();
+      notify({
+        title: 'Media Migration Completed',
+        description: `Scanned ${result.totalScanned} media items. Successfully migrated ${result.migratedCount} to persistent cloud storage (${result.skippedCount} already in cloud / ${result.failedCount} failed).`,
+        tone: result.failedCount > 0 ? 'info' : 'success',
+      });
+      // Refresh scan
+      void handleScanDiagnostics();
+      retry();
+    } catch (cause) {
+      notify({
+        title: 'Media Migration Failed',
+        description: cause instanceof ServiceError ? cause.message : 'Please check storage configuration in backend settings.',
+        tone: 'error',
+      });
+    } finally {
+      setMigratingMedia(false);
+    }
+  }
 
   async function handleSearchOrder() {
     const q = orderQuery.trim();
@@ -485,11 +533,162 @@ export function AdminCleanupPage() {
             </div>
           </Card>
 
-          {/* Section 4: NEXORA Synchronization Health */}
+          {/* Section 4: Persistent Storage & Media Cloud Migration */}
           <Card className="p-6">
             <div className="flex flex-wrap items-start justify-between gap-4 border-b border-border pb-4">
               <div>
-                <h2 className="text-h5 text-ink">4. NEXORA Synchronization Health</h2>
+                <h2 className="text-h5 text-ink">4. Media Storage & Cloud Persistence</h2>
+                <p className="mt-1 text-body-sm text-ink-muted">
+                  Ensures all product, category, brand, and promotional media are stored in permanent cloud storage so they survive server redeployments and restarts.
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => void handleScanDiagnostics()}
+                  loading={scanningDiagnostics}
+                  className="flex items-center gap-1.5"
+                >
+                  <Icon name="search" size={15} />
+                  Scan Media Diagnostics
+                </Button>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={() => void handleMigrateMedia()}
+                  loading={migratingMedia}
+                  className="flex items-center gap-1.5"
+                >
+                  <Icon name="upload" size={15} />
+                  Migrate Local Media to Cloud
+                </Button>
+              </div>
+            </div>
+
+            <div className="mt-4 space-y-4">
+              <div className="flex items-center gap-3">
+                <span
+                  className={`h-3 w-3 rounded-full ${
+                    stats.storage?.persistent ? 'bg-emerald-500' : 'bg-amber-500'
+                  }`}
+                />
+                <span className="text-body-sm font-semibold text-ink">
+                  {stats.storage?.persistent
+                    ? `Persistent Cloud Storage Active (${(stats.storage.provider || 'cloudinary').toUpperCase()})`
+                    : 'Ephemeral Local Storage Active (Cloudinary credentials required for production persistence)'}
+                </span>
+              </div>
+
+              <div className="rounded-lg border border-border bg-sand/20 p-4 text-body-sm space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-ink-muted">Storage Provider:</span>
+                  <span className="font-semibold text-ink uppercase">{stats.storage?.provider || 'local'}</span>
+                </div>
+                {stats.storage?.cloudName && (
+                  <div className="flex justify-between">
+                    <span className="text-ink-muted">Cloud Name:</span>
+                    <span className="font-mono text-ink">{stats.storage.cloudName}</span>
+                  </div>
+                )}
+                <div className="flex justify-between">
+                  <span className="text-ink-muted">Max Upload Size:</span>
+                  <span className="text-ink">{stats.storage?.maxFileSizeMb || 50} MB per file</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-ink-muted">Redeploy Persistence:</span>
+                  <span className={stats.storage?.persistent ? 'text-emerald-700 font-medium' : 'text-amber-700 font-medium'}>
+                    {stats.storage?.persistent ? 'Guaranteed (Cloud Hosted)' : 'Ephemeral (Requires Cloudinary setup for permanent storage)'}
+                  </span>
+                </div>
+                {stats.storage?.message && (
+                  <div className="pt-2 border-t border-border/60 text-xs text-ink-muted">
+                    {stats.storage.message}
+                  </div>
+                )}
+              </div>
+
+              {/* Diagnostic Scan Results */}
+              {diagnosticsReport && (
+                <div className="mt-4 space-y-4 rounded-lg border border-border bg-white p-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-body-sm font-semibold text-ink">Media Asset Diagnostics Scan</h3>
+                    <span className="text-xs text-ink-muted">
+                      Total References: <strong className="text-ink">{diagnosticsReport.totalMedia}</strong>
+                    </span>
+                  </div>
+
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                    <div className="rounded-md border border-emerald-200 bg-emerald-50/60 p-3">
+                      <span className="text-caption text-emerald-800 font-medium">Permanent Cloudinary</span>
+                      <p className="text-lg font-bold text-emerald-900">{diagnosticsReport.permanentCloudinary}</p>
+                    </div>
+                    <div className="rounded-md border border-sky-200 bg-sky-50/60 p-3">
+                      <span className="text-caption text-sky-800 font-medium">Static Assets</span>
+                      <p className="text-lg font-bold text-sky-900">{diagnosticsReport.staticAssets}</p>
+                    </div>
+                    <div className="rounded-md border border-amber-200 bg-amber-50/60 p-3">
+                      <span className="text-caption text-amber-800 font-medium">Legacy Local Files</span>
+                      <p className="text-lg font-bold text-amber-900">{diagnosticsReport.legacyLocal}</p>
+                    </div>
+                    <div className="rounded-md border border-rose-200 bg-rose-50/60 p-3">
+                      <span className="text-caption text-rose-800 font-medium">Missing / Ephemeral</span>
+                      <p className="text-lg font-bold text-rose-900">{diagnosticsReport.missingOrBroken}</p>
+                    </div>
+                  </div>
+
+                  {diagnosticsReport.items.length > 0 && (
+                    <div className="max-h-64 overflow-y-auto border border-border/80 rounded-md">
+                      <table className="w-full border-collapse text-left text-xs">
+                        <thead className="bg-sand/40 sticky top-0 border-b border-border">
+                          <tr>
+                            <th className="px-3 py-2 font-semibold text-ink-muted">Table / Field</th>
+                            <th className="px-3 py-2 font-semibold text-ink-muted">Status</th>
+                            <th className="px-3 py-2 font-semibold text-ink-muted">URL / Path</th>
+                            <th className="px-3 py-2 font-semibold text-ink-muted">Notes</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {diagnosticsReport.items.map((item, idx) => (
+                            <tr key={`${item.id}-${idx}`} className="border-b border-border/60 hover:bg-sand/10">
+                              <td className="px-3 py-2 font-medium text-ink">
+                                {item.table}.<span className="text-ink-muted">{item.field}</span>
+                              </td>
+                              <td className="px-3 py-2">
+                                <Badge
+                                  tone={
+                                    item.status === 'permanent_cloud'
+                                      ? 'success'
+                                      : item.status === 'static_asset'
+                                        ? 'neutral'
+                                        : item.status === 'legacy_local'
+                                          ? 'warning'
+                                          : 'error'
+                                  }
+                                >
+                                  {item.status.replace('_', ' ')}
+                                </Badge>
+                              </td>
+                              <td className="px-3 py-2 font-mono text-[11px] text-ink-muted truncate max-w-xs" title={item.url}>
+                                {item.url || '(empty)'}
+                              </td>
+                              <td className="px-3 py-2 text-ink-subtle">{item.notes || '—'}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </Card>
+
+          {/* Section 5: NEXORA Synchronization Health */}
+          <Card className="p-6">
+            <div className="flex flex-wrap items-start justify-between gap-4 border-b border-border pb-4">
+              <div>
+                <h2 className="text-h5 text-ink">5. NEXORA Synchronization Health</h2>
                 <p className="mt-1 text-body-sm text-ink-muted">
                   Tests data pipelines between Shelina and NEXORA, updates key usage timestamps, and logs synchronization audits.
                 </p>

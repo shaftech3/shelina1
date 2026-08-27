@@ -1,5 +1,5 @@
 import { api } from './apiClient';
-import type { AdminCleanupStats } from '@/types';
+import type { AdminCleanupStats, MediaDiagnosticsReport } from '@/types';
 
 export interface OrphanCleanupResult {
   orphanedMediaRemoved: number;
@@ -18,9 +18,27 @@ export interface NexoraSyncResult {
   };
 }
 
+export interface MediaMigrationResult {
+  totalScanned: number;
+  migratedCount: number;
+  failedCount: number;
+  skippedCount: number;
+  details: {
+    table: string;
+    id: string;
+    oldUrl: string;
+    newUrl?: string;
+    error?: string;
+  }[];
+}
+
 export const adminCleanupService = {
   async getStats(): Promise<AdminCleanupStats> {
     return api.get<AdminCleanupStats>('/admin/cleanup/stats');
+  },
+
+  async getMediaDiagnostics(): Promise<MediaDiagnosticsReport> {
+    return api.get<MediaDiagnosticsReport>('/admin/cleanup/media-diagnostics');
   },
 
   async cleanupOrphans(): Promise<OrphanCleanupResult> {
@@ -30,4 +48,9 @@ export const adminCleanupService = {
   async triggerNexoraSync(): Promise<NexoraSyncResult> {
     return api.post<NexoraSyncResult>('/admin/cleanup/sync', {});
   },
+
+  async migrateMedia(): Promise<MediaMigrationResult> {
+    return api.post<MediaMigrationResult>('/admin/cleanup/migrate-media', {});
+  },
 };
+

@@ -71,7 +71,7 @@ export function Image({
           : 'object-none';
 
   return (
-    <div className={cn('relative overflow-hidden bg-cream/70 flex items-center justify-center', RATIOS[ratio], className)}>
+    <div className={cn('relative flex min-w-0 max-w-full items-center justify-center overflow-hidden bg-cream/70', RATIOS[ratio], className)}>
       {status === 'loading' && (
         <div className="absolute inset-0 bg-cream/80">
           <div className="absolute inset-0 motion-safe:animate-shimmer bg-gradient-to-r from-transparent via-white/60 to-transparent" />
@@ -101,7 +101,7 @@ export function Image({
             setStatus('error');
           }}
           className={cn(
-            'h-full w-full transition-all duration-base ease-elegant',
+            'h-full w-full max-h-full max-w-full transition-all duration-base ease-elegant',
             fitClass,
             status === 'loaded' ? 'opacity-100' : 'opacity-0',
             imgClassName,

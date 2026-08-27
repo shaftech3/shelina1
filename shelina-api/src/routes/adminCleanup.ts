@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { prisma } from '../lib/prisma.js';
 import { requireAdmin } from '../middleware/authGuards.js';
+import { storageService } from '../services/storage.js';
 
 export const adminCleanupRouter = Router();
 
@@ -13,7 +14,7 @@ adminCleanupRouter.use(requireAdmin);
  * Provides a comprehensive snapshot of database records, order breakdowns,
  * customer activity, orphaned artifacts, and NEXORA synchronization status.
  */
-adminCleanupRouter.get('/stats', async (req, res, next) => {
+adminCleanupRouter.get('/stats', async (_req, res, next) => {
   try {
     const [
       totalOrders,
@@ -129,6 +130,7 @@ adminCleanupRouter.get('/stats', async (req, res, next) => {
           brands: totalBrands,
           orphanedMedia: orphanedMediaCount,
         },
+        storage: storageService.getStatus(),
         nexora: {
           connected: Boolean(activeApiKey),
           activeKey: activeApiKey,
@@ -267,3 +269,41 @@ async function handleNexoraSync(
 
 adminCleanupRouter.post('/sync', handleNexoraSync);
 adminCleanupRouter.post('/nexora-sync', handleNexoraSync);
+
+/**
+ * GET /api/admin/cleanup/media-diagnostics
+ *
+ * Scans all database tables holding media assets and returns a comprehensive
+ * breakdown of permanent Cloudinary URLs vs legacy local files vs missing media.
+ */
+adminCleanupRouter.get('/media-diagnostics', async (_req, res, next) => {
+  try {
+    const report = await storageService.scanMediaDiagnostics();
+    res.json({
+      success: true,
+      data: report,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * POST /api/admin/cleanup/migrate-media
+ *
+ * Migrates local media uploads across all products, categories, brands, banners,
+ * and homepages to persistent cloud storage (e.g. Cloudinary).
+ */
+adminCleanupRouter.post('/migrate-media', async (req, res, next) => {
+  try {
+    const adminId = (req as unknown as { adminId?: string }).adminId || 'admin';
+    const result = await storageService.migrateLocalMediaToCloud(adminId);
+    res.json({
+      success: true,
+      message: `Media migration completed. Migrated ${result.migratedCount} item(s) to persistent storage.`,
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+});

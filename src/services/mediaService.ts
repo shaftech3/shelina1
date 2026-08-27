@@ -8,14 +8,33 @@ import { ServiceError } from './http';
 
 const MAX_FILE_BYTES = 50 * 1024 * 1024; // 50 MB
 const ACCEPTED_IMAGE = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml', 'image/avif'];
-const ACCEPTED_VIDEO = ['video/mp4', 'video/webm', 'video/quicktime'];
+const ACCEPTED_VIDEO = ['video/mp4', 'video/webm', 'video/quicktime', 'video/x-m4v'];
 
 export interface UploadResult extends MediaAsset {
   persistent: boolean;
+  filename?: string;
+  provider?: string;
 }
 
-/** Object URLs created as fallback, revoked on cleanup. */
-const objectUrls = new Set<string>();
+export interface StorageConfigResponse {
+  provider: 'cloudinary' | 'local';
+  persistent: boolean;
+  isConfigured: boolean;
+  cloudName?: string;
+  uploadsDir?: string;
+  maxFileSizeMb: number;
+  acceptedTypes: string[];
+  uploadsEnabled: boolean;
+  message?: string;
+}
+
+export interface MediaMigrationResult {
+  totalScanned: number;
+  migratedCount: number;
+  failedCount: number;
+  skippedCount: number;
+  details: { table: string; id: string; oldUrl: string; newUrl?: string; error?: string }[];
+}
 
 function readDimensions(file: File): Promise<{ width?: number; height?: number }> {
   if (!file.type.startsWith('image/')) return Promise.resolve({});
@@ -37,13 +56,15 @@ function readDimensions(file: File): Promise<{ width?: number; height?: number }
 export const mediaService = {
   /**
    * Uploads a file directly to the backend media endpoint.
+   * Throws a descriptive ServiceError if upload fails so caller can display the error
+   * rather than saving an unpersisted blob URL.
    */
   async upload(file: File, alt = ''): Promise<UploadResult> {
-    const isImage = ACCEPTED_IMAGE.includes(file.type);
-    const isVideo = ACCEPTED_VIDEO.includes(file.type);
+    const isImage = ACCEPTED_IMAGE.includes(file.type) || file.type.startsWith('image/');
+    const isVideo = ACCEPTED_VIDEO.includes(file.type) || file.type.startsWith('video/');
 
     if (!isImage && !isVideo) {
-      throw new ServiceError('Unsupported file type. Use JPG, PNG, WebP, GIF, SVG, MP4 or WebM.', 415);
+      throw new ServiceError('Unsupported file type. Please upload a JPG, PNG, WebP, GIF, SVG or MP4/WebM video.', 415);
     }
     if (file.size > MAX_FILE_BYTES) {
       throw new ServiceError('File is larger than 50 MB.', 413);
@@ -51,30 +72,27 @@ export const mediaService = {
 
     const { width, height } = await readDimensions(file);
 
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-      const res = await api.upload<{ url: string; filename: string }>('/media', formData);
+    const formData = new FormData();
+    formData.append('file', file);
 
-      return {
-        url: res.url,
-        alt: alt.trim() || file.name.replace(/\.[^.]+$/, ''),
-        width,
-        height,
-        persistent: true,
-      };
-    } catch {
-      // Fallback preview
-      const fallbackUrl = URL.createObjectURL(file);
-      objectUrls.add(fallbackUrl);
-      return {
-        url: fallbackUrl,
-        alt: alt.trim() || file.name.replace(/\.[^.]+$/, ''),
-        width,
-        height,
-        persistent: false,
-      };
-    }
+    const res = await api.upload<{
+      url: string;
+      filename: string;
+      persistent?: boolean;
+      provider?: string;
+      width?: number;
+      height?: number;
+    }>('/media', formData);
+
+    return {
+      url: res.url,
+      alt: alt.trim() || file.name.replace(/\.[^.]+$/, ''),
+      width: res.width ?? width,
+      height: res.height ?? height,
+      filename: res.filename,
+      persistent: res.persistent ?? true,
+      provider: res.provider,
+    };
   },
 
   /**
@@ -82,26 +100,47 @@ export const mediaService = {
    */
   async uploadMultiple(files: File[]): Promise<UploadResult[]> {
     if (!files.length) return [];
-    try {
-      const formData = new FormData();
-      files.forEach((f) => formData.append('files', f));
-      const res = await api.upload<{ url: string; filename: string }[]>('/media/multiple', formData);
-      return res.map((item, idx) => ({
-        url: item.url,
-        alt: files[idx]?.name.replace(/\.[^.]+$/, '') || '',
-        persistent: true,
-      }));
-    } catch {
-      const results: UploadResult[] = [];
-      for (const file of files) {
-        results.push(await this.upload(file));
-      }
-      return results;
-    }
+    const formData = new FormData();
+    files.forEach((f) => formData.append('files', f));
+
+    const res = await api.upload<
+      {
+        url: string;
+        filename: string;
+        persistent?: boolean;
+        provider?: string;
+        width?: number;
+        height?: number;
+      }[]
+    >('/media/multiple', formData);
+
+    return res.map((item, idx) => ({
+      url: item.url,
+      alt: files[idx]?.name.replace(/\.[^.]+$/, '') || '',
+      width: item.width,
+      height: item.height,
+      filename: item.filename,
+      persistent: item.persistent ?? true,
+      provider: item.provider,
+    }));
   },
 
   /**
-   * Reference a file already published under /public.
+   * Checks the storage subsystem status.
+   */
+  async getConfig(): Promise<StorageConfigResponse> {
+    return api.get<StorageConfigResponse>('/media/config');
+  },
+
+  /**
+   * Triggers media migration to persistent cloud storage.
+   */
+  async migrateMedia(): Promise<MediaMigrationResult> {
+    return api.post<MediaMigrationResult>('/media/migrate');
+  },
+
+  /**
+   * Reference a static asset already in public directory.
    */
   selectExisting(path: string, alt = ''): UploadResult {
     const url = path.trim();
@@ -109,16 +148,12 @@ export const mediaService = {
     return { url, alt: alt.trim(), persistent: true };
   },
 
-  release(url: string): void {
-    if (objectUrls.has(url)) {
-      URL.revokeObjectURL(url);
-      objectUrls.delete(url);
-    }
+  release(_url: string): void {
+    // No-op for persistent URLs
   },
 
   releaseAll(): void {
-    objectUrls.forEach((url) => URL.revokeObjectURL(url));
-    objectUrls.clear();
+    // No-op
   },
 
   isTemporary(url: string): boolean {

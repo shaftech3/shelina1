@@ -131,6 +131,17 @@ export interface AdminCleanupStats {
     brands: number;
     orphanedMedia: number;
   };
+  storage?: {
+    provider: 'cloudinary' | 'local';
+    persistent: boolean;
+    isConfigured: boolean;
+    cloudName?: string;
+    uploadsDir?: string;
+    maxFileSizeMb: number;
+    acceptedTypes: string[];
+    uploadsEnabled: boolean;
+    message?: string;
+  };
   nexora: {
     connected: boolean;
     activeKey: {
@@ -154,4 +165,37 @@ export interface AdminCleanupStats {
     createdAt: string;
   }[];
 }
+
+export interface MediaDiagnosticItem {
+  id: string;
+  table: string;
+  field: string;
+  url: string;
+  status: 'permanent_cloud' | 'static_asset' | 'legacy_local' | 'missing' | 'other';
+  resourceType?: 'image' | 'video';
+  migratable: boolean;
+  notes?: string;
+}
+
+export interface MediaDiagnosticsReport {
+  totalMedia: number;
+  permanentCloudinary: number;
+  staticAssets: number;
+  legacyLocal: number;
+  missingOrBroken: number;
+  migrationCandidates: number;
+  storage: {
+    provider: 'cloudinary' | 'local';
+    persistent: boolean;
+    isConfigured: boolean;
+    cloudName?: string;
+    uploadsDir?: string;
+    maxFileSizeMb: number;
+    acceptedTypes: string[];
+    uploadsEnabled: boolean;
+    message?: string;
+  };
+  items: MediaDiagnosticItem[];
+}
+
 
