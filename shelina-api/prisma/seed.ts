@@ -365,7 +365,7 @@ async function main() {
     shippingFee: 250,
     freeShippingThreshold: 0,
     contactPhone: '+92 300 1234567',
-    contactEmail: 'support@shelina.pk',
+    contactEmail: 'shelinaoffical@gmail.com',
     whatsappNumber: '+923001234567',
   };
   await prisma.storeSettings.upsert({

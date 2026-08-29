@@ -112,7 +112,7 @@ nexoraRouter.get('/store', requireNexoraScope(), async (_req, res, next) => {
       currency: 'PKR',
       timezone: 'Asia/Karachi',
       country: 'Pakistan',
-      contactEmail: settings?.contactEmail || 'support@shelina.pk',
+      contactEmail: settings?.contactEmail || 'shelinaoffical@gmail.com',
       contactPhone: settings?.contactPhone || '+92 300 1234567',
       whatsappNumber: settings?.whatsappNumber || '+923001234567',
       defaultDeliveryFee: settings?.shippingFee ?? 250,

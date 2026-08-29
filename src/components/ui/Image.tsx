@@ -1,6 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { cn } from '@/lib/cn';
-import { normalizeMediaUrl } from '@/lib/media';
+import {
+  getOptimizedImageUrl,
+  getResponsiveImageSrcSet,
+  isCloudinaryUrl,
+  normalizeMediaUrl,
+} from '@/lib/media';
 import { Icon } from './Icon';
 
 export type AspectRatio = 'product' | 'category' | 'banner' | 'hero' | 'square' | 'wide' | 'diamond' | 'auto';
@@ -17,6 +22,7 @@ interface ImageProps {
   width?: number;
   height?: number;
   sizes?: string;
+  srcSet?: string;
   fallbackText?: string;
 }
 
@@ -33,8 +39,9 @@ const RATIOS: Record<AspectRatio, string> = {
 
 /**
  * Aspect-ratio-locked image container.
- * Reserves layout space up front (no CLS), lazy-loads by default, fades in on
- * decode and degrades to an elegant branded fallback if the asset fails to load.
+ * Reserves layout space up front (no CLS), lazy-loads by default, delivers
+ * modern WebP/AVIF via Cloudinary transformations, fades in on decode,
+ * and degrades to an elegant branded fallback if the asset fails to load.
  */
 export function Image({
   src,
@@ -47,10 +54,32 @@ export function Image({
   width,
   height,
   sizes,
+  srcSet: customSrcSet,
   fallbackText = 'Image unavailable',
 }: ImageProps) {
   const [status, setStatus] = useState<'loading' | 'loaded' | 'error'>('loading');
   const normalizedSrc = normalizeMediaUrl(src);
+
+  // Generate responsive srcSet and optimized base src if hosted on Cloudinary
+  const isCloud = isCloudinaryUrl(normalizedSrc);
+
+  const displaySrc = useMemo(() => {
+    if (!normalizedSrc) return '';
+    if (!isCloud) return normalizedSrc;
+    // Default optimized single src: automatic format and quality compression
+    return getOptimizedImageUrl(normalizedSrc, {
+      width: width || (ratio === 'product' ? 800 : ratio === 'banner' ? 1400 : 1000),
+      quality: 'auto:good',
+      format: 'auto',
+      crop: 'limit',
+    });
+  }, [normalizedSrc, isCloud, width, ratio]);
+
+  const responsiveSrcSet = useMemo(() => {
+    if (customSrcSet) return customSrcSet;
+    if (!isCloud) return undefined;
+    return getResponsiveImageSrcSet(normalizedSrc);
+  }, [customSrcSet, isCloud, normalizedSrc]);
 
   // Reset status whenever the src changes
   useEffect(() => {
@@ -85,11 +114,12 @@ export function Image({
         </div>
       ) : (
         <img
-          src={normalizedSrc}
+          src={displaySrc}
+          srcSet={responsiveSrcSet}
           alt={alt}
           width={width}
           height={height}
-          sizes={sizes}
+          sizes={sizes || (ratio === 'product' ? '(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw' : undefined)}
           loading={priority ? 'eager' : 'lazy'}
           decoding={priority ? 'sync' : 'async'}
           fetchPriority={priority ? 'high' : 'auto'}
@@ -111,3 +141,4 @@ export function Image({
     </div>
   );
 }
+

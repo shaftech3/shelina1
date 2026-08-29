@@ -2,6 +2,7 @@ import { useParams } from 'react-router-dom';
 import { useMyOrder, useSeo } from '@/hooks';
 import { orderService } from '@/services';
 import { formatPrice } from '@/lib/format';
+import { OFFICIAL_WHATSAPP_NUMBER, STORE_CONFIG } from '@/lib/constants';
 import { Layout } from '@/components/layout';
 import { ButtonLink, Container, Icon, Section, Spinner } from '@/components/ui';
 import { ErrorState } from '@/components/ui/States';
@@ -20,10 +21,10 @@ export function OrderSuccessPage() {
   const whatsappMessage = encodeURIComponent(
     `Hi Shelina, I have a question regarding my order #${order?.orderNumber || orderNumber}.`,
   );
-  const whatsappUrl = `https://wa.me/923000000000?text=${whatsappMessage}`;
+  const whatsappUrl = `https://wa.me/${OFFICIAL_WHATSAPP_NUMBER}?text=${whatsappMessage}`;
 
   const emailSubject = encodeURIComponent(`Question regarding order #${order?.orderNumber || orderNumber}`);
-  const emailUrl = `mailto:support@shelina.pk?subject=${emailSubject}`;
+  const emailUrl = `mailto:${STORE_CONFIG.supportEmail}?subject=${emailSubject}`;
 
   return (
     <Layout>

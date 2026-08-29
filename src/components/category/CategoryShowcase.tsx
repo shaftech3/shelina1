@@ -2,7 +2,7 @@ import { useRef, useState, useEffect } from 'react';
 import { cn } from '@/lib/cn';
 import type { Category } from '@/types';
 import { EmptyState, ErrorState, Icon, IconButton, Reveal, Skeleton } from '@/components/ui';
-import { DiamondCategoryCard } from './DiamondCategoryCard';
+import { SquareCategoryCard } from './DiamondCategoryCard';
 
 interface CategoryShowcaseProps {
   categories: Category[] | null;
@@ -14,9 +14,9 @@ interface CategoryShowcaseProps {
 }
 
 /**
- * Horizontal scrolling diamond category showcase.
+ * Horizontal scrolling square category showcase.
  *
- * Implements compact, distinctive diamond-shaped category cards with left/right
+ * Implements larger, premium square category cards with left/right
  * desktop controls and smooth touch-swipe snap on mobile.
  */
 export function CategoryShowcase({
@@ -58,11 +58,11 @@ export function CategoryShowcase({
 
   if (loading) {
     return (
-      <div className={cn('flex gap-6 overflow-hidden py-4', className)} aria-busy="true">
+      <div className={cn('flex gap-4 sm:gap-6 overflow-hidden py-4', className)} aria-busy="true">
         {Array.from({ length: 6 }).map((_, index) => (
-          <div key={index} className="flex flex-col items-center gap-3 shrink-0">
-            <Skeleton className="h-28 w-28 sm:h-32 sm:w-32 rotate-45 rounded-2xl" />
-            <Skeleton className="h-4 w-20 mt-2" />
+          <div key={index} className="flex flex-col items-center gap-2.5 shrink-0 w-28 sm:w-36 md:w-44">
+            <Skeleton className="aspect-square w-full rounded-2xl" />
+            <Skeleton className="h-4 w-20 mt-1" />
           </div>
         ))}
       </div>
@@ -97,17 +97,17 @@ export function CategoryShowcase({
         />
       </div>
 
-      {/* Horizontal scrolling diamond container */}
+      {/* Horizontal scrolling square categories container */}
       <div
         ref={scrollContainerRef}
         onScroll={checkScroll}
-        className="flex items-center gap-4 sm:gap-8 overflow-x-auto scroll-smooth snap-x snap-mandatory py-4 px-2 no-scrollbar"
+        className="flex items-start gap-3.5 sm:gap-6 overflow-x-auto scroll-smooth snap-x snap-mandatory py-2 px-1 no-scrollbar"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
         {categories.map((category, index) => (
           <div key={category.id} className="shrink-0 snap-start">
-            <Reveal delay={index * 60}>
-              <DiamondCategoryCard category={category} priority={priority && index < 4} />
+            <Reveal delay={index * 50}>
+              <SquareCategoryCard category={category} priority={priority && index < 4} />
             </Reveal>
           </div>
         ))}

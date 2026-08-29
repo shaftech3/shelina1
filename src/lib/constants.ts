@@ -1,11 +1,12 @@
-/** Store-wide configuration. Replace with CMS/env values in a later stage. */
+/** Store-wide configuration. */
 export const STORE_CONFIG = {
   name: 'Shelina',
   tagline: 'Footwear, refined.',
   currency: 'PKR',
   locale: 'en-PK',
-  supportEmail: 'shelinaofficial@gmail.com',
+  supportEmail: 'shelinaoffical@gmail.com',
   supportPhone: '03247741080',
+  whatsappNumber: '923247741080',
   whatsappUrl: 'https://wa.me/923247741080',
   address: 'Faisalabad, Punjab, Pakistan',
   /**
@@ -18,7 +19,9 @@ export const STORE_CONFIG = {
   freeShippingThreshold: 5000,
 } as const;
 
-export const SITE_URL = 'https://shelina.pk';
+export const SITE_URL = 'https://shelina1.vercel.app';
+export const OFFICIAL_EMAIL = 'shelinaoffical@gmail.com';
+export const OFFICIAL_WHATSAPP_NUMBER = '923247741080';
 
 /**
  * Brand asset slots.

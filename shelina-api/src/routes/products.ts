@@ -113,6 +113,10 @@ productsRouter.get('/', async (req, res, next) => {
       ...(limit ? { take: Number(limit) } : {}),
     });
 
+    if (!includeNonActive) {
+      res.setHeader('Cache-Control', 'public, max-age=15, stale-while-revalidate=60');
+    }
+
     res.json({ success: true, data: products.map(serializeProduct) });
   } catch (error) {
     next(error);
@@ -128,6 +132,7 @@ productsRouter.get('/:idOrSlug', async (req, res, next) => {
       include: PRODUCT_INCLUDE,
     });
     if (!product) throw ApiError.notFound('Product not found.');
+    res.setHeader('Cache-Control', 'public, max-age=30, stale-while-revalidate=120');
     res.json({ success: true, data: serializeProduct(product) });
   } catch (error) {
     next(error);

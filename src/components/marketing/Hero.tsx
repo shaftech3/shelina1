@@ -1,8 +1,15 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { cn } from '@/lib/cn';
 import type { HeroSlide } from '@/types';
 import { Badge, ButtonLink, Container, Icon } from '@/components/ui';
-import { isVideoMedia, normalizeMediaUrl } from '@/lib/media';
+import {
+  getOptimizedImageUrl,
+  getResponsiveImageSrcSet,
+  getVideoPosterUrl,
+  isCloudinaryUrl,
+  isVideoMedia,
+  normalizeMediaUrl,
+} from '@/lib/media';
 
 interface HeroProps {
   slide?: HeroSlide;
@@ -27,6 +34,29 @@ export function Hero({ slide, slides, className }: HeroProps) {
     return () => clearInterval(timer);
   }, [allSlides.length]);
 
+  const rawMediaSrc = normalizeMediaUrl(activeSlide?.image?.src);
+  const mobileMediaSrc = activeSlide?.mobileImage?.src ? normalizeMediaUrl(activeSlide.mobileImage.src) : undefined;
+  const isVideo = isVideoMedia(rawMediaSrc);
+
+  const mediaSrc = useMemo(() => {
+    if (!rawMediaSrc) return '';
+    if (isVideo) return rawMediaSrc;
+    if (isCloudinaryUrl(rawMediaSrc)) {
+      return getOptimizedImageUrl(rawMediaSrc, { width: 1600, quality: 'auto:good', format: 'auto' });
+    }
+    return rawMediaSrc;
+  }, [rawMediaSrc, isVideo]);
+
+  const heroSrcSet = useMemo(() => {
+    if (isVideo || !rawMediaSrc) return undefined;
+    return getResponsiveImageSrcSet(rawMediaSrc, [640, 960, 1280, 1600, 1920]);
+  }, [rawMediaSrc, isVideo]);
+
+  const videoPoster = useMemo(() => {
+    if (!isVideo) return undefined;
+    return getVideoPosterUrl(rawMediaSrc, 1280) || undefined;
+  }, [isVideo, rawMediaSrc]);
+
   if (!activeSlide) return null;
 
   const {
@@ -34,7 +64,6 @@ export function Hero({ slide, slides, className }: HeroProps) {
     heading,
     subheading,
     image,
-    mobileImage,
     primaryCta,
     secondaryCta,
     badge,
@@ -44,9 +73,6 @@ export function Hero({ slide, slides, className }: HeroProps) {
   } = activeSlide;
 
   const hasMultiple = allSlides.length > 1;
-  const mediaSrc = normalizeMediaUrl(image?.src);
-  const mobileMediaSrc = mobileImage?.src ? normalizeMediaUrl(mobileImage.src) : undefined;
-  const isVideo = isVideoMedia(mediaSrc);
 
   return (
     <section
@@ -59,10 +85,12 @@ export function Hero({ slide, slides, className }: HeroProps) {
           <video
             key={mediaSrc}
             src={mediaSrc}
+            poster={videoPoster}
             autoPlay
             muted
             loop
             playsInline
+            preload="metadata"
             className="h-full w-full object-cover object-center transition-opacity duration-1000"
           />
         ) : (
@@ -73,13 +101,17 @@ export function Hero({ slide, slides, className }: HeroProps) {
             <img
               key={mediaSrc}
               src={mediaSrc}
+              srcSet={heroSrcSet}
+              sizes="100vw"
               alt={image?.alt || heading}
               loading="eager"
+              decoding="sync"
               fetchPriority="high"
               className="h-full w-full object-cover object-center sm:object-[center_35%] transition-all duration-1000 motion-safe:animate-[hero-media_1.4s_var(--ease-entrance)_both]"
             />
           </picture>
         )}
+
 
         {/* Cinematic Gradient Scrim: Dark-to-transparent for perfect text contrast on all devices */}
         <div

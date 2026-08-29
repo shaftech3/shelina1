@@ -12,7 +12,7 @@ const DEFAULT_SETTINGS = {
   shippingFee: 250,
   freeShippingThreshold: 0,
   contactPhone: '+92 300 1234567',
-  contactEmail: 'support@shelina.pk',
+  contactEmail: 'shelinaoffical@gmail.com',
   whatsappNumber: '+923001234567',
 };
 
@@ -33,6 +33,7 @@ settingsRouter.get('/', async (_req, res, next) => {
       });
     }
 
+    res.setHeader('Cache-Control', 'public, max-age=60, stale-while-revalidate=300');
     res.json({ success: true, data: serializeSettings(settings) });
   } catch (error) {
     next(error);

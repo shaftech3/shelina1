@@ -3,6 +3,7 @@ import { cn } from '@/lib/cn';
 import { discountPercent, effectivePrice, formatPrice } from '@/lib/format';
 import { Badge, Button, Icon, useToast } from '@/components/ui';
 import { useCart } from '@/cart';
+import { buildProductWhatsAppUrl } from '@/lib/whatsapp';
 import type { Product } from '@/types';
 import { ColorSelector } from './ColorSelector';
 import { QuantityStepper } from './QuantityStepper';
@@ -16,13 +17,7 @@ interface ProductPurchasePanelProps {
 
 /**
  * Everything on the right-hand side of the product page: price, variant
- * selection, quantity and Add to Cart.
- *
- * The requirement rules encoded here:
- *  - A size is required only if the product declares sizes.
- *  - A colour is required only if the product declares colours.
- *  - A product with neither adds to cart immediately.
- * All three fall out of the data — there is no per-product special-casing.
+ * selection, quantity, Add to Cart, and Order via WhatsApp.
  */
 export function ProductPurchasePanel({ product, className }: ProductPurchasePanelProps) {
   const { addItem, openCart } = useCart();
@@ -54,26 +49,42 @@ export function ProductPurchasePanel({ product, className }: ProductPurchasePane
   const colorMissing = hasColors && !color;
 
   const handleAdd = () => {
-    // Size is checked first so the message matches the first control the
-    // customer would reach reading top to bottom.
     if (sizeMissing) {
-      setError('Please select a size.');
-      notify({ title: 'Please select a size.', tone: 'error' });
+      setError('Please select your size first.');
+      notify({ title: 'Please select your size first.', tone: 'error' });
       return;
     }
     if (colorMissing) {
-      setError('Please select a colour.');
-      notify({ title: 'Please select a colour.', tone: 'error' });
+      setError('Please select your colour first.');
+      notify({ title: 'Please select your colour first.', tone: 'error' });
       return;
     }
 
     setError(null);
     addItem({ product, size, color, quantity });
-
-    // The drawer opening IS the success feedback — it shows the line, the
-    // chosen variant and the new subtotal. A success toast on top of it would
-    // duplicate that and cover the panel, so toasts are reserved for errors.
     openCart();
+  };
+
+  const handleWhatsAppOrder = () => {
+    if (sizeMissing) {
+      setError('Please select your size first.');
+      notify({ title: 'Please select your size first.', tone: 'error' });
+      return;
+    }
+    if (colorMissing) {
+      setError('Please select your colour first.');
+      notify({ title: 'Please select your colour first.', tone: 'error' });
+      return;
+    }
+
+    setError(null);
+    const whatsappUrl = buildProductWhatsAppUrl({
+      product,
+      size,
+      color,
+      quantity,
+    });
+    window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
   };
 
   return (
@@ -144,11 +155,6 @@ export function ProductPurchasePanel({ product, className }: ProductPurchasePane
       />
 
       <div className="flex flex-col gap-3">
-        {/* Live region: the toast is transient, this persists next to the
-            control that failed. */}
-        {/* No role="alert" here: the toast already announces this text, and two
-            live regions would double-announce. The group references this node
-            via aria-errormessage, so it is still programmatically associated. */}
         <p
           id={errorId}
           className={cn(
@@ -160,18 +166,40 @@ export function ProductPurchasePanel({ product, className }: ProductPurchasePane
           {error}
         </p>
 
-        <Button
-          size="lg"
-          fullWidth
-          onClick={handleAdd}
-          disabled={soldOut}
-          iconRight={!soldOut ? <Icon name="cart" size={18} /> : undefined}
-        >
-          {soldOut ? 'Sold out' : 'Add to bag'}
-        </Button>
+        <div className="flex flex-col gap-2.5">
+          <Button
+            size="lg"
+            fullWidth
+            onClick={handleAdd}
+            disabled={soldOut}
+            iconRight={!soldOut ? <Icon name="cart" size={18} /> : undefined}
+          >
+            {soldOut ? 'Sold out' : 'Add to bag'}
+          </Button>
+
+          {!soldOut && (
+            <button
+              type="button"
+              onClick={handleWhatsAppOrder}
+              aria-label="Order this footwear directly via WhatsApp"
+              className="inline-flex h-12 w-full items-center justify-center gap-2.5 rounded-sm border border-[#25D366]/40 bg-surface px-5 text-button font-medium text-ink shadow-2xs transition-all duration-base hover:border-[#25D366] hover:bg-[#25D366]/8 hover:text-[#128C7E] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#25D366] active:scale-98"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                className="h-5 w-5 text-[#25D366]"
+                aria-hidden="true"
+              >
+                <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z" />
+              </svg>
+              Order via WhatsApp
+            </button>
+          )}
+        </div>
 
         <p className="text-caption text-ink-muted">
-          Sizes and colours are listed exactly as stocked for this style.
+          Fast Cash on Delivery across Pakistan. Sizes and colours are listed exactly as stocked.
         </p>
       </div>
     </div>

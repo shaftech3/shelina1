@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/cn';
 import { Icon, Image } from '@/components/ui';
-import { normalizeMediaUrl } from '@/lib/media';
+import { getVideoPosterUrl, normalizeMediaUrl } from '@/lib/media';
 import type { ImageAsset, ProductVideo } from '@/types';
 
 interface ProductGalleryProps {
@@ -21,7 +21,7 @@ type Slide =
  *
  * Only the active image is rendered at full size; thumbnails are small and
  * lazy. The video element is created only once the customer selects the video
- * slide — before that it is a poster image, so a product page costs zero video
+ * slide — before that it is an optimized poster image, so a product page costs zero video
  * bytes unless someone asks for it.
  *
  * Completely responsive and bounded: prevents horizontal layout overflow
@@ -73,6 +73,11 @@ export function ProductGallery({ images, video, productName, className }: Produc
     thumbRefs.current[next]?.focus();
   };
 
+  const activePoster =
+    active?.kind === 'video'
+      ? active.video.poster || getVideoPosterUrl(active.video.src) || images[0]?.src || ''
+      : '';
+
   return (
     <div className={cn('flex w-full min-w-0 max-w-full flex-col gap-3.5 overflow-hidden', className)}>
       <div className="relative flex w-full min-w-0 max-w-full items-center justify-center overflow-hidden rounded-lg border border-border/70 bg-[#faf8f5]">
@@ -94,7 +99,7 @@ export function ProductGallery({ images, video, productName, className }: Produc
           <video
             ref={videoRef}
             src={normalizeMediaUrl(active.video.src)}
-            poster={normalizeMediaUrl(active.video.poster || images[0]?.src)}
+            poster={normalizeMediaUrl(activePoster)}
             controls
             playsInline
             // Never autoplay with sound. Playback starts muted and only after
@@ -132,7 +137,7 @@ export function ProductGallery({ images, video, productName, className }: Produc
             aria-label={`Play video: ${active.video.title}`}
           >
             <Image
-              src={active.video.poster || images[0]?.src || ''}
+              src={activePoster}
               alt={active.video.title || productName}
               ratio="product"
               objectFit="contain"
@@ -149,6 +154,7 @@ export function ProductGallery({ images, video, productName, className }: Produc
             </span>
           </button>
         )}
+
 
         {hasMultiple && (
           <>

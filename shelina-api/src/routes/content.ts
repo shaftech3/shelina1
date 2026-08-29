@@ -48,6 +48,7 @@ homepageRouter.get('/', async (_req, res, next) => {
         include: { banners: { orderBy: { sortOrder: 'asc' } } },
       });
     }
+    res.setHeader('Cache-Control', 'public, max-age=30, stale-while-revalidate=120');
     res.json({ success: true, data: serializeHomepage(homepage) });
   } catch (error) {
     next(error);
@@ -86,6 +87,9 @@ bannersRouter.get('/', async (req, res, next) => {
       where: includeInactive ? undefined : { active: true },
       orderBy: { sortOrder: 'asc' },
     });
+    if (!includeInactive) {
+      res.setHeader('Cache-Control', 'public, max-age=30, stale-while-revalidate=120');
+    }
     res.json({ success: true, data: banners.map(serializeBanner) });
   } catch (error) {
     next(error);

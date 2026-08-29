@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Footer } from './Footer';
 import { Header } from './Header';
+import { FloatingWhatsApp } from '@/components/ui/FloatingWhatsApp';
 
 interface LayoutProps {
   children: ReactNode;
@@ -8,7 +9,7 @@ interface LayoutProps {
   overHero?: boolean;
 }
 
-/** App shell: skip link, header, main landmark, footer. */
+/** App shell: skip link, header, main landmark, footer, floating WhatsApp button. */
 export function Layout({ children, overHero = false }: LayoutProps) {
   return (
     <div className="flex min-h-screen w-full max-w-full flex-col overflow-x-hidden">
@@ -24,6 +25,8 @@ export function Layout({ children, overHero = false }: LayoutProps) {
       <main id="main" className="flex-1 w-full min-w-0 max-w-full overflow-x-hidden">
         {children}
       </main>
+
+      <FloatingWhatsApp />
 
       <Footer />
     </div>

@@ -20,6 +20,7 @@ categoriesRouter.get('/', async (req, res, next) => {
       include: { _count: { select: { products: true } } },
       orderBy: { name: 'asc' },
     });
+    res.setHeader('Cache-Control', 'public, max-age=30, stale-while-revalidate=120');
     res.json({ success: true, data: categories.map(serializeCategory) });
   } catch (error) {
     next(error);
@@ -116,6 +117,7 @@ brandsRouter.get('/', async (req, res, next) => {
       include: { _count: { select: { products: true } } },
       orderBy: { name: 'asc' },
     });
+    res.setHeader('Cache-Control', 'public, max-age=30, stale-while-revalidate=120');
     res.json({ success: true, data: brands.map(serializeBrand) });
   } catch (error) {
     next(error);

@@ -102,6 +102,21 @@ export class ApiValidationError extends ServiceError {
   }
 }
 
+/** In-memory cache for fast GET responses */
+interface CacheEntry<T> {
+  data: ApiEnvelope<T>;
+  expiresAt: number;
+}
+
+const GET_CACHE = new Map<string, CacheEntry<unknown>>();
+const IN_FLIGHT_REQUESTS = new Map<string, Promise<ApiEnvelope<unknown>>>();
+const DEFAULT_CACHE_TTL_MS = 15_000; // 15 seconds
+
+export function clearApiCache(): void {
+  GET_CACHE.clear();
+  IN_FLIGHT_REQUESTS.clear();
+}
+
 /**
  * Performs the call and returns the WHOLE envelope.
  *
@@ -109,78 +124,119 @@ export class ApiValidationError extends ServiceError {
  * unwraps `data`. Error handling is identical either way.
  */
 async function requestEnvelope<T>(path: string, init?: RequestInit): Promise<ApiEnvelope<T>> {
-  let response: Response;
+  const isGet = !init?.method || init.method.toUpperCase() === 'GET';
+  const cacheKey = `${path}`;
 
-  const headers: Record<string, string> = {
-    ...(init?.headers as Record<string, string> | undefined),
-  };
+  // Serve from in-memory cache if available and not expired
+  if (isGet) {
+    const cached = GET_CACHE.get(cacheKey);
+    if (cached && Date.now() < cached.expiresAt) {
+      return cached.data as ApiEnvelope<T>;
+    }
 
-  if (
-    init?.body !== undefined &&
-    !(typeof FormData !== 'undefined' && init.body instanceof FormData) &&
-    !headers['Content-Type']
-  ) {
-    headers['Content-Type'] = 'application/json';
+    // Coalesce duplicate concurrent in-flight requests to avoid network stampede
+    const inFlight = IN_FLIGHT_REQUESTS.get(cacheKey);
+    if (inFlight) {
+      return (await inFlight) as ApiEnvelope<T>;
+    }
+  } else {
+    // Invalidate cached GET queries whenever any mutation occurs
+    clearApiCache();
   }
 
-  // Attach auth token if available and not already set
-  if (!headers['Authorization']) {
-    const adminToken = getAdminToken();
-    const customerToken = getCustomerToken();
+  const execute = async (): Promise<ApiEnvelope<T>> => {
+    let response: Response;
+
+    const headers: Record<string, string> = {
+      ...(init?.headers as Record<string, string> | undefined),
+    };
 
     if (
-      adminToken &&
-      (path.startsWith('/admin') ||
-        path.startsWith('/auth/admin') ||
-        path.startsWith('/products') ||
-        path.startsWith('/categories') ||
-        path.startsWith('/brands') ||
-        path.startsWith('/homepage') ||
-        path.startsWith('/banners') ||
-        path.startsWith('/seo') ||
-        path.startsWith('/settings') ||
-        path.startsWith('/media'))
+      init?.body !== undefined &&
+      !(typeof FormData !== 'undefined' && init.body instanceof FormData) &&
+      !headers['Content-Type']
     ) {
-      headers['Authorization'] = `Bearer ${adminToken}`;
-    } else if (customerToken && (path.startsWith('/auth/customer') || path.startsWith('/orders'))) {
-      headers['Authorization'] = `Bearer ${customerToken}`;
+      headers['Content-Type'] = 'application/json';
+    }
+
+    // Attach auth token if available and not already set
+    if (!headers['Authorization']) {
+      const adminToken = getAdminToken();
+      const customerToken = getCustomerToken();
+
+      if (
+        adminToken &&
+        (path.startsWith('/admin') ||
+          path.startsWith('/auth/admin') ||
+          path.startsWith('/products') ||
+          path.startsWith('/categories') ||
+          path.startsWith('/brands') ||
+          path.startsWith('/homepage') ||
+          path.startsWith('/banners') ||
+          path.startsWith('/seo') ||
+          path.startsWith('/settings') ||
+          path.startsWith('/media'))
+      ) {
+        headers['Authorization'] = `Bearer ${adminToken}`;
+      } else if (customerToken && (path.startsWith('/auth/customer') || path.startsWith('/orders'))) {
+        headers['Authorization'] = `Bearer ${customerToken}`;
+      }
+    }
+
+    try {
+      response = await fetch(resolveUrl(path), {
+        credentials: 'include',
+        headers,
+        ...init,
+      });
+    } catch {
+      // Network-level failure: the API is unreachable. Never pretend it worked.
+      throw new ServiceError(
+        'Could not reach the server. Check your connection and try again.',
+        0,
+      );
+    }
+
+    let payload: ApiEnvelope<T> | null = null;
+    try {
+      payload = (await response.json()) as ApiEnvelope<T>;
+    } catch {
+      payload = null;
+    }
+
+    if (!response.ok || !payload?.success) {
+      // Clear stale admin token on unauthorized response for admin routes
+      if (response.status === 401 && (path.startsWith('/admin') || path.startsWith('/auth/admin'))) {
+        setAdminToken(null);
+      }
+      const message = payload?.message ?? `Request failed (${response.status}).`;
+      if (payload?.errors) {
+        throw new ApiValidationError(message, payload.errors, response.status);
+      }
+      throw new ServiceError(message, response.status);
+    }
+
+    if (isGet && payload.success) {
+      GET_CACHE.set(cacheKey, {
+        data: payload as ApiEnvelope<unknown>,
+        expiresAt: Date.now() + DEFAULT_CACHE_TTL_MS,
+      });
+    }
+
+    return payload;
+  };
+
+  if (isGet) {
+    const promise = execute();
+    IN_FLIGHT_REQUESTS.set(cacheKey, promise as Promise<ApiEnvelope<unknown>>);
+    try {
+      return await promise;
+    } finally {
+      IN_FLIGHT_REQUESTS.delete(cacheKey);
     }
   }
 
-  try {
-    response = await fetch(resolveUrl(path), {
-      credentials: 'include',
-      headers,
-      ...init,
-    });
-  } catch {
-    // Network-level failure: the API is unreachable. Never pretend it worked.
-    throw new ServiceError(
-      'Could not reach the server. Check your connection and try again.',
-      0,
-    );
-  }
-
-  let payload: ApiEnvelope<T> | null = null;
-  try {
-    payload = (await response.json()) as ApiEnvelope<T>;
-  } catch {
-    payload = null;
-  }
-
-  if (!response.ok || !payload?.success) {
-    // Clear stale admin token on unauthorized response for admin routes
-    if (response.status === 401 && (path.startsWith('/admin') || path.startsWith('/auth/admin'))) {
-      setAdminToken(null);
-    }
-    const message = payload?.message ?? `Request failed (${response.status}).`;
-    if (payload?.errors) {
-      throw new ApiValidationError(message, payload.errors, response.status);
-    }
-    throw new ServiceError(message, response.status);
-  }
-
-  return payload;
+  return execute();
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
@@ -214,6 +270,7 @@ export const api = {
   patch: <T>(path: string, body?: unknown) =>
     request<T>(path, { method: 'PATCH', body: body === undefined ? undefined : JSON.stringify(body) }),
   delete: <T>(path: string) => request<T>(path, { method: 'DELETE' }),
+  clearCache: clearApiCache,
   /**
    * Full envelope, for list endpoints that need `meta` alongside `data`.
    * The generic is the element type, so `raw<Order[]>` reads naturally.
