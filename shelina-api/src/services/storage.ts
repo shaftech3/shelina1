@@ -56,6 +56,21 @@ export interface MediaDiagnosticsReport {
   items: MediaDiagnosticItem[];
 }
 
+export interface CloudinaryCredentials {
+  cloudName: string;
+  apiKey: string;
+  apiSecret: string;
+}
+
+export interface CloudinaryConfigResult {
+  configured: boolean;
+  cloudNameConfigured: boolean;
+  apiKeyConfigured: boolean;
+  apiSecretConfigured: boolean;
+  cloudName?: string;
+  source: 'url' | 'individual' | 'none';
+}
+
 function cleanEnvVal(val?: string | null): string {
   if (!val) return '';
   return val.trim().replace(/^["']|["']$/g, '').trim();
@@ -65,7 +80,7 @@ function cleanEnvVal(val?: string | null): string {
  * Parses a standard Cloudinary URL into its constituent parts.
  * Format: cloudinary://<api_key>:<api_secret>@<cloud_name>
  */
-function parseCloudinaryUrl(urlStr: string): { cloudName: string; apiKey: string; apiSecret: string } | null {
+function parseCloudinaryUrl(urlStr: string): CloudinaryCredentials | null {
   try {
     const cleaned = cleanEnvVal(urlStr);
     if (!cleaned) return null;
@@ -151,16 +166,9 @@ function isProductionEnvironment(): boolean {
  * Comprehensive Cloudinary credentials inspection and setup.
  * Supports CLOUDINARY_URL and individual environment variables without leaking secrets.
  */
-function getCloudinaryConfig(): {
-  configured: boolean;
-  cloudNameConfigured: boolean;
-  apiKeyConfigured: boolean;
-  apiSecretConfigured: boolean;
-  cloudName?: string;
-  source: 'url' | 'individual' | 'none';
-} {
+function getCloudinaryConfig(): CloudinaryConfigResult {
   const rawUrl = cleanEnvVal(process.env.CLOUDINARY_URL);
-  const parsedFromUrl = rawUrl ? parseCloudinaryUrl(rawUrl) : null;
+  const parsedFromUrl: CloudinaryCredentials | null = rawUrl ? parseCloudinaryUrl(rawUrl) : null;
 
   const rawCloudName = cleanEnvVal(
     process.env.CLOUDINARY_CLOUD_NAME ||
@@ -207,10 +215,10 @@ function getCloudinaryConfig(): {
 
   return {
     configured: false,
-    cloudNameConfigured: Boolean(rawCloudName || (parsedFromUrl && parsedFromUrl.cloudName)),
-    apiKeyConfigured: Boolean(rawApiKey || (parsedFromUrl && parsedFromUrl.apiKey)),
-    apiSecretConfigured: Boolean(rawApiSecret || (parsedFromUrl && parsedFromUrl.apiSecret)),
-    cloudName: rawCloudName || (parsedFromUrl ? parsedFromUrl.cloudName : undefined),
+    cloudNameConfigured: Boolean(rawCloudName),
+    apiKeyConfigured: Boolean(rawApiKey),
+    apiSecretConfigured: Boolean(rawApiSecret),
+    cloudName: rawCloudName || undefined,
     source: 'none',
   };
 }

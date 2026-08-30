@@ -1,3 +1,16 @@
+// Sanitize CLOUDINARY_URL early if present in the environment
+if (process.env.CLOUDINARY_URL) {
+  let cleaned = process.env.CLOUDINARY_URL.trim().replace(/^["']|["']$/g, '').trim();
+  if (cleaned.startsWith('CLOUDINARY_URL=')) {
+    cleaned = cleaned.substring('CLOUDINARY_URL='.length).trim().replace(/^["']|["']$/g, '').trim();
+  }
+  if (cleaned.startsWith('cloudinary://')) {
+    process.env.CLOUDINARY_URL = cleaned;
+  } else {
+    delete process.env.CLOUDINARY_URL;
+  }
+}
+
 import express from 'express';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';

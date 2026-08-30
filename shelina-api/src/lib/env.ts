@@ -1,5 +1,19 @@
 import 'dotenv/config';
 
+// Sanitize CLOUDINARY_URL if it has prefix or quotes or invalid scheme to prevent Cloudinary SDK init crash
+if (process.env.CLOUDINARY_URL) {
+  let cleaned = process.env.CLOUDINARY_URL.trim().replace(/^["']|["']$/g, '').trim();
+  if (cleaned.startsWith('CLOUDINARY_URL=')) {
+    cleaned = cleaned.substring('CLOUDINARY_URL='.length).trim().replace(/^["']|["']$/g, '').trim();
+  }
+  if (cleaned.startsWith('cloudinary://')) {
+    process.env.CLOUDINARY_URL = cleaned;
+  } else {
+    // If not a valid cloudinary:// URL scheme, remove it so the SDK does not crash on module load
+    delete process.env.CLOUDINARY_URL;
+  }
+}
+
 /**
  * Environment access, validated once at boot.
  *
