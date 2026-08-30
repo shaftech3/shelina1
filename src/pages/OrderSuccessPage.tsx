@@ -64,7 +64,7 @@ export function OrderSuccessPage() {
                 </span>
                 <h1 className="mt-2 text-h2 font-serif text-ink">Thank You for Your Order!</h1>
                 <p className="mt-2 text-body text-ink-muted">
-                  We’ve received your order and our craftsmen are preparing your handcrafted footwear.
+                  Your order has been received and is now being processed. Our team will contact you shortly to confirm your order.
                 </p>
                 <div className="mt-3 inline-flex items-center gap-2 rounded-md bg-cream px-4 py-2 text-body-sm font-semibold text-ink">
                   <span>Order Reference:</span>

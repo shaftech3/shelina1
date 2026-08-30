@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useState } from 'react';
 import { cn } from '@/lib/cn';
 import { discountPercent, effectivePrice, formatPrice } from '@/lib/format';
 import type { Product } from '@/types';
@@ -31,6 +31,7 @@ export const ProductCard = memo(function ProductCard({
   className,
   onSelect,
 }: ProductCardProps) {
+  const [hoverIntent, setHoverIntent] = useState(false);
   const { name, brand, images, price, salePrice, colors, stockStatus, featured, isNew, slug } = product;
 
   const discount = discountPercent(price, salePrice);
@@ -41,6 +42,12 @@ export const ProductCard = memo(function ProductCard({
 
   return (
     <article
+      onMouseEnter={() => {
+        if (!hoverIntent && secondaryImage) setHoverIntent(true);
+      }}
+      onFocusCapture={() => {
+        if (!hoverIntent && secondaryImage) setHoverIntent(true);
+      }}
       className={cn(
         'group relative flex flex-col h-full rounded-lg transition-all duration-300 ease-out',
         'motion-safe:hover:-translate-y-1',
@@ -66,8 +73,8 @@ export const ProductCard = memo(function ProductCard({
           )}
         />
 
-        {/* Secondary Image on Desktop Hover (if available) */}
-        {secondaryImage && (
+        {/* Secondary Image on Desktop Hover (deferred until hover/focus intent) */}
+        {secondaryImage && hoverIntent && (
           <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 ease-out motion-safe:group-hover:opacity-100 motion-safe:group-focus-within:opacity-100">
             <Image
               src={secondaryImage.src}

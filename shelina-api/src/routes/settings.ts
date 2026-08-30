@@ -11,9 +11,9 @@ const SETTINGS_ID = 'settings';
 const DEFAULT_SETTINGS = {
   shippingFee: 250,
   freeShippingThreshold: 0,
-  contactPhone: '+92 300 1234567',
+  contactPhone: '03247741080',
   contactEmail: 'shelinaoffical@gmail.com',
-  whatsappNumber: '+923001234567',
+  whatsappNumber: '923247741080',
 };
 
 /**

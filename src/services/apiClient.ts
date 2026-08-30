@@ -163,22 +163,27 @@ async function requestEnvelope<T>(path: string, init?: RequestInit): Promise<Api
     if (!headers['Authorization']) {
       const adminToken = getAdminToken();
       const customerToken = getCustomerToken();
+      const cleanPath = path.startsWith('/') ? path : `/${path}`;
 
       if (
         adminToken &&
-        (path.startsWith('/admin') ||
-          path.startsWith('/auth/admin') ||
-          path.startsWith('/products') ||
-          path.startsWith('/categories') ||
-          path.startsWith('/brands') ||
-          path.startsWith('/homepage') ||
-          path.startsWith('/banners') ||
-          path.startsWith('/seo') ||
-          path.startsWith('/settings') ||
-          path.startsWith('/media'))
+        (cleanPath.startsWith('/admin') ||
+          cleanPath.startsWith('/auth/admin') ||
+          cleanPath.startsWith('/products') ||
+          cleanPath.startsWith('/categories') ||
+          cleanPath.startsWith('/brands') ||
+          cleanPath.startsWith('/homepage') ||
+          cleanPath.startsWith('/banners') ||
+          cleanPath.startsWith('/seo') ||
+          cleanPath.startsWith('/settings') ||
+          cleanPath.startsWith('/media') ||
+          cleanPath.startsWith('/api/media'))
       ) {
         headers['Authorization'] = `Bearer ${adminToken}`;
-      } else if (customerToken && (path.startsWith('/auth/customer') || path.startsWith('/orders'))) {
+      } else if (
+        customerToken &&
+        (cleanPath.startsWith('/auth/customer') || cleanPath.startsWith('/orders'))
+      ) {
         headers['Authorization'] = `Bearer ${customerToken}`;
       }
     }
@@ -209,7 +214,15 @@ async function requestEnvelope<T>(path: string, init?: RequestInit): Promise<Api
       if (response.status === 401 && (path.startsWith('/admin') || path.startsWith('/auth/admin'))) {
         setAdminToken(null);
       }
-      const message = payload?.message ?? `Request failed (${response.status}).`;
+      const message =
+        payload?.message ||
+        (response.status === 413
+          ? 'File size exceeds the 50 MB limit.'
+          : response.status === 401
+            ? 'Authentication required. Please log in.'
+            : response.status === 403
+              ? 'Access forbidden.'
+              : `Request failed (${response.status}).`);
       if (payload?.errors) {
         throw new ApiValidationError(message, payload.errors, response.status);
       }

@@ -35,8 +35,17 @@ export function Hero({ slide, slides, className }: HeroProps) {
   }, [allSlides.length]);
 
   const rawMediaSrc = normalizeMediaUrl(activeSlide?.image?.src);
-  const mobileMediaSrc = activeSlide?.mobileImage?.src ? normalizeMediaUrl(activeSlide.mobileImage.src) : undefined;
+  const rawMobileMediaSrc = activeSlide?.mobileImage?.src ? normalizeMediaUrl(activeSlide.mobileImage.src) : undefined;
   const isVideo = isVideoMedia(rawMediaSrc);
+
+  const mobileMediaSrc = useMemo(() => {
+    if (!rawMobileMediaSrc) return undefined;
+    if (isVideoMedia(rawMobileMediaSrc)) return rawMobileMediaSrc;
+    if (isCloudinaryUrl(rawMobileMediaSrc)) {
+      return getOptimizedImageUrl(rawMobileMediaSrc, { width: 640, quality: 'auto:good', format: 'auto' });
+    }
+    return rawMobileMediaSrc;
+  }, [rawMobileMediaSrc]);
 
   const mediaSrc = useMemo(() => {
     if (!rawMediaSrc) return '';

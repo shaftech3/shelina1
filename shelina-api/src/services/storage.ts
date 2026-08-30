@@ -3,6 +3,7 @@ import path from 'path';
 import crypto from 'crypto';
 import { v2 as cloudinary, type UploadApiResponse } from 'cloudinary';
 import { prisma } from '../lib/prisma.js';
+import { ApiError } from '../lib/errors.js';
 
 export interface StorageUploadResult {
   url: string;
@@ -114,9 +115,14 @@ function isProductionEnvironment(): boolean {
  */
 function getCloudinaryConfig(): { configured: boolean; cloudName?: string } {
   const url = cleanEnvVal(process.env.CLOUDINARY_URL);
-  const cloudName = cleanEnvVal(process.env.CLOUDINARY_CLOUD_NAME);
-  const apiKey = cleanEnvVal(process.env.CLOUDINARY_API_KEY);
-  const apiSecret = cleanEnvVal(process.env.CLOUDINARY_API_SECRET);
+  const cloudName = cleanEnvVal(
+    process.env.CLOUDINARY_CLOUD_NAME ||
+      process.env.CLOUDINARY_NAME ||
+      process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME ||
+      process.env.VITE_CLOUDINARY_CLOUD_NAME,
+  );
+  const apiKey = cleanEnvVal(process.env.CLOUDINARY_API_KEY || process.env.CLOUDINARY_KEY);
+  const apiSecret = cleanEnvVal(process.env.CLOUDINARY_API_SECRET || process.env.CLOUDINARY_SECRET);
 
   if (url) {
     cloudinary.config({ url, secure: true });
@@ -204,22 +210,23 @@ export const storageService = {
           .replace(/[^a-zA-Z0-9_-]/g, '_')
           .slice(0, 40);
         const subfolder = isVideo ? 'videos' : 'media';
-        const publicId = `shelina/${subfolder}/${Date.now()}_${base || 'asset'}`;
+        const publicId = `${Date.now()}_${base || 'asset'}`;
 
         const uploadStream = cloudinary.uploader.upload_stream(
           {
             public_id: publicId,
             resource_type: resourceType,
-            folder: 'shelina',
+            folder: `shelina/${subfolder}`,
             overwrite: false,
           },
           (error, result: UploadApiResponse | undefined) => {
             if (error || !result) {
               console.error('[Storage] Cloudinary upload error:', error);
               return reject(
-                new Error(
+                new ApiError(
                   error?.message ||
                     'Failed to upload file to Cloudinary persistent storage. Please verify your Cloudinary API credentials.',
+                  400,
                 ),
               );
             }
@@ -245,8 +252,9 @@ export const storageService = {
 
     // In production on Render, NEVER silently save to ephemeral container disk
     if (isProd) {
-      throw new Error(
+      throw new ApiError(
         'Permanent media storage is not configured on this server. Please add CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET (or CLOUDINARY_URL) to your environment variables on Render to ensure uploaded media is stored permanently.',
+        400,
       );
     }
 

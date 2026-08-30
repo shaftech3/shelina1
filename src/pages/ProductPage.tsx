@@ -14,7 +14,9 @@ import {
 import { ProductGallery } from '@/components/product/ProductGallery';
 import { ProductGrid } from '@/components/product/ProductGrid';
 import { ProductPurchasePanel } from '@/components/product/ProductPurchasePanel';
+import { JsonLd } from '@/components/seo/JsonLd';
 import { STORE_CONFIG } from '@/lib/constants';
+import { effectivePrice } from '@/lib/format';
 
 /** Skeleton mirroring the real two-column layout to avoid a jarring swap. */
 function ProductSkeleton() {
@@ -72,8 +74,67 @@ export function ProductPage() {
     );
   }
 
+  const payable = product ? effectivePrice(product.price, product.salePrice) : 0;
+  const inStock = product ? product.stockStatus !== 'out-of-stock' : false;
+
+  const productSchema = product
+    ? [
+        {
+          '@context': 'https://schema.org',
+          '@type': 'Product',
+          name: product.name,
+          image: product.images.map((img) => img.src),
+          description: product.shortDescription || product.description || product.name,
+          sku: product.sku || product.id,
+          brand: {
+            '@type': 'Brand',
+            name: product.brand || STORE_CONFIG.name,
+          },
+          offers: {
+            '@type': 'Offer',
+            url: `https://shelina1.onrender.com/product/${product.slug}`,
+            priceCurrency: 'PKR',
+            price: payable,
+            itemCondition: 'https://schema.org/NewCondition',
+            availability: inStock
+              ? 'https://schema.org/InStock'
+              : 'https://schema.org/OutOfStock',
+            seller: {
+              '@type': 'Organization',
+              name: 'Shelina',
+            },
+          },
+        },
+        {
+          '@context': 'https://schema.org',
+          '@type': 'BreadcrumbList',
+          itemListElement: [
+            {
+              '@type': 'ListItem',
+              position: 1,
+              name: 'Home',
+              item: 'https://shelina1.onrender.com/',
+            },
+            {
+              '@type': 'ListItem',
+              position: 2,
+              name: 'Shop',
+              item: 'https://shelina1.onrender.com/shop',
+            },
+            {
+              '@type': 'ListItem',
+              position: 3,
+              name: product.name,
+              item: `https://shelina1.onrender.com/product/${product.slug}`,
+            },
+          ],
+        },
+      ]
+    : null;
+
   return (
     <Layout>
+      {productSchema && <JsonLd id={`product-jsonld-${product?.id}`} data={productSchema} />}
       <Section spacing="tight" className="w-full max-w-full overflow-hidden">
         <Container className="w-full min-w-0 max-w-full overflow-hidden">
           {loading || !product ? (

@@ -41,10 +41,22 @@ export default defineConfig({
     cssCodeSplit: true,
     rollupOptions: {
       output: {
-        // Keep the framework in its own long-lived cache chunk.
+        // Separate core libraries into distinct long-lived cache chunks
         manualChunks(id: string) {
-          if (id.includes('node_modules/react') || id.includes('node_modules/scheduler')) {
-            return 'react';
+          if (
+            id.includes('node_modules/react/') ||
+            id.includes('node_modules/react-dom/') ||
+            id.includes('node_modules/react-router/') ||
+            id.includes('node_modules/react-router-dom/') ||
+            id.includes('node_modules/scheduler/')
+          ) {
+            return 'react-vendor';
+          }
+          if (id.includes('node_modules/motion/') || id.includes('node_modules/framer-motion/')) {
+            return 'motion-vendor';
+          }
+          if (id.includes('node_modules/lucide-react/')) {
+            return 'icons-vendor';
           }
           return undefined;
         },

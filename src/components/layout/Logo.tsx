@@ -20,7 +20,7 @@ const SOURCES: Record<LogoSlot, string> = {
 };
 
 const SIZES: Record<LogoSlot, string> = {
-  desktop: 'h-14 w-14 sm:h-16 sm:w-16 md:h-16 md:w-16 lg:h-16 lg:w-16',
+  desktop: 'h-14 w-14 sm:h-15 sm:w-15 md:h-16 md:w-16 lg:h-16 lg:w-16',
   mobile: 'h-12 w-12 sm:h-13 sm:w-13',
   footer: 'h-16 w-16 sm:h-18 sm:w-18',
 };
@@ -35,7 +35,7 @@ export function Logo({ slot = 'desktop', className, showWordmark = false, invert
   const logoSrc = normalizeMediaUrl(SOURCES[slot]);
 
   return (
-    <span className={cn('inline-flex items-center gap-3 sm:gap-3.5', className)}>
+    <span className={cn('inline-flex items-center gap-2.5 sm:gap-3.5', className)}>
       <img
         src={logoSrc}
         alt={`${STORE_CONFIG.name} logo`}
@@ -48,10 +48,10 @@ export function Logo({ slot = 'desktop', className, showWordmark = false, invert
         )}
       />
       {showWordmark && (
-        <span className="flex flex-col leading-none">
+        <span className="flex flex-col leading-tight">
           <span
             className={cn(
-              'font-display text-[1.55rem] sm:text-[1.75rem] font-bold tracking-[0.05em] uppercase',
+              'font-display text-[1.45rem] sm:text-[1.75rem] font-bold tracking-[0.06em] uppercase',
               invert ? 'text-cream' : 'text-primary-deep',
             )}
           >
@@ -59,7 +59,7 @@ export function Logo({ slot = 'desktop', className, showWordmark = false, invert
           </span>
           <span
             className={cn(
-              'mt-1 text-[0.64rem] sm:text-[0.7rem] uppercase tracking-[0.32em] font-medium',
+              'text-[0.6rem] sm:text-[0.68rem] uppercase tracking-[0.28em] font-medium',
               invert ? 'text-cream/70' : 'text-ink-muted',
             )}
           >

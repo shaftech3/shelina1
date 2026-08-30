@@ -70,7 +70,7 @@ export const env = {
     smtpPort: Number(process.env.BREVO_SMTP_PORT ?? process.env.SMTP_PORT ?? 587),
     smtpUser: process.env.BREVO_SMTP_USER ?? process.env.SMTP_USER ?? '',
     smtpPassword: process.env.BREVO_SMTP_PASSWORD ?? process.env.SMTP_PASSWORD ?? '',
-    fromEmail: process.env.BREVO_FROM_EMAIL ?? process.env.SMTP_FROM_EMAIL ?? 'orders@shelina.pk',
+    fromEmail: process.env.BREVO_FROM_EMAIL ?? process.env.SMTP_FROM_EMAIL ?? 'shelinaoffical@gmail.com',
     fromName: process.env.BREVO_FROM_NAME ?? process.env.SMTP_FROM_NAME ?? 'Shelina Footwear Atelier',
     isConfigured: Boolean(
       (process.env.BREVO_SMTP_USER || process.env.SMTP_USER) &&

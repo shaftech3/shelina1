@@ -143,10 +143,12 @@ model Product {
   updatedAt DateTime @updatedAt
 
   // Indexes match how the storefront actually queries: slug/sku lookups and
-  // category/brand/status filters. Deliberately not indexing every column.
+  // category/brand/status filters.
   @@index([categoryId])
   @@index([brandId])
   @@index([status])
+  @@index([status, featured, createdAt])
+  @@index([status, newArrival, createdAt])
   @@map("products")
 }
 

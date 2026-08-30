@@ -31,9 +31,15 @@ export class ApiError extends Error {
   static conflict(message: string) {
     return new ApiError(message, 409);
   }
+  static payloadTooLarge(message = 'File or payload too large.') {
+    return new ApiError(message, 413);
+  }
   /** 422 — well-formed request, but the submitted information is not usable. */
   static unprocessable(message: string, details?: Record<string, string>) {
     return new ApiError(message, 422, details);
+  }
+  static internal(message = 'Internal server error.') {
+    return new ApiError(message, 500);
   }
 }
 

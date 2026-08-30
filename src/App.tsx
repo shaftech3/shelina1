@@ -7,16 +7,17 @@ import { CartDrawer } from '@/components/cart/CartDrawer';
 import { PageTransition } from '@/components/layout/PageTransition';
 import { RouteFallback } from '@/components/layout/RouteFallback';
 import { HomePage } from '@/pages/HomePage';
-import { ShopPage } from '@/pages/ShopPage';
-import { ProductPage } from '@/pages/ProductPage';
-import { CartPage } from '@/pages/CartPage';
-import { AccountAuthPage } from '@/pages/AccountAuthPage';
-import { AccountPage } from '@/pages/AccountPage';
-import { AccountOrdersPage } from '@/pages/AccountOrdersPage';
-import { AccountOrderDetailPage } from '@/pages/AccountOrderDetailPage';
-import { CheckoutPage } from '@/pages/CheckoutPage';
-import { OrderSuccessPage } from '@/pages/OrderSuccessPage';
-import { NotFoundPage } from '@/pages/NotFoundPage';
+
+const ShopPage = lazy(() => import('@/pages/ShopPage').then((m) => ({ default: m.ShopPage })));
+const ProductPage = lazy(() => import('@/pages/ProductPage').then((m) => ({ default: m.ProductPage })));
+const CartPage = lazy(() => import('@/pages/CartPage').then((m) => ({ default: m.CartPage })));
+const CheckoutPage = lazy(() => import('@/pages/CheckoutPage').then((m) => ({ default: m.CheckoutPage })));
+const OrderSuccessPage = lazy(() => import('@/pages/OrderSuccessPage').then((m) => ({ default: m.OrderSuccessPage })));
+const AccountAuthPage = lazy(() => import('@/pages/AccountAuthPage').then((m) => ({ default: m.AccountAuthPage })));
+const AccountPage = lazy(() => import('@/pages/AccountPage').then((m) => ({ default: m.AccountPage })));
+const AccountOrdersPage = lazy(() => import('@/pages/AccountOrdersPage').then((m) => ({ default: m.AccountOrdersPage })));
+const AccountOrderDetailPage = lazy(() => import('@/pages/AccountOrderDetailPage').then((m) => ({ default: m.AccountOrderDetailPage })));
+const NotFoundPage = lazy(() => import('@/pages/NotFoundPage').then((m) => ({ default: m.NotFoundPage })));
 
 /**
  * The entire admin panel is one lazy chunk, so none of it — pages, forms or

@@ -12,6 +12,7 @@ import {
 import { Layout } from '@/components/layout';
 import { CategoryShowcase } from '@/components/category/CategoryShowcase';
 import { ProductCarousel } from '@/components/product/ProductCarousel';
+import { JsonLd } from '@/components/seo/JsonLd';
 import {
   ButtonLink,
   Container,
@@ -51,8 +52,37 @@ export function HomePage() {
 
   const heroSlide = hero.data?.[0];
 
+  const homepageSchema = [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'Organization',
+      name: 'Shelina',
+      url: 'https://shelina1.onrender.com',
+      logo: 'https://shelina1.onrender.com/images/brand/shelina-logo.jpeg',
+      description: 'Handcrafted leather footwear atelier specializing in premium chappals, bespoke shoes, and sneakers in Pakistan.',
+      email: 'shelinaoffical@gmail.com',
+      telephone: '+92-324-7741080',
+      address: {
+        '@type': 'PostalAddress',
+        addressCountry: 'PK',
+      },
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'WebSite',
+      name: 'Shelina',
+      url: 'https://shelina1.onrender.com',
+      potentialAction: {
+        '@type': 'SearchAction',
+        target: 'https://shelina1.onrender.com/shop?q={search_term_string}',
+        'query-input': 'required name=search_term_string',
+      },
+    },
+  ];
+
   return (
     <Layout overHero>
+      <JsonLd id="homepage-jsonld" data={homepageSchema} />
       {/* 1 — Cinematic Hero */}
       {heroSlide ? (
         <Hero slide={heroSlide} slides={hero.data || undefined} />

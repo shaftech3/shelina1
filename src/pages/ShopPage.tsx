@@ -4,6 +4,7 @@ import { useBrands, useCategories, useProducts, useSeo } from '@/hooks';
 import { useShopFilters, SORT_OPTIONS } from '@/hooks/useShopFilters';
 import { productService, type ProductSort } from '@/services';
 import { Layout } from '@/components/layout';
+import { JsonLd } from '@/components/seo/JsonLd';
 import {
   Button,
   Container,
@@ -153,8 +154,37 @@ export function ShopPage() {
       : []),
   ];
 
+  const shopSchema = [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'CollectionPage',
+      name: context.heading,
+      description: context.intro,
+      url: `https://shelina1.onrender.com${context.path}`,
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        {
+          '@type': 'ListItem',
+          position: 1,
+          name: 'Home',
+          item: 'https://shelina1.onrender.com/',
+        },
+        {
+          '@type': 'ListItem',
+          position: 2,
+          name: context.heading,
+          item: `https://shelina1.onrender.com${context.path}`,
+        },
+      ],
+    },
+  ];
+
   return (
     <Layout>
+      <JsonLd id={`shop-jsonld-${context.path}`} data={shopSchema} />
       {/* Heading and catalogue share one band: two stacked Sections summed
           their vertical padding into a large dead gap, and `cn` is a plain
           joiner (no tailwind-merge), so a `pb-0` override loses to the

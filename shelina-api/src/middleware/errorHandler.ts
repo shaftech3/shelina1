@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import type { NextFunction, Request, Response } from 'express';
 import { ZodError } from 'zod';
+import multer from 'multer';
 import { ApiError } from '../lib/errors.js';
 
 /** 404 for unmatched routes, in the same envelope as every other error. */
@@ -11,9 +12,8 @@ export function notFoundHandler(_req: Request, res: Response) {
 /**
  * Single error funnel.
  *
- * Only ApiError and validation messages are shown to the client. Anything else
- * is logged server-side and replaced with a generic message so stack traces,
- * SQL errors and connection strings never leak.
+ * Operational ApiError, Multer, Zod, and descriptive validation errors
+ * are cleanly surfaced to the client with appropriate HTTP status codes.
  */
 export function errorHandler(
   error: unknown,
@@ -41,11 +41,24 @@ export function errorHandler(
     return;
   }
 
+  if (error instanceof multer.MulterError) {
+    let message = error.message;
+    let status = 400;
+    if (error.code === 'LIMIT_FILE_SIZE') {
+      message = 'File size exceeds the 50 MB limit. Please upload a smaller file.';
+      status = 413;
+    } else if (error.code === 'LIMIT_UNEXPECTED_FILE') {
+      message = `Unexpected upload field "${error.field || 'file'}".`;
+    } else if (error.code === 'LIMIT_FILE_COUNT') {
+      message = 'Too many files uploaded at once.';
+    }
+    res.status(status).json({ success: false, message });
+    return;
+  }
+
   /**
    * `express.json()` throws a SyntaxError tagged with a 400 status when the
-   * request body is not valid JSON. That is a client mistake, not a server
-   * fault, so it must not be reported as a 500 — and its message quotes the
-   * malformed body back, so it is replaced with a fixed string.
+   * request body is not valid JSON.
    */
   if (
     error instanceof SyntaxError &&
@@ -57,21 +70,24 @@ export function errorHandler(
     return;
   }
 
-  /**
-   * Unexpected: log the truth, return a safe message.
-   *
-   * The response body NEVER carries the error text, even in development.
-   * Prisma's messages embed absolute source paths, model names and SQL detail,
-   * and a dev-only leak still ends up in screenshots, bug reports and browser
-   * consoles. Instead the full error is logged with a short correlation id that
-   * is echoed to the client, so a report can be matched to a log line without
-   * exposing anything about the internals.
-   */
   const errorId = randomUUID().slice(0, 8);
   console.error(`[api] unhandled error [${errorId}]:`, error);
+
+  // Surface operational error message if available and not an opaque Prisma/database internal
+  const rawMsg = error instanceof Error ? error.message : '';
+  const isPrismaInternal =
+    rawMsg.includes('Invalid `prisma.') ||
+    rawMsg.includes('prisma-client') ||
+    rawMsg.includes('raw query failed');
+
+  const safeMessage =
+    rawMsg && !isPrismaInternal
+      ? rawMsg
+      : 'An unexpected error occurred. Please try again or check server logs.';
+
   res.status(500).json({
     success: false,
-    message: 'Something went wrong.',
+    message: safeMessage,
     errorId,
   });
 }
