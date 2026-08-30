@@ -14,6 +14,7 @@ const ICONS: Record<SocialPlatform, IconName> = {
   instagram: 'instagram',
   facebook: 'facebook',
   tiktok: 'tiktok',
+  whatsapp: 'whatsapp',
 };
 
 export function SocialIcon({ platform, label, href, invert = false, className }: SocialIconProps) {

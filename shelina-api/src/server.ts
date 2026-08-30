@@ -3,6 +3,7 @@ import { env } from './lib/env.js';
 import { ensureSchemaMigrations } from './lib/ensureSchema.js';
 import { bootstrapSingleAdmin } from './lib/bootstrapAdmin.js';
 import { verifyEmailConfiguration } from './services/email.js';
+import { verifyStorageConfiguration } from './services/storage.js';
 import { ensureDevDatabaseReady } from './lib/devDatabase.js';
 import { prisma } from './lib/prisma.js';
 
@@ -40,4 +41,7 @@ app.listen(env.port, '0.0.0.0', async () => {
 
   // Validate Brevo SMTP readiness
   await verifyEmailConfiguration();
+
+  // Validate permanent media storage configuration
+  await verifyStorageConfiguration();
 });

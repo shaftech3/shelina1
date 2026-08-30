@@ -66,7 +66,7 @@ export const footerNav: { title: string; links: NavLink[] }[] = [
  */
 export const legalNav: NavLink[] = [];
 
-export type SocialPlatform = 'instagram' | 'facebook' | 'tiktok';
+export type SocialPlatform = 'instagram' | 'facebook' | 'tiktok' | 'whatsapp';
 
 export const socialLinks: { platform: SocialPlatform; label: string; href: string }[] = [
   {
@@ -83,5 +83,10 @@ export const socialLinks: { platform: SocialPlatform; label: string; href: strin
     platform: 'tiktok',
     label: 'Shelina on TikTok',
     href: 'https://www.tiktok.com/@shelinacollection',
+  },
+  {
+    platform: 'whatsapp',
+    label: 'Chat with Shelina on WhatsApp',
+    href: 'https://wa.me/923247741080?text=Hello%20Shelina%2C%20I%20have%20an%20inquiry%20regarding%20your%20handcrafted%20footwear%20collection.',
   },
 ];

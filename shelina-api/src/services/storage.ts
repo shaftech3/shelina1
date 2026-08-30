@@ -22,6 +22,10 @@ export interface StorageStatus {
   provider: 'cloudinary' | 'local';
   persistent: boolean;
   isConfigured: boolean;
+  cloudinaryConfigured: boolean;
+  cloudNameConfigured: boolean;
+  apiKeyConfigured: boolean;
+  apiSecretConfigured: boolean;
   cloudName?: string;
   uploadsDir?: string;
   maxFileSizeMb: number;
@@ -55,6 +59,39 @@ export interface MediaDiagnosticsReport {
 function cleanEnvVal(val?: string | null): string {
   if (!val) return '';
   return val.trim().replace(/^["']|["']$/g, '').trim();
+}
+
+/**
+ * Parses a standard Cloudinary URL into its constituent parts.
+ * Format: cloudinary://<api_key>:<api_secret>@<cloud_name>
+ */
+function parseCloudinaryUrl(urlStr: string): { cloudName: string; apiKey: string; apiSecret: string } | null {
+  try {
+    const cleaned = cleanEnvVal(urlStr);
+    if (!cleaned) return null;
+
+    if (cleaned.startsWith('cloudinary://')) {
+      const parsed = new URL(cleaned);
+      const apiKey = decodeURIComponent(parsed.username || '');
+      const apiSecret = decodeURIComponent(parsed.password || '');
+      const cloudName = decodeURIComponent(parsed.hostname || '');
+      if (cloudName && apiKey && apiSecret) {
+        return { cloudName, apiKey, apiSecret };
+      }
+    }
+
+    const match = cleaned.match(/cloudinary:\/\/([^:]+):([^@]+)@([^\s/?#]+)/);
+    if (match) {
+      return {
+        apiKey: match[1],
+        apiSecret: match[2],
+        cloudName: match[3],
+      };
+    }
+  } catch {
+    // ignore
+  }
+  return null;
 }
 
 /**
@@ -111,41 +148,97 @@ function isProductionEnvironment(): boolean {
 }
 
 /**
- * Initializes and validates Cloudinary configuration.
+ * Comprehensive Cloudinary credentials inspection and setup.
+ * Supports CLOUDINARY_URL and individual environment variables without leaking secrets.
  */
-function getCloudinaryConfig(): { configured: boolean; cloudName?: string } {
-  const url = cleanEnvVal(process.env.CLOUDINARY_URL);
-  const cloudName = cleanEnvVal(
+function getCloudinaryConfig(): {
+  configured: boolean;
+  cloudNameConfigured: boolean;
+  apiKeyConfigured: boolean;
+  apiSecretConfigured: boolean;
+  cloudName?: string;
+  source: 'url' | 'individual' | 'none';
+} {
+  const rawUrl = cleanEnvVal(process.env.CLOUDINARY_URL);
+  const parsedFromUrl = rawUrl ? parseCloudinaryUrl(rawUrl) : null;
+
+  const rawCloudName = cleanEnvVal(
     process.env.CLOUDINARY_CLOUD_NAME ||
       process.env.CLOUDINARY_NAME ||
       process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME ||
       process.env.VITE_CLOUDINARY_CLOUD_NAME,
   );
-  const apiKey = cleanEnvVal(process.env.CLOUDINARY_API_KEY || process.env.CLOUDINARY_KEY);
-  const apiSecret = cleanEnvVal(process.env.CLOUDINARY_API_SECRET || process.env.CLOUDINARY_SECRET);
+  const rawApiKey = cleanEnvVal(process.env.CLOUDINARY_API_KEY || process.env.CLOUDINARY_KEY);
+  const rawApiSecret = cleanEnvVal(process.env.CLOUDINARY_API_SECRET || process.env.CLOUDINARY_SECRET);
 
-  if (url) {
-    cloudinary.config({ url, secure: true });
-    const match = url.match(/@([^/?#]+)/);
-    return { configured: true, cloudName: match ? match[1] : 'configured' };
-  }
-
-  if (cloudName && apiKey && apiSecret) {
+  if (parsedFromUrl) {
     cloudinary.config({
-      cloud_name: cloudName,
-      api_key: apiKey,
-      api_secret: apiSecret,
+      cloud_name: parsedFromUrl.cloudName,
+      api_key: parsedFromUrl.apiKey,
+      api_secret: parsedFromUrl.apiSecret,
       secure: true,
     });
-    return { configured: true, cloudName };
+    return {
+      configured: true,
+      cloudNameConfigured: true,
+      apiKeyConfigured: true,
+      apiSecretConfigured: true,
+      cloudName: parsedFromUrl.cloudName,
+      source: 'url',
+    };
   }
 
-  return { configured: false };
+  if (rawCloudName && rawApiKey && rawApiSecret) {
+    cloudinary.config({
+      cloud_name: rawCloudName,
+      api_key: rawApiKey,
+      api_secret: rawApiSecret,
+      secure: true,
+    });
+    return {
+      configured: true,
+      cloudNameConfigured: true,
+      apiKeyConfigured: true,
+      apiSecretConfigured: true,
+      cloudName: rawCloudName,
+      source: 'individual',
+    };
+  }
+
+  return {
+    configured: false,
+    cloudNameConfigured: Boolean(rawCloudName || (parsedFromUrl && parsedFromUrl.cloudName)),
+    apiKeyConfigured: Boolean(rawApiKey || (parsedFromUrl && parsedFromUrl.apiKey)),
+    apiSecretConfigured: Boolean(rawApiSecret || (parsedFromUrl && parsedFromUrl.apiSecret)),
+    cloudName: rawCloudName || (parsedFromUrl ? parsedFromUrl.cloudName : undefined),
+    source: 'none',
+  };
+}
+
+/**
+ * Startup validation logger for server boot.
+ */
+export async function verifyStorageConfiguration(): Promise<void> {
+  const status = storageService.getStatus();
+  if (status.cloudinaryConfigured) {
+    console.log(`[storage] Cloudinary media storage: CONFIGURED & ACTIVE (cloud: ${status.cloudName})`);
+  } else if (isProductionEnvironment()) {
+    console.warn(
+      `[storage] WARNING: Cloudinary media storage is NOT configured in production.\n` +
+        `[storage] Cloud name configured: ${status.cloudNameConfigured ? 'YES' : 'NO'}\n` +
+        `[storage] API key configured: ${status.apiKeyConfigured ? 'YES' : 'NO'}\n` +
+        `[storage] API secret configured: ${status.apiSecretConfigured ? 'YES' : 'NO'}\n` +
+        `[storage] Please add CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET (or CLOUDINARY_URL) to your environment variables on Render.`,
+    );
+  } else {
+    console.log('[storage] Local media storage active for development (uploads will be stored in public/uploads).');
+  }
 }
 
 export const storageService = {
   /**
    * Returns current storage subsystem status and configuration.
+   * Safe for client reporting (never exposes API secret or credentials).
    */
   getStatus(): StorageStatus {
     const cloud = getCloudinaryConfig();
@@ -156,8 +249,13 @@ export const storageService = {
     if (isCloudinary) {
       message = `Permanent Cloudinary cloud media storage is ACTIVE and verified (Cloud: ${cloud.cloudName || 'custom'}).`;
     } else if (isProd) {
-      message =
-        'CRITICAL: Permanent cloud storage is not configured. Please set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET (or CLOUDINARY_URL) on Render to enable permanent media storage.';
+      if (cloud.cloudNameConfigured && (!cloud.apiKeyConfigured || !cloud.apiSecretConfigured)) {
+        message =
+          'Cloudinary is partially configured: CLOUDINARY_CLOUD_NAME is present, but CLOUDINARY_API_KEY or CLOUDINARY_API_SECRET is missing. Please set all three environment variables on Render.';
+      } else {
+        message =
+          'Permanent media storage is not configured on this server. Please add CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET (or CLOUDINARY_URL) to your environment variables on Render to ensure uploaded media is stored permanently.';
+      }
     } else {
       message = 'Direct media uploads are active in local development mode (using local filesystem).';
     }
@@ -166,6 +264,10 @@ export const storageService = {
       provider: isCloudinary ? 'cloudinary' : 'local',
       persistent: isCloudinary || Boolean(process.env.UPLOADS_DIR),
       isConfigured: isCloudinary,
+      cloudinaryConfigured: isCloudinary,
+      cloudNameConfigured: cloud.cloudNameConfigured,
+      apiKeyConfigured: cloud.apiKeyConfigured,
+      apiSecretConfigured: cloud.apiSecretConfigured,
       cloudName: cloud.cloudName,
       uploadsDir: isCloudinary ? undefined : resolveUploadsDirectory(),
       maxFileSizeMb: 50,
@@ -212,20 +314,54 @@ export const storageService = {
         const subfolder = isVideo ? 'videos' : 'media';
         const publicId = `${Date.now()}_${base || 'asset'}`;
 
+        let finished = false;
+        const timer = setTimeout(() => {
+          if (!finished) {
+            finished = true;
+            reject(
+              new ApiError(
+                'Media upload timed out after 60 seconds. Please check your network connection or try a smaller file.',
+                408,
+              ),
+            );
+          }
+        }, 60000);
+
         const uploadStream = cloudinary.uploader.upload_stream(
           {
             public_id: publicId,
             resource_type: resourceType,
-            folder: `shelina/${subfolder}`,
+            folder: `Shelina/${subfolder}`,
             overwrite: false,
+            use_filename: true,
+            unique_filename: true,
           },
           (error, result: UploadApiResponse | undefined) => {
+            if (finished) return;
+            finished = true;
+            clearTimeout(timer);
+
             if (error || !result) {
               console.error('[Storage] Cloudinary upload error:', error);
+              const errMsg = error?.message || 'Upload failed';
+              const isAuthError =
+                errMsg.toLowerCase().includes('must supply api_key') ||
+                errMsg.toLowerCase().includes('invalid api_key') ||
+                errMsg.toLowerCase().includes('signature') ||
+                errMsg.toLowerCase().includes('unauthorized');
+
+              if (isAuthError) {
+                return reject(
+                  new ApiError(
+                    'Cloudinary authentication failed. Please verify CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET on Render.',
+                    401,
+                  ),
+                );
+              }
+
               return reject(
                 new ApiError(
-                  error?.message ||
-                    'Failed to upload file to Cloudinary persistent storage. Please verify your Cloudinary API credentials.',
+                  `Failed to upload file to Cloudinary: ${errMsg}`,
                   400,
                 ),
               );
@@ -252,8 +388,10 @@ export const storageService = {
 
     // In production on Render, NEVER silently save to ephemeral container disk
     if (isProd) {
+      const status = storageService.getStatus();
       throw new ApiError(
-        'Permanent media storage is not configured on this server. Please add CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET (or CLOUDINARY_URL) to your environment variables on Render to ensure uploaded media is stored permanently.',
+        status.message ||
+          'Permanent media storage is not configured on this server. Please add CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET (or CLOUDINARY_URL) to your environment variables on Render to ensure uploaded media is stored permanently.',
         400,
       );
     }

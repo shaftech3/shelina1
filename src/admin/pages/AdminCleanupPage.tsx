@@ -601,6 +601,22 @@ export function AdminCleanupPage() {
                     {stats.storage?.persistent ? 'Guaranteed (Cloud Hosted)' : 'Ephemeral (Requires Cloudinary setup for permanent storage)'}
                   </span>
                 </div>
+                {stats.storage && !stats.storage.persistent && (
+                  <div className="pt-2 border-t border-border/60">
+                    <span className="text-xs text-ink-muted block mb-1.5 font-medium">Render Environment Variables Status:</span>
+                    <div className="grid grid-cols-3 gap-2 text-xs">
+                      <div className={`p-1.5 rounded text-center font-medium ${stats.storage.cloudNameConfigured ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+                        Cloud Name: {stats.storage.cloudNameConfigured ? '✓ Set' : '✗ Missing'}
+                      </div>
+                      <div className={`p-1.5 rounded text-center font-medium ${stats.storage.apiKeyConfigured ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+                        API Key: {stats.storage.apiKeyConfigured ? '✓ Set' : '✗ Missing'}
+                      </div>
+                      <div className={`p-1.5 rounded text-center font-medium ${stats.storage.apiSecretConfigured ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+                        API Secret: {stats.storage.apiSecretConfigured ? '✓ Set' : '✗ Missing'}
+                      </div>
+                    </div>
+                  </div>
+                )}
                 {stats.storage?.message && (
                   <div className="pt-2 border-t border-border/60 text-xs text-ink-muted">
                     {stats.storage.message}

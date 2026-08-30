@@ -7,6 +7,7 @@ import { ensureDevDatabaseReady } from './shelina-api/src/lib/devDatabase.js';
 import { ensureSchemaMigrations } from './shelina-api/src/lib/ensureSchema.js';
 import { bootstrapSingleAdmin } from './shelina-api/src/lib/bootstrapAdmin.js';
 import { verifyEmailConfiguration } from './shelina-api/src/services/email.js';
+import { verifyStorageConfiguration } from './shelina-api/src/services/storage.js';
 import { prisma } from './shelina-api/src/lib/prisma.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -58,6 +59,7 @@ async function startServer() {
 
       await bootstrapSingleAdmin();
       await verifyEmailConfiguration();
+      await verifyStorageConfiguration();
       console.log('[server] Database and services initialized successfully.');
     } catch (initErr) {
       console.warn('[server] Background initialization notice:', initErr instanceof Error ? initErr.message : initErr);

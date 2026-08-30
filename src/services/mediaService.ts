@@ -20,6 +20,10 @@ export interface StorageConfigResponse {
   provider: 'cloudinary' | 'local';
   persistent: boolean;
   isConfigured: boolean;
+  cloudinaryConfigured?: boolean;
+  cloudNameConfigured?: boolean;
+  apiKeyConfigured?: boolean;
+  apiSecretConfigured?: boolean;
   cloudName?: string;
   uploadsDir?: string;
   maxFileSizeMb: number;
