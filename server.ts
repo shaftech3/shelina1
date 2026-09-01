@@ -11,47 +11,54 @@ if (process.env.CLOUDINARY_URL) {
   }
 }
 
-import express from 'express';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { createServer as createViteServer } from 'vite';
 import { createApp } from './shelina-api/src/app.js';
-import { ensureDevDatabaseReady } from './shelina-api/src/lib/devDatabase.js';
+import { env } from './shelina-api/src/lib/env.js';
 import { ensureSchemaMigrations } from './shelina-api/src/lib/ensureSchema.js';
 import { bootstrapSingleAdmin } from './shelina-api/src/lib/bootstrapAdmin.js';
 import { verifyEmailConfiguration } from './shelina-api/src/services/email.js';
 import { verifyStorageConfiguration } from './shelina-api/src/services/storage.js';
 import { prisma } from './shelina-api/src/lib/prisma.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
 async function startServer() {
-  const PORT = 3000;
+  const PORT = Number(process.env.PORT || env.port || 3000);
+  const isProduction = process.env.NODE_ENV === 'production' || env.isProduction;
   const app = createApp();
 
-  // Vite middleware in development mode, or static files in production
-  if (process.env.NODE_ENV !== 'production') {
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: 'spa',
-    });
-    app.use(vite.middlewares);
-  } else {
-    const distPath = path.join(process.cwd(), 'dist');
-    app.use(express.static(distPath));
-    app.get('*', (_req, res) => {
-      res.sendFile(path.join(distPath, 'index.html'));
-    });
+  // In development mode only (AI Studio / local dev), mount Vite middleware for preview
+  if (!isProduction) {
+    try {
+      const { createServer: createViteServer } = await import('vite');
+      const vite = await createViteServer({
+        server: { middlewareMode: true },
+        appType: 'spa',
+      });
+      app.use(vite.middlewares);
+    } catch (viteErr) {
+      console.warn('[server] Vite middleware notice:', viteErr instanceof Error ? viteErr.message : viteErr);
+    }
   }
 
-  // Start listening on port 3000 immediately
+  // Start listening on port 3000 (or PORT env) bound to 0.0.0.0
   const server = app.listen(PORT, '0.0.0.0', async () => {
-    console.log(`[server] Shelina application running on http://0.0.0.0:${PORT}`);
+    console.log(`[server] Shelina API running on http://0.0.0.0:${PORT}`);
+    console.log(`[server] Mode: ${isProduction ? 'production (API-only)' : 'development'}`);
+    console.log(`[server] CORS Origins: ${env.corsOrigins.join(', ')}`);
 
-    // Asynchronously bootstrap local database, schema, admin & email in background
+    // In development only, if using a local database URL, ensure local dev DB
+    if (!isProduction) {
+      const isLocalDb = env.databaseUrl.includes('127.0.0.1') || env.databaseUrl.includes('localhost');
+      if (isLocalDb) {
+        try {
+          const { ensureDevDatabaseReady } = await import('./shelina-api/src/lib/devDatabase.js');
+          await ensureDevDatabaseReady();
+        } catch (dbErr) {
+          console.warn('[server] Local dev database notice:', dbErr instanceof Error ? dbErr.message : dbErr);
+        }
+      }
+    }
+
+    // Asynchronously bootstrap schema, admin, email & storage in background
     try {
-      await ensureDevDatabaseReady();
       await ensureSchemaMigrations();
 
       // Seed initial content if needed

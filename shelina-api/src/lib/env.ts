@@ -59,7 +59,7 @@ function getAdminEmail(): string {
 export const env = {
   NODE_ENV,
   isProduction,
-  port: Number(process.env.PORT || process.env.API_PORT || 4000),
+  port: Number(process.env.PORT || process.env.API_PORT || 3000),
   databaseUrl,
   sessionSecret,
   /** Comma-separated allowlist. Never "*" — credentials are involved. */

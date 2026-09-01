@@ -32,7 +32,7 @@ function isPortOpen(port: number, host: string): Promise<boolean> {
  * PGlite TCP server on 127.0.0.1:5432 and ensures migrations & seed are applied.
  */
 export async function ensureDevDatabaseReady(): Promise<void> {
-  if (isReady || env.isProduction) {
+  if (isReady || env.isProduction || process.env.NODE_ENV === 'production') {
     return;
   }
 

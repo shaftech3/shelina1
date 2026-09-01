@@ -32,10 +32,28 @@ async function clearStaleAdvisoryLocks(): Promise<void> {
  * (including external Neon PostgreSQL) on server boot without relying on external npx binaries.
  */
 export async function ensureSchemaMigrations(): Promise<void> {
-  const __dirname = path.dirname(fileURLToPath(import.meta.url));
-  const migrationsDir = path.resolve(__dirname, '../../prisma/migrations');
+  let baseDir = process.cwd();
+  if (typeof __dirname !== 'undefined') {
+    baseDir = __dirname;
+  } else {
+    try {
+      if (typeof import.meta !== 'undefined' && import.meta.url) {
+        baseDir = path.dirname(fileURLToPath(import.meta.url));
+      }
+    } catch {
+      // fallback to process.cwd()
+    }
+  }
 
-  if (!fs.existsSync(migrationsDir)) {
+  const candidateDirs = [
+    path.resolve(baseDir, '../../prisma/migrations'),
+    path.resolve(baseDir, '../prisma/migrations'),
+    path.resolve(process.cwd(), 'shelina-api/prisma/migrations'),
+    path.resolve(process.cwd(), 'prisma/migrations'),
+  ];
+  const migrationsDir = candidateDirs.find((dir) => fs.existsSync(dir));
+
+  if (!migrationsDir) {
     return;
   }
 

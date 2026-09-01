@@ -4,7 +4,6 @@ import { ensureSchemaMigrations } from './lib/ensureSchema.js';
 import { bootstrapSingleAdmin } from './lib/bootstrapAdmin.js';
 import { verifyEmailConfiguration } from './services/email.js';
 import { verifyStorageConfiguration } from './services/storage.js';
-import { ensureDevDatabaseReady } from './lib/devDatabase.js';
 import { prisma } from './lib/prisma.js';
 
 const app = createApp();
@@ -14,8 +13,15 @@ app.listen(env.port, '0.0.0.0', async () => {
   console.log(`[api] environment: ${env.NODE_ENV}`);
   console.log(`[api] CORS allowlist: ${env.corsOrigins.join(', ') || '(none configured)'}`);
 
-  // Guarantee development database is online if running locally
-  await ensureDevDatabaseReady();
+  // Guarantee development database is online ONLY if running locally in dev
+  if (!env.isProduction && (env.databaseUrl.includes('127.0.0.1') || env.databaseUrl.includes('localhost'))) {
+    try {
+      const { ensureDevDatabaseReady } = await import('./lib/devDatabase.js');
+      await ensureDevDatabaseReady();
+    } catch (dbErr) {
+      console.warn('[api] Local dev database notice:', dbErr instanceof Error ? dbErr.message : dbErr);
+    }
+  }
 
   // Guarantee all database schema tables exist in connected PostgreSQL
   await ensureSchemaMigrations();

@@ -60,16 +60,19 @@ export function createApp() {
       origin(origin, callback) {
         // Same-origin/curl requests send no Origin header.
         if (!origin) return callback(null, true);
-        if (env.corsOrigins.includes(origin)) return callback(null, true);
+        const normalized = origin.replace(/\/+$/, '');
+        if (env.corsOrigins.includes(normalized) || env.corsOrigins.includes(origin)) {
+          return callback(null, true);
+        }
 
         // In development, allow local dev origin connections and preview domains
         if (
           !env.isProduction &&
-          (/^http:\/\/localhost(:\d+)?$/.test(origin) ||
-            /^http:\/\/127\.0\.0\.1(:\d+)?$/.test(origin) ||
-            /^https:\/\/.*\.run\.app$/.test(origin) ||
-            /^https:\/\/.*\.google\.com$/.test(origin) ||
-            origin === 'https://ai.studio')
+          (/^http:\/\/localhost(:\d+)?$/.test(normalized) ||
+            /^http:\/\/127\.0\.0\.1(:\d+)?$/.test(normalized) ||
+            /^https:\/\/.*\.run\.app$/.test(normalized) ||
+            /^https:\/\/.*\.google\.com$/.test(normalized) ||
+            normalized === 'https://ai.studio')
         ) {
           return callback(null, true);
         }
@@ -78,11 +81,16 @@ export function createApp() {
         const matchesWildcard = env.corsOrigins.some((allowed) => {
           if (allowed.includes('*')) {
             const regex = new RegExp('^' + allowed.replace(/\./g, '\\.').replace(/\*/g, '.*') + '$');
-            return regex.test(origin);
+            return regex.test(normalized) || regex.test(origin);
           }
           return false;
         });
         if (matchesWildcard) return callback(null, true);
+
+        // Explicitly allow shelina1.vercel.app and preview subdomains
+        if (normalized === 'https://shelina1.vercel.app' || normalized.endsWith('.vercel.app')) {
+          return callback(null, true);
+        }
 
         return callback(null, false);
       },
@@ -95,6 +103,17 @@ export function createApp() {
 
   app.use(express.json({ limit: '1mb' }));
   app.use(cookieParser());
+
+  // Root endpoint for quick connectivity check on Oracle server
+  app.get('/', (_req, res) => {
+    res.json({
+      name: 'Shelina API',
+      status: 'online',
+      version: '1.0.0',
+      health: '/api/health',
+      storefront: 'https://shelina1.vercel.app',
+    });
+  });
 
   app.get('/api/health', async (_req, res) => {
     const { prisma } = await import('./lib/prisma.js');

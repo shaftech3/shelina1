@@ -73,9 +73,23 @@ function formatDate(date: Date): string {
 
 /** Resolve the logo from the frontend's public folder, if it is reachable. */
 function findLogo(): string | null {
-  const here = path.dirname(fileURLToPath(import.meta.url));
+  let here = process.cwd();
+  if (typeof __dirname !== 'undefined') {
+    here = __dirname;
+  } else {
+    try {
+      if (typeof import.meta !== 'undefined' && import.meta.url) {
+        here = path.dirname(fileURLToPath(import.meta.url));
+      }
+    } catch {
+      // fallback
+    }
+  }
   const candidate = path.resolve(here, '../../../shelina/public/images/brand/shelina-logo.jpeg');
-  return existsSync(candidate) ? candidate : null;
+  const candidate2 = path.resolve(process.cwd(), 'public/images/brand/shelina-logo.jpeg');
+  if (existsSync(candidate)) return candidate;
+  if (existsSync(candidate2)) return candidate2;
+  return null;
 }
 
 /**
