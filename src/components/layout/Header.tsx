@@ -43,14 +43,14 @@ export function Header({ overHero = false }: HeaderProps) {
         )}
       >
         <Container>
-          <div className="flex h-[var(--header-height)] items-center justify-between gap-3">
+          <div className="flex h-[var(--header-height)] items-center justify-between gap-2.5 sm:gap-4">
             {/* Mobile: menu trigger */}
             <div className="flex items-center lg:hidden">
               <IconButton
                 label="Open menu"
-                icon={<Icon name="menu" size={26} className="text-ink" />}
-                size="md"
-                className="h-11 w-11 hover:bg-cream"
+                icon={<Icon name="menu" size={28} className="text-ink" />}
+                size="lg"
+                className="h-12 w-12 hover:bg-cream active:bg-surface-alt"
                 onClick={() => setMenuOpen(true)}
                 aria-expanded={menuOpen}
                 aria-controls="mobile-navigation"
@@ -61,9 +61,9 @@ export function Header({ overHero = false }: HeaderProps) {
             <Link
               to="/"
               aria-label={`${STORE_CONFIG.name} — home`}
-              className="flex shrink-0 items-center rounded-sm focus-visible:outline-none focus-visible:shadow-focus lg:mr-2"
+              className="flex shrink-0 items-center rounded-sm focus-visible:outline-none focus-visible:shadow-focus lg:mr-3"
             >
-              <Logo slot="mobile" className="lg:hidden" priority />
+              <Logo slot="mobile" className="lg:hidden" showWordmark priority />
               <Logo slot="desktop" className="hidden lg:inline-flex" showWordmark priority />
             </Link>
 

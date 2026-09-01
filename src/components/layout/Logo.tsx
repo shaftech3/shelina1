@@ -20,9 +20,9 @@ const SOURCES: Record<LogoSlot, string> = {
 };
 
 const SIZES: Record<LogoSlot, string> = {
-  desktop: 'h-15 w-15 sm:h-16 sm:w-16 md:h-[66px] md:w-[66px] lg:h-[68px] lg:w-[68px]',
-  mobile: 'h-[50px] w-[50px] sm:h-[54px] sm:w-[54px]',
-  footer: 'h-16 w-16 sm:h-18 sm:w-18',
+  desktop: 'h-16 w-16 sm:h-[72px] sm:w-[72px] md:h-[78px] md:w-[78px] lg:h-[82px] lg:w-[82px]',
+  mobile: 'h-[58px] w-[58px] sm:h-[64px] sm:w-[64px]',
+  footer: 'h-20 w-20 sm:h-24 sm:w-24',
 };
 
 /**
@@ -42,16 +42,21 @@ export function Logo({ slot = 'desktop', className, showWordmark = false, invert
         loading={priority ? 'eager' : 'lazy'}
         decoding={priority ? 'sync' : 'async'}
         className={cn(
-          'shrink-0 rounded-full object-cover shadow-sm ring-1.5 transition-transform duration-300 hover:scale-105',
-          invert ? 'ring-white/30' : 'ring-primary/30',
+          'shrink-0 rounded-full object-cover shadow-sm ring-2 transition-transform duration-300 hover:scale-105',
+          invert ? 'ring-white/30' : 'ring-primary/40',
           SIZES[slot],
         )}
       />
       {showWordmark && (
-        <span className="flex flex-col leading-tight">
+        <span className="flex flex-col leading-none gap-0.5">
           <span
             className={cn(
-              'font-display text-[1.45rem] sm:text-[1.75rem] font-bold tracking-[0.06em] uppercase',
+              'font-display font-bold tracking-[0.07em] uppercase',
+              slot === 'desktop'
+                ? 'text-[1.65rem] sm:text-[1.85rem] lg:text-[2.05rem]'
+                : slot === 'mobile'
+                ? 'text-[1.35rem] sm:text-[1.55rem]'
+                : 'text-[1.75rem] sm:text-[2.15rem]',
               invert ? 'text-cream' : 'text-primary-deep',
             )}
           >
@@ -59,8 +64,13 @@ export function Logo({ slot = 'desktop', className, showWordmark = false, invert
           </span>
           <span
             className={cn(
-              'text-[0.6rem] sm:text-[0.68rem] uppercase tracking-[0.28em] font-medium',
-              invert ? 'text-cream/70' : 'text-ink-muted',
+              'uppercase font-medium tracking-[0.28em]',
+              slot === 'desktop'
+                ? 'text-[0.68rem] sm:text-[0.74rem]'
+                : slot === 'mobile'
+                ? 'text-[0.58rem] sm:text-[0.65rem]'
+                : 'text-[0.72rem] sm:text-[0.8rem]',
+              invert ? 'text-cream/75' : 'text-ink-muted',
             )}
           >
             Refined Footwear

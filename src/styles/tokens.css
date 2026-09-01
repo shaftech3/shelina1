@@ -59,7 +59,7 @@
   --container-max: 1360px;
   --space-gutter: 1.25rem;
   --space-section: 3rem;
-  --header-height: 72px;
+  --header-height: 80px;
 
   /* ---- Motion ---- */
   --ease-elegant: cubic-bezier(0.22, 0.61, 0.36, 1);
@@ -75,7 +75,7 @@
   :root {
     --space-gutter: 2rem;
     --space-section: 4.5rem;
-    --header-height: 84px;
+    --header-height: 92px;
   }
 }
 

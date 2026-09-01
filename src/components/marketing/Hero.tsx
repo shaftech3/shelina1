@@ -85,11 +85,11 @@ export function Hero({ slide, slides, className }: HeroProps) {
 
   return (
     <section
-      className={cn('relative isolate bg-ink overflow-hidden', className)}
+      className={cn('group/hero relative isolate bg-ink overflow-hidden', className)}
       aria-labelledby="hero-heading"
     >
-      {/* Media background — responsive video or image */}
-      <div className="absolute inset-0 -z-10 bg-ink">
+      {/* Media background — responsive video or image with cinematic motion */}
+      <div className="absolute inset-0 -z-10 bg-ink overflow-hidden">
         {isVideo ? (
           <video
             key={mediaSrc}
@@ -100,7 +100,7 @@ export function Hero({ slide, slides, className }: HeroProps) {
             loop
             playsInline
             preload="metadata"
-            className="h-full w-full object-cover object-center transition-opacity duration-1000"
+            className="h-full w-full object-cover object-center transition-all duration-[2000ms] ease-out motion-safe:[@media(hover:hover)]:group-hover/hero:scale-[1.025]"
           />
         ) : (
           <picture className="h-full w-full block">
@@ -116,15 +116,14 @@ export function Hero({ slide, slides, className }: HeroProps) {
               loading="eager"
               decoding="sync"
               fetchPriority="high"
-              className="h-full w-full object-cover object-center sm:object-[center_35%] transition-all duration-1000 motion-safe:animate-[hero-media_1.4s_var(--ease-entrance)_both]"
+              className="h-full w-full object-cover object-center sm:object-[center_35%] transition-transform duration-[2500ms] ease-out motion-safe:animate-[hero-media_1.8s_cubic-bezier(0.16,0.84,0.44,1)_both] motion-safe:[@media(hover:hover)]:group-hover/hero:scale-[1.025]"
             />
           </picture>
         )}
 
-
         {/* Cinematic Gradient Scrim: Dark-to-transparent for perfect text contrast on all devices */}
         <div
-          className="absolute inset-0 bg-gradient-to-t from-ink/95 via-ink/65 to-ink/40 sm:bg-gradient-to-r sm:from-ink/90 sm:via-ink/75 sm:to-transparent"
+          className="absolute inset-0 bg-gradient-to-t from-ink/95 via-ink/65 to-ink/40 sm:bg-gradient-to-r sm:from-ink/90 sm:via-ink/75 sm:to-transparent transition-opacity duration-700"
           style={{ opacity: Math.max(overlayOpacity + 0.25, 0.7) }}
         />
 
@@ -143,7 +142,7 @@ export function Hero({ slide, slides, className }: HeroProps) {
           {(badge || eyebrow) && (
             <div
               className="flex flex-wrap items-center gap-2.5 motion-safe:animate-[fade-up_var(--dur-slow)_var(--ease-entrance)_both]"
-              style={{ animationDelay: '40ms' }}
+              style={{ animationDelay: '60ms' }}
             >
               {badge && (
                 <Badge tone="secondary" className="px-2.5 py-0.5 text-xs font-semibold shadow-xs">
@@ -161,7 +160,7 @@ export function Hero({ slide, slides, className }: HeroProps) {
           <h1
             id="hero-heading"
             className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-white leading-[1.1] motion-safe:animate-[fade-up_var(--dur-slow)_var(--ease-entrance)_both]"
-            style={{ animationDelay: '120ms' }}
+            style={{ animationDelay: '150ms' }}
           >
             {heading}
           </h1>
@@ -169,7 +168,7 @@ export function Hero({ slide, slides, className }: HeroProps) {
           {subheading && (
             <p
               className="max-w-xl text-sm sm:text-base lg:text-lg text-cream/85 font-light leading-relaxed motion-safe:animate-[fade-up_var(--dur-slow)_var(--ease-entrance)_both]"
-              style={{ animationDelay: '200ms' }}
+              style={{ animationDelay: '240ms' }}
             >
               {subheading}
             </p>
@@ -180,7 +179,7 @@ export function Hero({ slide, slides, className }: HeroProps) {
               'mt-1 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center',
               'motion-safe:animate-[fade-up_var(--dur-slow)_var(--ease-entrance)_both]',
             )}
-            style={{ animationDelay: '280ms' }}
+            style={{ animationDelay: '320ms' }}
           >
             {primaryCta && (
               <ButtonLink
@@ -211,7 +210,7 @@ export function Hero({ slide, slides, className }: HeroProps) {
                 'motion-safe:animate-[fade-up_var(--dur-slow)_var(--ease-entrance)_both]',
                 align === 'center' && 'justify-center',
               )}
-              style={{ animationDelay: '360ms' }}
+              style={{ animationDelay: '400ms' }}
             >
               {highlights.map((item) => (
                 <li key={item} className="flex items-center gap-1.5 text-xs sm:text-sm text-cream/75">

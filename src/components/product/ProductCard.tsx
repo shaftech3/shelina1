@@ -1,9 +1,8 @@
 import { memo } from 'react';
 import { cn } from '@/lib/cn';
 import { discountPercent, effectivePrice, formatPrice } from '@/lib/format';
-import { buildProductWhatsAppUrl } from '@/lib/whatsapp';
 import type { Product } from '@/types';
-import { Badge, Icon, Image, SmartLink } from '@/components/ui';
+import { Badge, Image, SmartLink } from '@/components/ui';
 import { ColorSwatches } from './ColorSwatches';
 import { StockLabel } from './StockLabel';
 
@@ -20,7 +19,7 @@ export interface ProductCardProps {
 }
 
 /**
- * Premium footwear product card with compact WhatsApp action and smooth fashion transitions.
+ * Premium footwear product card with clean fashion hierarchy and smooth transitions.
  */
 export const ProductCard = memo(function ProductCard({
   product,
@@ -36,23 +35,16 @@ export const ProductCard = memo(function ProductCard({
   const secondaryImage = images[1];
   const soldOut = stockStatus === 'out-of-stock';
 
-  const handleWhatsAppOrder = (event: React.MouseEvent) => {
-    event.preventDefault();
-    event.stopPropagation();
-    const whatsappUrl = buildProductWhatsAppUrl({ product });
-    window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
-  };
-
   return (
     <article
       className={cn(
-        'group relative flex flex-col h-full rounded-lg transition-all duration-300 ease-out',
-        'motion-safe:[@media(hover:hover)]:hover:-translate-y-1',
+        'group relative flex flex-col h-full rounded-xl transition-all duration-300 ease-out',
+        'motion-safe:[@media(hover:hover)]:hover:-translate-y-1.5',
         className,
       )}
     >
       {/* Product Image Frame: Proportional containment (never cropped, never stretched) */}
-      <div className="relative aspect-[4/5] w-full overflow-hidden rounded-lg border border-border/80 bg-[#faf8f5] shadow-xs transition-all duration-300 ease-out group-hover:border-border-strong group-hover:shadow-sm">
+      <div className="relative aspect-[4/5] w-full overflow-hidden rounded-xl border border-border/80 bg-[#faf8f5] shadow-xs transition-all duration-300 ease-out motion-safe:[@media(hover:hover)]:group-hover:border-border-strong motion-safe:[@media(hover:hover)]:group-hover:shadow-md">
         {/* Primary Product Image */}
         <Image
           src={primaryImage?.src ?? ''}
@@ -64,7 +56,7 @@ export const ProductCard = memo(function ProductCard({
           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
           className="h-full w-full bg-transparent"
           imgClassName={cn(
-            'p-2.5 sm:p-3.5 transition-all duration-500 ease-out motion-safe:[@media(hover:hover)]:group-hover:scale-[1.035]',
+            'p-3 sm:p-4 transition-all duration-500 ease-out motion-safe:[@media(hover:hover)]:group-hover:scale-[1.04]',
             secondaryImage && 'motion-safe:[@media(hover:hover)]:group-hover:opacity-0 motion-safe:[@media(hover:hover)]:group-focus-within:opacity-0',
             soldOut && 'opacity-75 grayscale-[20%]',
           )}
@@ -81,25 +73,25 @@ export const ProductCard = memo(function ProductCard({
               width={600}
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
               className="h-full w-full bg-transparent"
-              imgClassName="p-2.5 sm:p-3.5 transition-transform duration-500 ease-out motion-safe:[@media(hover:hover)]:group-hover:scale-[1.035]"
+              imgClassName="p-3 sm:p-4 transition-transform duration-500 ease-out motion-safe:[@media(hover:hover)]:group-hover:scale-[1.04]"
             />
           </div>
         )}
 
         {/* Badges */}
-        <div className="pointer-events-none absolute left-2 top-2 sm:left-2.5 sm:top-2.5 flex flex-col items-start gap-1 z-10">
+        <div className="pointer-events-none absolute left-2.5 top-2.5 sm:left-3 sm:top-3 flex flex-col items-start gap-1 z-10">
           {discount !== null && (
-            <Badge tone="secondary" className="px-1.5 py-0.5 text-[10px] sm:text-xs font-semibold shadow-2xs">
+            <Badge tone="secondary" className="px-2 py-0.5 text-[10px] sm:text-xs font-semibold shadow-xs">
               -{discount}%
             </Badge>
           )}
           {isNew && !discount && (
-            <Badge tone="primary" className="px-1.5 py-0.5 text-[10px] sm:text-xs font-semibold shadow-2xs">
+            <Badge tone="primary" className="px-2 py-0.5 text-[10px] sm:text-xs font-semibold shadow-xs">
               New
             </Badge>
           )}
           {featured && !isNew && !discount && (
-            <Badge tone="dark" className="px-1.5 py-0.5 text-[10px] sm:text-xs font-semibold shadow-2xs">
+            <Badge tone="dark" className="px-2 py-0.5 text-[10px] sm:text-xs font-semibold shadow-xs">
               Featured
             </Badge>
           )}
@@ -114,9 +106,9 @@ export const ProductCard = memo(function ProductCard({
       </div>
 
       {/* Product Information */}
-      <div className="flex flex-1 flex-col gap-1 px-0.5 pt-2 sm:pt-2.5">
+      <div className="flex flex-1 flex-col gap-1 px-1 pt-2.5 sm:pt-3">
         {brand && (
-          <span className="line-clamp-1 text-[10px] sm:text-[11px] font-medium uppercase tracking-[0.14em] text-ink-subtle">
+          <span className="line-clamp-1 text-[10px] sm:text-[11px] font-medium uppercase tracking-[0.16em] text-ink-subtle">
             {brand}
           </span>
         )}
@@ -130,7 +122,7 @@ export const ProductCard = memo(function ProductCard({
                 onSelect(product);
               }
             }}
-            className="rounded-xs transition-colors duration-fast hover:text-primary-deep focus-visible:outline-none focus-visible:text-primary-deep"
+            className="rounded-xs transition-colors duration-300 hover:text-primary-deep focus-visible:outline-none focus-visible:text-primary-deep"
           >
             {/* Stretched hit area */}
             <span className="absolute inset-0" aria-hidden />
@@ -138,7 +130,7 @@ export const ProductCard = memo(function ProductCard({
           </SmartLink>
         </h3>
 
-        <div className="flex flex-wrap items-baseline gap-1.5 sm:gap-2">
+        <div className="flex flex-wrap items-baseline gap-1.5 sm:gap-2 pt-0.5">
           <span className={cn('text-xs sm:text-body-sm font-semibold', discount !== null ? 'text-secondary-deep' : 'text-ink')}>
             {formatPrice(payable)}
           </span>
@@ -149,29 +141,9 @@ export const ProductCard = memo(function ProductCard({
           )}
         </div>
 
-        <div className="mt-auto flex flex-col gap-1.5 pt-1.5">
-          <div className="flex items-center justify-between gap-2">
-            <ColorSwatches colors={colors} />
-            <StockLabel status={stockStatus} />
-          </div>
-
-          {!soldOut && (
-            <button
-              type="button"
-              onClick={handleWhatsAppOrder}
-              aria-label={`Order ${name} via WhatsApp`}
-              className={cn(
-                'relative z-10 mt-0.5 flex h-7.5 sm:h-8 w-full min-w-0 items-center justify-center gap-1.5 rounded-sm',
-                'border border-[#25D366]/40 bg-surface/95 px-2 py-0.5 text-[11px] sm:text-xs font-medium text-[#128C7E]',
-                'shadow-2xs transition-all duration-200 ease-out whitespace-nowrap overflow-hidden',
-                'hover:border-[#25D366] hover:bg-[#25D366]/10 hover:text-[#075E54] active:scale-[0.98]',
-                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#25D366]',
-              )}
-            >
-              <Icon name="whatsapp" size={13} className="shrink-0 text-[#25D366]" />
-              <span className="truncate">Order on WhatsApp</span>
-            </button>
-          )}
+        <div className="mt-auto flex items-center justify-between gap-2 pt-2">
+          <ColorSwatches colors={colors} />
+          <StockLabel status={stockStatus} />
         </div>
       </div>
     </article>

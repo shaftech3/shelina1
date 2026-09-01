@@ -57,13 +57,13 @@ export function ProductCarousel({
 
   if (loading) {
     return (
-      <div className={cn('flex gap-3 sm:gap-5 overflow-hidden py-2', className)} aria-busy="true">
+      <div className={cn('flex gap-4 sm:gap-6 overflow-hidden py-2', className)} aria-busy="true">
         {Array.from({ length: 4 }).map((_, index) => (
-          <div key={index} className="w-[165px] xs:w-[190px] sm:w-[225px] md:w-[245px] lg:w-[260px] shrink-0">
-            <Skeleton className="aspect-[4/5] w-full rounded-md sm:rounded-lg" />
-            <Skeleton className="h-3 w-1/3 mt-2.5" />
-            <Skeleton className="h-3.5 w-4/5 mt-1.5" />
-            <Skeleton className="h-3.5 w-1/2 mt-1.5" />
+          <div key={index} className="w-[185px] xs:w-[210px] sm:w-[250px] md:w-[275px] lg:w-[295px] shrink-0">
+            <Skeleton className="aspect-[4/5] w-full rounded-xl" />
+            <Skeleton className="h-3 w-1/3 mt-3" />
+            <Skeleton className="h-4 w-4/5 mt-1.5" />
+            <Skeleton className="h-4 w-1/2 mt-1.5" />
           </div>
         ))}
       </div>
@@ -102,13 +102,13 @@ export function ProductCarousel({
       <div
         ref={scrollRef}
         onScroll={checkScroll}
-        className="flex gap-3 sm:gap-5 overflow-x-auto scroll-smooth snap-x snap-mandatory py-2 pb-4 no-scrollbar"
+        className="flex gap-4 sm:gap-6 overflow-x-auto scroll-smooth snap-x snap-mandatory py-2 pb-4 no-scrollbar"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
         {products.map((product, index) => (
           <div
             key={product.id}
-            className="w-[165px] xs:w-[190px] sm:w-[225px] md:w-[245px] lg:w-[260px] shrink-0 snap-start"
+            className="w-[185px] xs:w-[210px] sm:w-[250px] md:w-[275px] lg:w-[295px] shrink-0 snap-start"
           >
             <Reveal delay={index * 50}>
               <ProductCard product={product} priority={priority && index < 2} />
