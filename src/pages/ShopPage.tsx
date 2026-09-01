@@ -191,15 +191,15 @@ export function ShopPage() {
           responsive `md:py-16` living inside its own media query. */}
       <Section spacing="tight">
         <Container>
-          <div className="mb-10 flex max-w-2xl flex-col gap-3 md:mb-12">
+          <div className="mb-6 flex max-w-2xl flex-col gap-2 md:mb-8">
             <span className="eyebrow text-primary-deep">{context.eyebrow}</span>
-            <h1 className="font-display text-h1 text-ink">{context.heading}</h1>
+            <h1 className="font-display text-h2 sm:text-h1 text-ink">{context.heading}</h1>
             <p className="text-body text-ink-muted">{context.intro}</p>
           </div>
-          <div className="grid gap-10 lg:grid-cols-[248px_minmax(0,1fr)] lg:gap-12">
+          <div className="grid gap-6 lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-8">
             {/* Desktop sidebar. Hidden on mobile, where the drawer takes over. */}
             <aside className="hidden lg:block">
-              <div className="sticky top-[calc(var(--header-height)+1.5rem)]">
+              <div className="sticky top-[calc(var(--header-height)+1rem)]">
                 <ShopFilters
                   categories={context.scope.categorySlug ? [] : (categories.data ?? [])}
                   brands={brands.data ?? []}
@@ -209,8 +209,8 @@ export function ShopPage() {
               </div>
             </aside>
 
-            <div className="flex min-w-0 flex-col gap-6">
-              <div className="flex flex-col gap-4">
+            <div className="flex min-w-0 flex-col gap-5">
+              <div className="flex flex-col gap-3.5">
                 <Input
                   type="search"
                   value={searchDraft}

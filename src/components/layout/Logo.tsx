@@ -20,8 +20,8 @@ const SOURCES: Record<LogoSlot, string> = {
 };
 
 const SIZES: Record<LogoSlot, string> = {
-  desktop: 'h-14 w-14 sm:h-15 sm:w-15 md:h-16 md:w-16 lg:h-16 lg:w-16',
-  mobile: 'h-12 w-12 sm:h-13 sm:w-13',
+  desktop: 'h-15 w-15 sm:h-16 sm:w-16 md:h-[66px] md:w-[66px] lg:h-[68px] lg:w-[68px]',
+  mobile: 'h-[50px] w-[50px] sm:h-[54px] sm:w-[54px]',
   footer: 'h-16 w-16 sm:h-18 sm:w-18',
 };
 

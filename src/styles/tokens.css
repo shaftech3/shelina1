@@ -58,8 +58,8 @@
   /* ---- Layout ---- */
   --container-max: 1360px;
   --space-gutter: 1.25rem;
-  --space-section: 4rem;
-  --header-height: 68px;
+  --space-section: 3rem;
+  --header-height: 72px;
 
   /* ---- Motion ---- */
   --ease-elegant: cubic-bezier(0.22, 0.61, 0.36, 1);
@@ -74,15 +74,15 @@
 @media (min-width: 768px) {
   :root {
     --space-gutter: 2rem;
-    --space-section: 6rem;
-    --header-height: 80px;
+    --space-section: 4.5rem;
+    --header-height: 84px;
   }
 }
 
 @media (min-width: 1280px) {
   :root {
     --space-gutter: 2.5rem;
-    --space-section: 7.5rem;
+    --space-section: 5.25rem;
   }
 }
 

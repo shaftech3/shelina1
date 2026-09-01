@@ -36,3 +36,4 @@ export { Tag } from './Tag';
 export { Textarea } from './Textarea';
 export { ToastProvider, useToast } from './Toast';
 export { Tooltip } from './Tooltip';
+export { FloatingWhatsApp } from './FloatingWhatsApp';

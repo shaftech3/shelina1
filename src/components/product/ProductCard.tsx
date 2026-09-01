@@ -1,8 +1,9 @@
-import { memo, useState } from 'react';
+import { memo } from 'react';
 import { cn } from '@/lib/cn';
 import { discountPercent, effectivePrice, formatPrice } from '@/lib/format';
+import { buildProductWhatsAppUrl } from '@/lib/whatsapp';
 import type { Product } from '@/types';
-import { Badge, Image, SmartLink } from '@/components/ui';
+import { Badge, Icon, Image, SmartLink } from '@/components/ui';
 import { ColorSwatches } from './ColorSwatches';
 import { StockLabel } from './StockLabel';
 
@@ -19,11 +20,7 @@ export interface ProductCardProps {
 }
 
 /**
- * Premium footwear product card.
- *
- * Stage 1 is visual-only: no add-to-cart, wishlist or quick-view behaviour.
- * The markup and props are already shaped so those actions can be slotted in
- * without restructuring the component.
+ * Premium footwear product card with compact WhatsApp action and smooth fashion transitions.
  */
 export const ProductCard = memo(function ProductCard({
   product,
@@ -31,7 +28,6 @@ export const ProductCard = memo(function ProductCard({
   className,
   onSelect,
 }: ProductCardProps) {
-  const [hoverIntent, setHoverIntent] = useState(false);
   const { name, brand, images, price, salePrice, colors, stockStatus, featured, isNew, slug } = product;
 
   const discount = discountPercent(price, salePrice);
@@ -40,21 +36,22 @@ export const ProductCard = memo(function ProductCard({
   const secondaryImage = images[1];
   const soldOut = stockStatus === 'out-of-stock';
 
+  const handleWhatsAppOrder = (event: React.MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    const whatsappUrl = buildProductWhatsAppUrl({ product });
+    window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+  };
+
   return (
     <article
-      onMouseEnter={() => {
-        if (!hoverIntent && secondaryImage) setHoverIntent(true);
-      }}
-      onFocusCapture={() => {
-        if (!hoverIntent && secondaryImage) setHoverIntent(true);
-      }}
       className={cn(
         'group relative flex flex-col h-full rounded-lg transition-all duration-300 ease-out',
-        'motion-safe:hover:-translate-y-1',
+        'motion-safe:[@media(hover:hover)]:hover:-translate-y-1',
         className,
       )}
     >
-      {/* Product Image Frame: Fixed aspect ratio with proportional containment and neutral background */}
+      {/* Product Image Frame: Proportional containment (never cropped, never stretched) */}
       <div className="relative aspect-[4/5] w-full overflow-hidden rounded-lg border border-border/80 bg-[#faf8f5] shadow-xs transition-all duration-300 ease-out group-hover:border-border-strong group-hover:shadow-sm">
         {/* Primary Product Image */}
         <Image
@@ -67,15 +64,15 @@ export const ProductCard = memo(function ProductCard({
           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
           className="h-full w-full bg-transparent"
           imgClassName={cn(
-            'p-2.5 sm:p-3.5 transition-all duration-500 ease-out motion-safe:group-hover:scale-[1.025]',
-            secondaryImage && 'motion-safe:group-hover:opacity-0 motion-safe:group-focus-within:opacity-0',
+            'p-2.5 sm:p-3.5 transition-all duration-500 ease-out motion-safe:[@media(hover:hover)]:group-hover:scale-[1.035]',
+            secondaryImage && 'motion-safe:[@media(hover:hover)]:group-hover:opacity-0 motion-safe:[@media(hover:hover)]:group-focus-within:opacity-0',
             soldOut && 'opacity-75 grayscale-[20%]',
           )}
         />
 
-        {/* Secondary Image on Desktop Hover (deferred until hover/focus intent) */}
-        {secondaryImage && hoverIntent && (
-          <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 ease-out motion-safe:group-hover:opacity-100 motion-safe:group-focus-within:opacity-100">
+        {/* Secondary Image on Desktop Hover (seamless crossfade) */}
+        {secondaryImage && (
+          <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 ease-out motion-safe:[@media(hover:hover)]:group-hover:opacity-100 motion-safe:[@media(hover:hover)]:group-focus-within:opacity-100">
             <Image
               src={secondaryImage.src}
               alt={secondaryImage.alt || `${name} - alternate angle`}
@@ -84,7 +81,7 @@ export const ProductCard = memo(function ProductCard({
               width={600}
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
               className="h-full w-full bg-transparent"
-              imgClassName="p-2.5 sm:p-3.5 transition-transform duration-500 ease-out motion-safe:group-hover:scale-[1.025]"
+              imgClassName="p-2.5 sm:p-3.5 transition-transform duration-500 ease-out motion-safe:[@media(hover:hover)]:group-hover:scale-[1.035]"
             />
           </div>
         )}
@@ -152,9 +149,29 @@ export const ProductCard = memo(function ProductCard({
           )}
         </div>
 
-        <div className="mt-auto flex items-center justify-between gap-2 pt-1.5">
-          <ColorSwatches colors={colors} />
-          <StockLabel status={stockStatus} />
+        <div className="mt-auto flex flex-col gap-1.5 pt-1.5">
+          <div className="flex items-center justify-between gap-2">
+            <ColorSwatches colors={colors} />
+            <StockLabel status={stockStatus} />
+          </div>
+
+          {!soldOut && (
+            <button
+              type="button"
+              onClick={handleWhatsAppOrder}
+              aria-label={`Order ${name} via WhatsApp`}
+              className={cn(
+                'relative z-10 mt-0.5 flex h-7.5 sm:h-8 w-full min-w-0 items-center justify-center gap-1.5 rounded-sm',
+                'border border-[#25D366]/40 bg-surface/95 px-2 py-0.5 text-[11px] sm:text-xs font-medium text-[#128C7E]',
+                'shadow-2xs transition-all duration-200 ease-out whitespace-nowrap overflow-hidden',
+                'hover:border-[#25D366] hover:bg-[#25D366]/10 hover:text-[#075E54] active:scale-[0.98]',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#25D366]',
+              )}
+            >
+              <Icon name="whatsapp" size={13} className="shrink-0 text-[#25D366]" />
+              <span className="truncate">Order on WhatsApp</span>
+            </button>
+          )}
         </div>
       </div>
     </article>

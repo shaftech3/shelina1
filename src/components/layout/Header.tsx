@@ -48,7 +48,9 @@ export function Header({ overHero = false }: HeaderProps) {
             <div className="flex items-center lg:hidden">
               <IconButton
                 label="Open menu"
-                icon={<Icon name="menu" size={22} />}
+                icon={<Icon name="menu" size={26} className="text-ink" />}
+                size="md"
+                className="h-11 w-11 hover:bg-cream"
                 onClick={() => setMenuOpen(true)}
                 aria-expanded={menuOpen}
                 aria-controls="mobile-navigation"

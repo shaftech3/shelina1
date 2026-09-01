@@ -132,21 +132,21 @@ export function Hero({ slide, slides, className }: HeroProps) {
         <div className="absolute -top-32 -left-32 h-96 w-96 rounded-full bg-primary/15 blur-3xl pointer-events-none" />
       </div>
 
-      <Container className="relative flex min-h-[480px] sm:min-h-[540px] lg:min-h-[clamp(560px,76vh,800px)] items-center py-12 sm:py-16 lg:py-24">
+      <Container className="relative flex min-h-[380px] sm:min-h-[440px] lg:min-h-[clamp(440px,56vh,580px)] items-center py-8 sm:py-12 lg:py-14">
         <div
           key={currentIndex}
           className={cn(
-            'flex flex-col gap-6 max-w-2xl text-white',
+            'flex flex-col gap-4 sm:gap-5 max-w-2xl text-white',
             align === 'center' && 'mx-auto items-center text-center',
           )}
         >
           {(badge || eyebrow) && (
             <div
-              className="flex flex-wrap items-center gap-3 motion-safe:animate-[fade-up_var(--dur-slow)_var(--ease-entrance)_both]"
+              className="flex flex-wrap items-center gap-2.5 motion-safe:animate-[fade-up_var(--dur-slow)_var(--ease-entrance)_both]"
               style={{ animationDelay: '40ms' }}
             >
               {badge && (
-                <Badge tone="secondary" className="px-3 py-1 text-xs font-semibold shadow-xs">
+                <Badge tone="secondary" className="px-2.5 py-0.5 text-xs font-semibold shadow-xs">
                   {badge}
                 </Badge>
               )}
@@ -160,7 +160,7 @@ export function Hero({ slide, slides, className }: HeroProps) {
 
           <h1
             id="hero-heading"
-            className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-white leading-[1.08] motion-safe:animate-[fade-up_var(--dur-slow)_var(--ease-entrance)_both]"
+            className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-white leading-[1.1] motion-safe:animate-[fade-up_var(--dur-slow)_var(--ease-entrance)_both]"
             style={{ animationDelay: '120ms' }}
           >
             {heading}
@@ -168,7 +168,7 @@ export function Hero({ slide, slides, className }: HeroProps) {
 
           {subheading && (
             <p
-              className="max-w-xl text-base sm:text-lg lg:text-xl text-cream/85 font-light leading-relaxed motion-safe:animate-[fade-up_var(--dur-slow)_var(--ease-entrance)_both]"
+              className="max-w-xl text-sm sm:text-base lg:text-lg text-cream/85 font-light leading-relaxed motion-safe:animate-[fade-up_var(--dur-slow)_var(--ease-entrance)_both]"
               style={{ animationDelay: '200ms' }}
             >
               {subheading}
@@ -177,7 +177,7 @@ export function Hero({ slide, slides, className }: HeroProps) {
 
           <div
             className={cn(
-              'mt-2 flex flex-col gap-3.5 sm:flex-row sm:flex-wrap sm:items-center',
+              'mt-1 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center',
               'motion-safe:animate-[fade-up_var(--dur-slow)_var(--ease-entrance)_both]',
             )}
             style={{ animationDelay: '280ms' }}
@@ -185,8 +185,8 @@ export function Hero({ slide, slides, className }: HeroProps) {
             {primaryCta && (
               <ButtonLink
                 href={primaryCta.href}
-                size="lg"
-                className="shadow-lg hover:shadow-xl font-medium tracking-wide"
+                size="md"
+                className="sm:h-12 shadow-lg hover:shadow-xl font-medium tracking-wide"
                 iconRight={<Icon name="arrow-right" size={18} />}
               >
                 {primaryCta.label}
@@ -196,8 +196,8 @@ export function Hero({ slide, slides, className }: HeroProps) {
               <ButtonLink
                 href={secondaryCta.href}
                 variant="outline"
-                size="lg"
-                className="bg-white/10 text-white border-white/30 backdrop-blur-sm hover:bg-white/20"
+                size="md"
+                className="sm:h-12 bg-white/10 text-white border-white/30 backdrop-blur-sm hover:bg-white/20"
               >
                 {secondaryCta.label}
               </ButtonLink>
@@ -207,15 +207,15 @@ export function Hero({ slide, slides, className }: HeroProps) {
           {highlights && highlights.length > 0 && (
             <ul
               className={cn(
-                'mt-2 flex flex-wrap gap-x-6 gap-y-2 pt-2 border-t border-white/15',
+                'mt-1 flex flex-wrap gap-x-5 gap-y-1.5 pt-2 border-t border-white/15',
                 'motion-safe:animate-[fade-up_var(--dur-slow)_var(--ease-entrance)_both]',
                 align === 'center' && 'justify-center',
               )}
               style={{ animationDelay: '360ms' }}
             >
               {highlights.map((item) => (
-                <li key={item} className="flex items-center gap-2 text-xs sm:text-sm text-cream/75">
-                  <Icon name="check" size={14} className="shrink-0 text-primary-light" />
+                <li key={item} className="flex items-center gap-1.5 text-xs sm:text-sm text-cream/75">
+                  <Icon name="check" size={13} className="shrink-0 text-primary-light" />
                   {item}
                 </li>
               ))}
