@@ -1,15 +1,7 @@
-// Sanitize CLOUDINARY_URL early if present in the environment
-if (process.env.CLOUDINARY_URL) {
-  let cleaned = process.env.CLOUDINARY_URL.trim().replace(/^["']|["']$/g, '').trim();
-  if (cleaned.startsWith('CLOUDINARY_URL=')) {
-    cleaned = cleaned.substring('CLOUDINARY_URL='.length).trim().replace(/^["']|["']$/g, '').trim();
-  }
-  if (cleaned.startsWith('cloudinary://')) {
-    process.env.CLOUDINARY_URL = cleaned;
-  } else {
-    delete process.env.CLOUDINARY_URL;
-  }
-}
+import { loadBackendEnv } from './shelina-api/src/lib/loadEnv.js';
+
+// Load backend environment from shelina-api/.env or candidates before other modules
+loadBackendEnv();
 
 import { createApp } from './shelina-api/src/app.js';
 import { env } from './shelina-api/src/lib/env.js';

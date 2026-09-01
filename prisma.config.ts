@@ -3,12 +3,12 @@ import fs from 'node:fs';
 import dotenv from 'dotenv';
 import { defineConfig } from 'prisma/config';
 
-// Portably load backend .env for shelina-api Prisma CLI executions
+// Portably load backend .env for root Prisma CLI executions
 const candidates = [
-  path.resolve(process.cwd(), '.env'),
   path.resolve(process.cwd(), 'shelina-api', '.env'),
+  path.resolve(process.cwd(), '.env'),
+  path.resolve(__dirname, 'shelina-api', '.env'),
   path.resolve(__dirname, '.env'),
-  path.resolve(__dirname, '..', 'shelina-api', '.env'),
 ];
 
 for (const envPath of candidates) {
@@ -17,14 +17,10 @@ for (const envPath of candidates) {
   }
 }
 
-/**
- * Prisma 7 moves the datasource URL out of schema.prisma. The connection
- * string is read from the environment here and never checked in.
- */
 export default defineConfig({
-  schema: path.join('prisma', 'schema.prisma'),
+  schema: path.join('shelina-api', 'prisma', 'schema.prisma'),
   migrations: {
-    seed: 'tsx prisma/seed.ts',
+    seed: 'tsx shelina-api/prisma/seed.ts',
   },
   datasource: {
     url: process.env.DATABASE_URL || 'postgresql://shelina@127.0.0.1:5432/shelina_dev?schema=public',

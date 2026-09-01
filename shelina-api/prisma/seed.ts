@@ -1,10 +1,13 @@
-import 'dotenv/config';
-import { createRequire } from 'node:module';
+import Module from 'node:module';
 import path from 'node:path';
 import fs from 'node:fs';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
+import { loadBackendEnv } from '../src/lib/loadEnv.js';
+
+// Load backend environment portably
+loadBackendEnv();
 
 /**
  * ============================================================================
@@ -47,10 +50,12 @@ function loadMock<T>(file: string, exportName: string): T {
   source = source.replace(/export const /g, 'const ');
   source += `\nmodule.exports = ${exportName};`;
 
-  const require = createRequire(import.meta.url);
-  const Module = require('node:module');
-  const compiled = new Module(filePath, undefined);
-  compiled.paths = Module._nodeModulePaths(path.dirname(filePath));
+  // Use Node's Module constructor directly without createRequire(import.meta.url)
+  // to maintain full compatibility with both CJS bundles and ESM executions.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const NodeModule = Module as any;
+  const compiled = new NodeModule(filePath, undefined);
+  compiled.paths = NodeModule._nodeModulePaths(path.dirname(filePath));
   compiled._compile(source, filePath.replace(/\.ts$/, '.cjs'));
   return compiled.exports as T;
 }
