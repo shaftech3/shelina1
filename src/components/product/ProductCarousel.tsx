@@ -57,13 +57,13 @@ export function ProductCarousel({
 
   if (loading) {
     return (
-      <div className={cn('flex gap-4 sm:gap-6 overflow-hidden py-2', className)} aria-busy="true">
+      <div className={cn('flex gap-3.5 sm:gap-5 md:gap-6 overflow-hidden py-2', className)} aria-busy="true">
         {Array.from({ length: 4 }).map((_, index) => (
-          <div key={index} className="w-[185px] xs:w-[210px] sm:w-[250px] md:w-[275px] lg:w-[295px] shrink-0">
+          <div key={index} className="w-[165px] xs:w-[185px] sm:w-[220px] md:w-[245px] lg:w-[265px] shrink-0">
             <Skeleton className="aspect-[4/5] w-full rounded-xl" />
-            <Skeleton className="h-3 w-1/3 mt-3" />
-            <Skeleton className="h-4 w-4/5 mt-1.5" />
-            <Skeleton className="h-4 w-1/2 mt-1.5" />
+            <Skeleton className="h-3 w-1/3 mt-2.5" />
+            <Skeleton className="h-4 w-4/5 mt-1" />
+            <Skeleton className="h-4 w-1/2 mt-1" />
           </div>
         ))}
       </div>
@@ -77,24 +77,24 @@ export function ProductCarousel({
   return (
     <div className={cn('relative group/product-carousel', className)}>
       {/* Desktop navigation buttons */}
-      <div className="absolute -top-14 right-0 hidden sm:flex items-center gap-2 z-10">
+      <div className="absolute -top-12 right-0 hidden sm:flex items-center gap-1.5 z-10">
         <IconButton
           label="Scroll left"
-          icon={<Icon name="chevron-down" size={18} className="rotate-90" />}
+          icon={<Icon name="chevron-down" size={16} className="rotate-90" />}
           size="sm"
           variant="outline"
           disabled={!canScrollLeft}
           onClick={() => scroll('left')}
-          className="rounded-full shadow-xs disabled:opacity-30 hover:bg-cream"
+          className="rounded-full shadow-2xs disabled:opacity-30 h-8 w-8 hover:bg-cream"
         />
         <IconButton
           label="Scroll right"
-          icon={<Icon name="chevron-down" size={18} className="-rotate-90" />}
+          icon={<Icon name="chevron-down" size={16} className="-rotate-90" />}
           size="sm"
           variant="outline"
           disabled={!canScrollRight}
           onClick={() => scroll('right')}
-          className="rounded-full shadow-xs disabled:opacity-30 hover:bg-cream"
+          className="rounded-full shadow-2xs disabled:opacity-30 h-8 w-8 hover:bg-cream"
         />
       </div>
 
@@ -102,15 +102,15 @@ export function ProductCarousel({
       <div
         ref={scrollRef}
         onScroll={checkScroll}
-        className="flex gap-4 sm:gap-6 overflow-x-auto scroll-smooth snap-x snap-mandatory py-2 pb-4 no-scrollbar"
+        className="flex gap-3.5 sm:gap-5 md:gap-6 overflow-x-auto scroll-smooth snap-x snap-mandatory py-1.5 pb-3 no-scrollbar"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
         {products.map((product, index) => (
           <div
             key={product.id}
-            className="w-[185px] xs:w-[210px] sm:w-[250px] md:w-[275px] lg:w-[295px] shrink-0 snap-start"
+            className="w-[165px] xs:w-[185px] sm:w-[220px] md:w-[245px] lg:w-[265px] shrink-0 snap-start"
           >
-            <Reveal delay={index * 50}>
+            <Reveal delay={index * 40}>
               <ProductCard product={product} priority={priority && index < 2} />
             </Reveal>
           </div>

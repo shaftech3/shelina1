@@ -16,7 +16,7 @@ interface CategoryShowcaseProps {
 /**
  * Horizontal scrolling square category showcase.
  *
- * Implements larger, premium square category cards with left/right
+ * Implements compact, premium square category cards with left/right
  * desktop controls and smooth touch-swipe snap on mobile.
  */
 export function CategoryShowcase({
@@ -58,11 +58,11 @@ export function CategoryShowcase({
 
   if (loading) {
     return (
-      <div className={cn('flex gap-4 sm:gap-6 overflow-hidden py-4', className)} aria-busy="true">
+      <div className={cn('flex gap-2.5 sm:gap-4 overflow-hidden py-2', className)} aria-busy="true">
         {Array.from({ length: 6 }).map((_, index) => (
-          <div key={index} className="flex flex-col items-center gap-2.5 shrink-0 w-28 sm:w-36 md:w-44">
-            <Skeleton className="aspect-square w-full rounded-2xl" />
-            <Skeleton className="h-4 w-20 mt-1" />
+          <div key={index} className="flex flex-col items-center gap-1.5 shrink-0 w-[82px] xs:w-[96px] sm:w-[110px] md:w-[124px]">
+            <Skeleton className="aspect-square w-full rounded-xl" />
+            <Skeleton className="h-3.5 w-16 mt-1" />
           </div>
         ))}
       </div>
@@ -76,24 +76,24 @@ export function CategoryShowcase({
   return (
     <div className={cn('relative group/carousel', className)}>
       {/* Desktop navigation buttons */}
-      <div className="absolute -top-14 right-0 hidden sm:flex items-center gap-2 z-10">
+      <div className="absolute -top-12 right-0 hidden sm:flex items-center gap-1.5 z-10">
         <IconButton
           label="Scroll left"
-          icon={<Icon name="chevron-down" size={18} className="rotate-90" />}
+          icon={<Icon name="chevron-down" size={16} className="rotate-90" />}
           size="sm"
           variant="outline"
           disabled={!canScrollLeft}
           onClick={() => scroll('left')}
-          className="rounded-full shadow-xs disabled:opacity-30"
+          className="rounded-full shadow-2xs disabled:opacity-30 h-8 w-8 hover:bg-cream"
         />
         <IconButton
           label="Scroll right"
-          icon={<Icon name="chevron-down" size={18} className="-rotate-90" />}
+          icon={<Icon name="chevron-down" size={16} className="-rotate-90" />}
           size="sm"
           variant="outline"
           disabled={!canScrollRight}
           onClick={() => scroll('right')}
-          className="rounded-full shadow-xs disabled:opacity-30"
+          className="rounded-full shadow-2xs disabled:opacity-30 h-8 w-8 hover:bg-cream"
         />
       </div>
 
@@ -101,12 +101,12 @@ export function CategoryShowcase({
       <div
         ref={scrollContainerRef}
         onScroll={checkScroll}
-        className="flex items-start gap-3.5 sm:gap-6 overflow-x-auto scroll-smooth snap-x snap-mandatory py-2 px-1 no-scrollbar"
+        className="flex items-start gap-2.5 sm:gap-4 md:gap-5 overflow-x-auto scroll-smooth snap-x snap-mandatory py-1 px-0.5 no-scrollbar"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
         {categories.map((category, index) => (
           <div key={category.id} className="shrink-0 snap-start">
-            <Reveal delay={index * 50}>
+            <Reveal delay={index * 40}>
               <SquareCategoryCard category={category} priority={priority && index < 4} />
             </Reveal>
           </div>

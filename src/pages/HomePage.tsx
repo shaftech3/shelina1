@@ -12,6 +12,7 @@ import {
 import { Layout } from '@/components/layout';
 import { CategoryShowcase } from '@/components/category/CategoryShowcase';
 import { ProductCarousel } from '@/components/product/ProductCarousel';
+import { ProductGrid } from '@/components/product/ProductGrid';
 import { JsonLd } from '@/components/seo/JsonLd';
 import {
   ButtonLink,
@@ -26,11 +27,16 @@ import {
 /**
  * Shelina storefront homepage.
  *
- * Implements a cinematic, luxury layout featuring:
- * - Full-bleed video/image hero with responsive atmospheric scrims
- * - Distinctive diamond-shaped category carousel with smooth touch snap
- * - Horizontally scrollable curated & new arrivals carousels
- * - Atmospheric brand showcase & editorial storytelling
+ * Implements a refined, high-engagement fashion-store flow:
+ * 1. Hero — cinematic visual welcome
+ * 2. Categories — compact, clean square navigation showcase
+ * 3. Featured Collection — horizontal scrolling product carousel
+ * 4. New Arrivals — curated 4-product grid (2x2 on mobile, 4-col on desktop)
+ * 5. Best Sellers — horizontal scrolling product carousel
+ * 6. Trending Styles — curated 4-product grid (2x2 on mobile, 4-col on desktop)
+ * 7. Handcrafted Essentials — horizontal scrolling product carousel
+ * 8. Brand Showcase & Editorial Story
+ * 9. Trust Values & VIP Newsletter
  */
 export function HomePage() {
   useSeo({
@@ -42,8 +48,14 @@ export function HomePage() {
 
   const hero = useHeroSlides();
   const categories = useCategories({ featured: true });
-  const featured = useProducts({ featured: true, limit: 8 });
+
+  // Product data streams for rhythmic alternating homepage sections
+  const featured = useProducts({ featured: true, limit: 10 });
   const newIn = useProducts({ isNew: true, limit: 8 });
+  const bestSellers = useProducts({ sort: 'newest', limit: 10 });
+  const onSale = useProducts({ onSale: true, limit: 8 });
+  const allProducts = useProducts({ limit: 16 });
+
   const banners = useBanners();
   const [firstBanner, secondBanner] = banners.data ?? [];
   const brands = useBrands();
@@ -51,6 +63,17 @@ export function HomePage() {
   const trust = useTrustValues();
 
   const heroSlide = hero.data?.[0];
+
+  // Resolve exactly 4 curated products for grid sections
+  const newArrivals4 = (newIn.data && newIn.data.length >= 4)
+    ? newIn.data.slice(0, 4)
+    : (allProducts.data ? allProducts.data.slice(0, 4) : null);
+
+  const trending4 = (onSale.data && onSale.data.length >= 4)
+    ? onSale.data.slice(0, 4)
+    : (allProducts.data && allProducts.data.length >= 8
+        ? allProducts.data.slice(4, 8)
+        : (allProducts.data ? allProducts.data.slice(0, 4) : null));
 
   const homepageSchema = [
     {
@@ -83,6 +106,7 @@ export function HomePage() {
   return (
     <Layout overHero>
       <JsonLd id="homepage-jsonld" data={homepageSchema} />
+
       {/* 1 — Cinematic Hero */}
       {heroSlide ? (
         <Hero slide={heroSlide} slides={hero.data || undefined} />
@@ -90,16 +114,16 @@ export function HomePage() {
         <Skeleton className="h-[48vh] min-h-[300px] w-full rounded-none lg:h-[680px]" />
       )}
 
-      {/* 2 — Diamond Categories Carousel */}
-      <Section aria-labelledby="categories-heading" className="overflow-hidden border-b border-border/40">
-        <Container className="flex flex-col gap-6">
+      {/* 2 — Compact Square Categories Showcase */}
+      <Section spacing="tight" aria-labelledby="categories-heading" className="overflow-hidden border-b border-border/40 py-5 sm:py-7">
+        <Container className="flex flex-col gap-4 sm:gap-5">
           <Reveal>
             <SectionHeader
               eyebrow="Curated Silhouettes"
               title="Shop by Category"
               description="Explore our hand-finished collections, contoured for comfort."
               action={
-                <ButtonLink href="/shop" variant="ghost" iconRight={<Icon name="arrow-right" size={17} />}>
+                <ButtonLink href="/shop" variant="ghost" iconRight={<Icon name="arrow-right" size={16} />}>
                   All Collections
                 </ButtonLink>
               }
@@ -115,9 +139,9 @@ export function HomePage() {
         </Container>
       </Section>
 
-      {/* 3 — Featured Collections (Horizontal Carousel) */}
-      <Section tone="cream" aria-labelledby="featured-heading" className="overflow-hidden">
-        <Container className="flex flex-col gap-8">
+      {/* 3 — Scrolling Section: Featured Collection */}
+      <Section tone="cream" spacing="tight" aria-labelledby="featured-heading" className="overflow-hidden py-6 sm:py-8 md:py-10">
+        <Container className="flex flex-col gap-5 sm:gap-6">
           <Reveal>
             <SectionHeader
               eyebrow="Season's Choice"
@@ -131,56 +155,131 @@ export function HomePage() {
             />
           </Reveal>
           <ProductCarousel
-            products={featured.data}
-            loading={featured.loading}
+            products={featured.data && featured.data.length > 0 ? featured.data : allProducts.data}
+            loading={featured.loading || allProducts.loading}
             error={featured.error}
             onRetry={featured.retry}
           />
         </Container>
       </Section>
 
-      {/* 4 — Promotional Banner */}
-      {firstBanner && <Banner banner={firstBanner} />}
-
-      {/* 5 — New Arrivals (Horizontal Carousel) */}
-      <Section aria-labelledby="new-heading" className="overflow-hidden">
-        <Container className="flex flex-col gap-8">
+      {/* 4 — 4-Product Grid: New Arrivals (2x2 on Mobile, 4-Col Desktop) */}
+      <Section spacing="tight" aria-labelledby="new-arrivals-heading" className="py-6 sm:py-8 md:py-10">
+        <Container className="flex flex-col gap-5 sm:gap-6">
           <Reveal>
             <SectionHeader
-              align="center"
               eyebrow="Just Landed"
               title="New Arrivals"
-              description="Fresh silhouettes and refined leathers released this month."
+              description="Fresh silhouettes and refined leathers released this season."
+              action={
+                <ButtonLink href="/new-arrivals" variant="ghost" iconRight={<Icon name="arrow-right" size={16} />}>
+                  Explore All
+                </ButtonLink>
+              }
             />
           </Reveal>
-          <ProductCarousel
-            products={newIn.data}
-            loading={newIn.loading}
+          <ProductGrid
+            products={newArrivals4}
+            loading={newIn.loading || allProducts.loading}
             error={newIn.error}
             onRetry={newIn.retry}
-            emptyMessage="New bespoke styles are on their way."
+            columns={4}
+            skeletonCount={4}
           />
-          <Reveal className="flex justify-center pt-2">
-            <ButtonLink href="/new-arrivals" size="lg" iconRight={<Icon name="arrow-right" size={18} />}>
-              Explore Full Collection
-            </ButtonLink>
-          </Reveal>
         </Container>
       </Section>
 
-      {/* 6 — Second Promotional Banner */}
+      {/* Promotional Banner (if available) */}
+      {firstBanner && <Banner banner={firstBanner} />}
+
+      {/* 5 — Scrolling Section: Best Sellers */}
+      <Section tone="cream" spacing="tight" aria-labelledby="bestsellers-heading" className="overflow-hidden py-6 sm:py-8 md:py-10">
+        <Container className="flex flex-col gap-5 sm:gap-6">
+          <Reveal>
+            <SectionHeader
+              eyebrow="Most Coveted"
+              title="Best Sellers"
+              description="Customer favorites celebrated for enduring quality and daylong comfort."
+              action={
+                <ButtonLink href="/shop?sort=bestselling" variant="outline">
+                  Shop Best Sellers
+                </ButtonLink>
+              }
+            />
+          </Reveal>
+          <ProductCarousel
+            products={bestSellers.data && bestSellers.data.length > 0 ? bestSellers.data : allProducts.data}
+            loading={bestSellers.loading || allProducts.loading}
+            error={bestSellers.error}
+            onRetry={bestSellers.retry}
+            emptyMessage="Celebrated styles will appear here soon."
+          />
+        </Container>
+      </Section>
+
+      {/* 6 — 4-Product Grid: Trending Styles (2x2 on Mobile, 4-Col Desktop) */}
+      <Section spacing="tight" aria-labelledby="trending-heading" className="py-6 sm:py-8 md:py-10">
+        <Container className="flex flex-col gap-5 sm:gap-6">
+          <Reveal>
+            <SectionHeader
+              eyebrow="Curated Styles"
+              title="Trending Silhouettes"
+              description="Hand-selected statements designed to elevate everyday elegance."
+              action={
+                <ButtonLink href="/shop" variant="ghost" iconRight={<Icon name="arrow-right" size={16} />}>
+                  View Curated
+                </ButtonLink>
+              }
+            />
+          </Reveal>
+          <ProductGrid
+            products={trending4}
+            loading={onSale.loading || allProducts.loading}
+            error={onSale.error}
+            onRetry={onSale.retry}
+            columns={4}
+            skeletonCount={4}
+          />
+        </Container>
+      </Section>
+
+      {/* Second Promotional Banner (if available) */}
       {secondBanner && <Banner banner={secondBanner} />}
 
-      {/* 7 — Brand Showcase */}
-      <Section aria-labelledby="brands-heading">
-        <Container className="flex flex-col gap-10">
+      {/* 7 — Scrolling Section: Handcrafted Essentials */}
+      <Section tone="cream" spacing="tight" aria-labelledby="essentials-heading" className="overflow-hidden py-6 sm:py-8 md:py-10">
+        <Container className="flex flex-col gap-5 sm:gap-6">
+          <Reveal>
+            <SectionHeader
+              eyebrow="Atelier Standards"
+              title="Handcrafted Essentials"
+              description="Signature Peshawari, Khussas, and bespoke loafers built to endure."
+              action={
+                <ButtonLink href="/shop" variant="outline">
+                  All Footwear
+                </ButtonLink>
+              }
+            />
+          </Reveal>
+          <ProductCarousel
+            products={allProducts.data && allProducts.data.length > 0 ? allProducts.data : featured.data}
+            loading={allProducts.loading}
+            error={allProducts.error}
+            onRetry={allProducts.retry}
+          />
+        </Container>
+      </Section>
+
+      {/* 8 — Signature Brand Lines */}
+      <Section spacing="tight" aria-labelledby="brands-heading" className="py-7 sm:py-9">
+        <Container className="flex flex-col gap-6 sm:gap-8">
           <Reveal>
             <SectionHeader
               eyebrow="Our Signature Lines"
               title="Shelina Brands"
               description="Distinctive ateliers united under our master craftsmanship standard."
               action={
-                <ButtonLink href="/shop" variant="ghost" iconRight={<Icon name="arrow-right" size={17} />}>
+                <ButtonLink href="/shop" variant="ghost" iconRight={<Icon name="arrow-right" size={16} />}>
                   Explore Brands
                 </ButtonLink>
               }
@@ -195,12 +294,12 @@ export function HomePage() {
         </Container>
       </Section>
 
-      {/* 8 — Full-Bleed Editorial Story */}
+      {/* 9 — Full-Bleed Editorial Story */}
       <EditorialFeature feature={editorial.data} loading={editorial.loading} />
 
-      {/* 9 — Trust Values & Heritage */}
-      <Section tone="cream" spacing="tight" aria-labelledby="trust-heading">
-        <Container className="flex flex-col gap-10">
+      {/* 10 — Trust Values & Heritage */}
+      <Section tone="cream" spacing="tight" aria-labelledby="trust-heading" className="py-7 sm:py-9">
+        <Container className="flex flex-col gap-6 sm:gap-8">
           <Reveal>
             <SectionHeader
               align="center"
@@ -213,7 +312,7 @@ export function HomePage() {
         </Container>
       </Section>
 
-      {/* 10 — VIP Club Newsletter */}
+      {/* 11 — VIP Club Newsletter */}
       <Newsletter />
     </Layout>
   );
