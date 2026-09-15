@@ -29,8 +29,10 @@ export function FloatingWhatsApp({ className, inquiryText }: FloatingWhatsAppPro
       )}`;
 
   return (
-    <div
+    <aside
       id="floating-whatsapp-container"
+      role="region"
+      aria-label="WhatsApp Contact"
       className={cn(
         'fixed floating-whatsapp-pos z-[90]',
         'flex items-center gap-2.5 pointer-events-auto select-none',
@@ -94,6 +96,6 @@ export function FloatingWhatsApp({ className, inquiryText }: FloatingWhatsAppPro
           <span className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-[#25D366]" />
         </span>
       </a>
-    </div>
+    </aside>
   );
 }

@@ -184,8 +184,9 @@ export function Hero({ slide, slides, className }: HeroProps) {
             {primaryCta && (
               <ButtonLink
                 href={primaryCta.href}
-                size="md"
-                className="sm:h-12 shadow-lg hover:shadow-xl font-medium tracking-wide"
+                variant="primary"
+                size="lg"
+                className="sm:h-12 shadow-lg hover:shadow-xl font-medium tracking-wide bg-secondary hover:bg-secondary/90 text-white border-transparent"
                 iconRight={<Icon name="arrow-right" size={18} />}
               >
                 {primaryCta.label}
