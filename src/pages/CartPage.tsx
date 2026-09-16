@@ -61,7 +61,14 @@ export function CartPage() {
         <Container>
           <div className="flex flex-col gap-2">
             <span className="eyebrow text-primary-deep">Your selection</span>
-            <h1 className="font-display text-h1 text-ink">Your bag</h1>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <h1 className="font-display text-h1 text-ink">Your bag</h1>
+              <div className="lg:hidden">
+                <ButtonLink href="/checkout" fullWidth>
+                  Checkout - {formatPrice(totals.subtotal)}
+                </ButtonLink>
+              </div>
+            </div>
             <p className="text-body text-ink-muted">
               {totals.count} {totals.count === 1 ? 'item' : 'items'} across {totals.lineCount}{' '}
               {totals.lineCount === 1 ? 'line' : 'lines'}.

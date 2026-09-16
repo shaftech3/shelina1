@@ -54,7 +54,7 @@ export function CartLine({
           src={item.image?.src ?? ''}
           alt={item.image?.alt ?? item.productName}
           ratio="square"
-          objectFit="cover"
+          objectFit="contain"
           sizes={isPage ? '112px' : '80px'}
         />
       </SmartLink>

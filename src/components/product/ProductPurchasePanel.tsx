@@ -1,4 +1,5 @@
 import { useId, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/cn';
 import { discountPercent, effectivePrice, formatPrice } from '@/lib/format';
 import { Badge, Button, Icon, useToast } from '@/components/ui';
@@ -17,11 +18,12 @@ interface ProductPurchasePanelProps {
 
 /**
  * Everything on the right-hand side of the product page: price, variant
- * selection, quantity, Add to Cart, and Order via WhatsApp.
+ * selection, quantity, Add to Cart, Buy Now, and Order via WhatsApp.
  */
 export function ProductPurchasePanel({ product, className }: ProductPurchasePanelProps) {
   const { addItem, openCart } = useCart();
   const { notify } = useToast();
+  const navigate = useNavigate();
   const errorId = useId();
 
   const hasSizes = product.sizes.length > 0;
@@ -48,36 +50,35 @@ export function ProductPurchasePanel({ product, className }: ProductPurchasePane
   const sizeMissing = hasSizes && !size;
   const colorMissing = hasColors && !color;
 
-  const handleAdd = () => {
+  const validateOptions = () => {
     if (sizeMissing) {
       setError('Please select your size first.');
       notify({ title: 'Please select your size first.', tone: 'error' });
-      return;
+      return false;
     }
     if (colorMissing) {
       setError('Please select your colour first.');
       notify({ title: 'Please select your colour first.', tone: 'error' });
-      return;
+      return false;
     }
-
     setError(null);
+    return true;
+  };
+
+  const handleAdd = () => {
+    if (!validateOptions()) return;
     addItem({ product, size, color, quantity });
     openCart();
   };
 
-  const handleWhatsAppOrder = () => {
-    if (sizeMissing) {
-      setError('Please select your size first.');
-      notify({ title: 'Please select your size first.', tone: 'error' });
-      return;
-    }
-    if (colorMissing) {
-      setError('Please select your colour first.');
-      notify({ title: 'Please select your colour first.', tone: 'error' });
-      return;
-    }
+  const handleBuyNow = () => {
+    if (!validateOptions()) return;
+    addItem({ product, size, color, quantity });
+    navigate('/checkout');
+  };
 
-    setError(null);
+  const handleWhatsAppOrder = () => {
+    if (!validateOptions()) return;
     const whatsappUrl = buildProductWhatsAppUrl({
       product,
       size,
@@ -176,6 +177,17 @@ export function ProductPurchasePanel({ product, className }: ProductPurchasePane
           >
             {soldOut ? 'Sold out' : 'Add to bag'}
           </Button>
+
+          {!soldOut && (
+            <Button
+              size="lg"
+              variant="secondary"
+              fullWidth
+              onClick={handleBuyNow}
+            >
+              Buy now
+            </Button>
+          )}
 
           {!soldOut && (
             <button

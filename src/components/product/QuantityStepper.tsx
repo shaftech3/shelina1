@@ -1,4 +1,4 @@
-import { useId } from 'react';
+import { useId, useState, useEffect } from 'react';
 import { cn } from '@/lib/cn';
 
 interface QuantityStepperProps {
@@ -13,6 +13,7 @@ interface QuantityStepperProps {
   /** Accessible name; defaults to a generic label. */
   label?: string;
 }
+
 /**
  * Accessible quantity control.
  *
@@ -30,7 +31,15 @@ export function QuantityStepper({
   label = 'Quantity',
 }: QuantityStepperProps) {
   const inputId = useId();
+  const [localValue, setLocalValue] = useState<string>(String(value));
+
+  // Sync local value if parent value changes externally
+  useEffect(() => {
+    setLocalValue(String(value));
+  }, [value]);
+
   const ceiling = max && max > 0 ? max : undefined;
+
   const clamp = (next: number) => {
     if (!Number.isFinite(next)) return min;
     const floored = Math.floor(next);
@@ -38,14 +47,26 @@ export function QuantityStepper({
     if (ceiling !== undefined && floored > ceiling) return ceiling;
     return floored;
   };
+
+  const handleCommit = (raw: string) => {
+    const parsed = Number(raw);
+    const clamped = clamp(parsed);
+    setLocalValue(String(clamped));
+    if (clamped !== value) {
+      onChange(clamped);
+    }
+  };
+
   const atMin = value <= min;
   const atMax = ceiling !== undefined && value >= ceiling;
+
   const buttonClasses = cn(
     'inline-flex shrink-0 items-center justify-center text-ink transition-colors duration-fast',
     'hover:bg-cream focus-visible:outline-none focus-visible:shadow-focus',
     'disabled:cursor-not-allowed disabled:text-ink-subtle disabled:hover:bg-transparent',
     size === 'sm' ? 'h-9 w-9' : 'h-12 w-12',
   );
+
   return (
     <div className={cn('flex flex-col gap-2', className)}>
       <label htmlFor={inputId} className={size === 'sm' ? 'sr-only' : 'text-label font-medium text-ink'}>
@@ -60,7 +81,7 @@ export function QuantityStepper({
         <button
           type="button"
           className={buttonClasses}
-          onClick={() => onChange(clamp(value - 1))}
+          onClick={() => handleCommit(String(value - 1))}
           disabled={atMin}
           aria-label="Decrease quantity"
         >
@@ -68,21 +89,23 @@ export function QuantityStepper({
             −
           </span>
         </button>
+
         <input
           id={inputId}
           type="number"
           inputMode="numeric"
-          value={value}
+          value={localValue}
           min={min}
           max={ceiling}
-          // Commit on change for keyboard/typed entry, and clamp again on blur
-          // so a transient empty field can't leave the control in a bad state.
           onChange={(event) => {
-            const parsed = Number(event.target.value);
-            if (event.target.value === '') return;
-            onChange(clamp(parsed));
+            setLocalValue(event.target.value);
           }}
-          onBlur={(event) => onChange(clamp(Number(event.target.value)))}
+          onBlur={(event) => handleCommit(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') {
+              handleCommit(localValue);
+            }
+          }}
           aria-label={label}
           className={cn(
             'h-full border-x border-border bg-surface text-center font-medium text-ink',
@@ -92,10 +115,11 @@ export function QuantityStepper({
             size === 'sm' ? 'w-10 text-caption' : 'w-14 text-body-sm',
           )}
         />
+
         <button
           type="button"
           className={buttonClasses}
-          onClick={() => onChange(clamp(value + 1))}
+          onClick={() => handleCommit(String(value + 1))}
           disabled={atMax}
           aria-label="Increase quantity"
         >
@@ -104,6 +128,7 @@ export function QuantityStepper({
           </span>
         </button>
       </div>
+
       {atMax && ceiling !== undefined && (
         <span className="text-caption text-ink-muted" role="status">
           Only {ceiling} left in stock.

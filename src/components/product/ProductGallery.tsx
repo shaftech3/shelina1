@@ -39,7 +39,14 @@ export function ProductGallery({ images, video, productName, className }: Produc
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const thumbRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
-  const active = slides[index];
+  // Reset state when the underlying product changes
+  useEffect(() => {
+    setIndex(0);
+    setVideoActivated(false);
+    setVideoError(false);
+  }, [images, video]);
+
+  const active = slides[index] || slides[0];
   const hasMultiple = slides.length > 1;
 
   // Moving away from the video slide must stop playback — otherwise audio
