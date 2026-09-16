@@ -35,12 +35,12 @@ export function getBackendOrigin(): string {
   if (typeof window !== 'undefined' && window.location?.origin) {
     // If running on Vercel and no backend API URL was specified, point to Render API server
     if (window.location.hostname.includes('vercel.app')) {
-      return 'https://shelina1.onrender.com';
+      return 'https://shelina.work.gd';
     }
     return window.location.origin;
   }
 
-  return 'https://shelina1.onrender.com';
+  return 'https://shelina.work.gd';
 }
 
 /**
@@ -52,9 +52,9 @@ export function normalizeMediaUrl(url?: string | null): string {
   let trimmed = url.trim();
   if (!trimmed) return '';
 
-  // Fix accidentally doubled URLs (e.g. https://shelina1.onrender.com/https://...)
-  if (trimmed.startsWith('https://shelina1.onrender.com/http://') || trimmed.startsWith('https://shelina1.onrender.com/https://')) {
-    trimmed = trimmed.replace('https://shelina1.onrender.com/', '');
+  // Fix accidentally doubled URLs (e.g. https://shelina.work.gd/https://...)
+  if (trimmed.startsWith('https://shelina.work.gd/http://') || trimmed.startsWith('https://shelina.work.gd/https://')) {
+    trimmed = trimmed.replace('https://shelina.work.gd/', '');
   }
 
   // 1. Absolute web URLs, blob URLs, and inline base64/SVG data URIs

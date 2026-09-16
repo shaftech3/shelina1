@@ -21,4 +21,4 @@ Disallow: /checkout/
 Disallow: /order/
 Disallow: /api/
 
-Sitemap: https://shelina1.onrender.com/sitemap.xml
+Sitemap: https://shelina1.vercel.app/sitemap.xml

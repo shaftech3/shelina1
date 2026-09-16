@@ -37,7 +37,7 @@ export function AdminNexoraPage() {
 
   const apiBaseUrl = typeof window !== 'undefined'
     ? `${window.location.origin}/api/nexora/v1`
-    : 'https://shelina1.onrender.com/api/nexora/v1';
+    : 'https://shelina.work.gd/api/nexora/v1';
 
   const loadData = useCallback(async () => {
     try {
