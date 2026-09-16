@@ -17,6 +17,13 @@ export const FALLBACK_IMAGE_URL =
   'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600" fill="%23f7f4ef"><rect width="600" height="600" fill="%23f7f4ef"/><g fill="%238a7e72" font-family="serif" text-anchor="middle"><text x="300" y="280" font-size="42" font-weight="600" letter-spacing="2">SHELINA</text><text x="300" y="325" font-size="16" letter-spacing="4" fill="%23a89e92">FOOTWEAR</text></g><path d="M260 380h80M280 395h40" stroke="%23dcd5cb" stroke-width="2" stroke-linecap="round"/></svg>';
 
 export function getBackendOrigin(): string {
+  if (import.meta.env.PROD) {
+    if (typeof window !== 'undefined' && window.location?.origin) {
+      return window.location.origin;
+    }
+    return '';
+  }
+
   const customBackend = (import.meta.env.VITE_BACKEND_URL as string | undefined)?.trim();
   if (customBackend) {
     return customBackend.replace(/\/+$/, '');
@@ -33,14 +40,10 @@ export function getBackendOrigin(): string {
   }
 
   if (typeof window !== 'undefined' && window.location?.origin) {
-    // If running on Vercel and no backend API URL was specified, point to Render API server
-    if (window.location.hostname.includes('vercel.app')) {
-      return 'https://shelina.work.gd';
-    }
     return window.location.origin;
   }
 
-  return 'https://shelina.work.gd';
+  return '';
 }
 
 /**

@@ -65,6 +65,9 @@ export function setCustomerToken(token: string | null): void {
 }
 
 function getBaseUrl(): string {
+  if (import.meta.env.PROD) {
+    return '/api';
+  }
   const envUrl = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.trim();
   if (!envUrl) return '/api';
   let normalized = envUrl.replace(/\/+$/, '');
