@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { cn } from '@/lib/cn';
 import { OFFICIAL_WHATSAPP_NUMBER } from '@/lib/constants';
 import { buildInquiryWhatsAppUrl } from '@/lib/whatsapp';
@@ -22,13 +23,20 @@ interface FloatingWhatsAppProps {
  */
 export function FloatingWhatsApp({ className, inquiryText }: FloatingWhatsAppProps) {
   const [hovered, setHovered] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
+
   const href = inquiryText
     ? buildInquiryWhatsAppUrl(inquiryText)
     : `https://wa.me/${OFFICIAL_WHATSAPP_NUMBER}?text=${encodeURIComponent(
         'Hello Shelina, I have an inquiry regarding your footwear collection.',
       )}`;
 
-  return (
+  const content = (
     <aside
       id="floating-whatsapp-container"
       role="region"
@@ -98,4 +106,7 @@ export function FloatingWhatsApp({ className, inquiryText }: FloatingWhatsAppPro
       </a>
     </aside>
   );
+
+  if (!mounted) return null;
+  return createPortal(content, document.body);
 }

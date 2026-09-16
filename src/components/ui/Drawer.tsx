@@ -62,18 +62,18 @@ export function Drawer({ open, onClose, title, children, side = 'right', footer,
           className,
         )}
       >
-        <div className="flex h-[var(--header-height)] shrink-0 items-center justify-between gap-4 border-b border-border px-5">
+        <div className="flex h-[calc(var(--header-height)+0.25rem)] shrink-0 items-center justify-between gap-4 border-b border-border/60 px-6">
           {title ? (
-            <span className="font-display text-h4 text-ink">{title}</span>
+            <h2 className="font-serif text-[1.35rem] font-medium tracking-wide text-ink uppercase text-opacity-90">{title}</h2>
           ) : (
             <span />
           )}
-          <IconButton label="Close panel" icon={<Icon name="close" size={20} />} onClick={onClose} />
+          <IconButton label="Close panel" icon={<Icon name="close" size={22} />} onClick={onClose} className="hover:bg-cream/50 transition-colors" />
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-6">{children}</div>
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 py-7">{children}</div>
 
-        {footer && <div className="shrink-0 border-t border-border bg-cream px-5 py-4">{footer}</div>}
+        {footer && <div className="shrink-0 border-t border-border/60 bg-cream/30 px-6 py-5">{footer}</div>}
       </div>
     </div>,
     document.body,

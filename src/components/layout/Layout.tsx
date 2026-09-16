@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react';
-import { FloatingWhatsApp } from '@/components/ui';
 import { Footer } from './Footer';
 import { Header } from './Header';
 
@@ -9,7 +8,7 @@ interface LayoutProps {
   overHero?: boolean;
 }
 
-/** App shell: skip link, header, main landmark, footer, and global WhatsApp trigger. */
+/** App shell: skip link, header, main landmark, footer. */
 export function Layout({ children, overHero = false }: LayoutProps) {
   return (
     <div className="flex min-h-screen w-full max-w-full flex-col overflow-x-hidden">
@@ -27,9 +26,6 @@ export function Layout({ children, overHero = false }: LayoutProps) {
       </main>
 
       <Footer />
-
-      {/* Global floating WhatsApp button available across the entire customer-facing storefront */}
-      <FloatingWhatsApp />
     </div>
   );
 }

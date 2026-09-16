@@ -33,7 +33,7 @@ export const SquareCategoryCard = memo(function SquareCategoryCard({
       href={`/category/${slug}`}
       className={cn(
         'group flex flex-col items-center gap-1.5 sm:gap-2 rounded-xl p-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 transition-all duration-300 motion-safe:[@media(hover:hover)]:hover:-translate-y-1 active:scale-98',
-        'w-[82px] xs:w-[96px] sm:w-[110px] md:w-[124px] lg:w-[134px]',
+        'w-[76px] xs:w-[88px] sm:w-[104px] md:w-[116px] lg:w-[124px]',
         className,
       )}
     >

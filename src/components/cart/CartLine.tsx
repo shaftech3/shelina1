@@ -44,7 +44,7 @@ export function CartLine({
         href={`/product/${item.slug}`}
         onClick={onNavigate}
         className={cn(
-          'shrink-0 overflow-hidden rounded-md border border-border/70 bg-[#faf8f5]',
+          'shrink-0 overflow-hidden rounded-md border border-border/50 bg-[#faf8f5]',
           'focus-visible:outline-none focus-visible:shadow-focus',
           isPage ? 'w-24 sm:w-28' : 'w-20',
         )}
@@ -53,10 +53,9 @@ export function CartLine({
         <Image
           src={item.image?.src ?? ''}
           alt={item.image?.alt ?? item.productName}
-          ratio="product"
-          objectFit="contain"
+          ratio="square"
+          objectFit="cover"
           sizes={isPage ? '112px' : '80px'}
-          imgClassName="p-1"
         />
       </SmartLink>
 

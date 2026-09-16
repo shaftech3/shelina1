@@ -24,9 +24,9 @@ export function AdminSettingsPage() {
     defaultDeliveryFee: 250,
     freeShippingThreshold: 5000,
     codEnabled: true,
-    contactPhone: '03247741080',
+    contactPhone: '03217613329',
     contactEmail: 'shelinaoffical@gmail.com',
-    whatsappNumber: '+923247741080',
+    whatsappNumber: '+923217613329',
     deliveryNote: 'Standard delivery takes 2–4 business days across Pakistan via courier with Cash on Delivery.',
   });
 

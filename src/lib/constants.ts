@@ -5,9 +5,9 @@ export const STORE_CONFIG = {
   currency: 'PKR',
   locale: 'en-PK',
   supportEmail: 'shelinaoffical@gmail.com',
-  supportPhone: '03247741080',
-  whatsappNumber: '923247741080',
-  whatsappUrl: 'https://wa.me/923247741080',
+  supportPhone: '03217613329',
+  whatsappNumber: '923217613329',
+  whatsappUrl: 'https://wa.me/923217613329',
   address: 'Faisalabad, Punjab, Pakistan',
   /**
    * Display only — used for the announcement strip and any "spend X more"
@@ -21,7 +21,7 @@ export const STORE_CONFIG = {
 
 export const SITE_URL = 'https://shelina1.vercel.app';
 export const OFFICIAL_EMAIL = 'shelinaoffical@gmail.com';
-export const OFFICIAL_WHATSAPP_NUMBER = '923247741080';
+export const OFFICIAL_WHATSAPP_NUMBER = '923217613329';
 
 /**
  * Brand asset slots.

@@ -60,7 +60,7 @@ export function CategoryShowcase({
     return (
       <div className={cn('flex gap-2.5 sm:gap-4 overflow-hidden py-2', className)} aria-busy="true">
         {Array.from({ length: 6 }).map((_, index) => (
-          <div key={index} className="flex flex-col items-center gap-1.5 shrink-0 w-[82px] xs:w-[96px] sm:w-[110px] md:w-[124px]">
+          <div key={index} className="flex flex-col items-center gap-1.5 shrink-0 w-[76px] xs:w-[88px] sm:w-[104px] md:w-[116px]">
             <Skeleton className="aspect-square w-full rounded-xl" />
             <Skeleton className="h-3.5 w-16 mt-1" />
           </div>

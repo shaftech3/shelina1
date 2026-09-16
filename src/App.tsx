@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect } from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
-import { ToastProvider } from '@/components/ui';
+import { ToastProvider, FloatingWhatsApp } from '@/components/ui';
 import { CartProvider } from '@/cart';
 import { seoService } from '@/services';
 import { CartDrawer } from '@/components/cart/CartDrawer';
@@ -83,6 +83,7 @@ export default function App() {
 
           {/* Mounted once, outside the routes, so it survives navigation. */}
           <CartDrawer />
+          <FloatingWhatsApp />
         </CartProvider>
       </BrowserRouter>
     </ToastProvider>

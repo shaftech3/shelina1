@@ -87,6 +87,6 @@ export const socialLinks: { platform: SocialPlatform; label: string; href: strin
   {
     platform: 'whatsapp',
     label: 'Chat with Shelina on WhatsApp',
-    href: 'https://wa.me/923247741080?text=Hello%20Shelina%2C%20I%20have%20an%20inquiry%20regarding%20your%20handcrafted%20footwear%20collection.',
+    href: 'https://wa.me/923217613329?text=Hello%20Shelina%2C%20I%20have%20an%20inquiry%20regarding%20your%20handcrafted%20footwear%20collection.',
   },
 ];
