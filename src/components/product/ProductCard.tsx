@@ -54,17 +54,19 @@ export const ProductCard = memo(function ProductCard({
           priority={priority}
           width={600}
           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-          className="h-full w-full bg-transparent"
+          className="h-full w-full bg-transparent mix-blend-multiply"
           imgClassName={cn(
-            'p-3 sm:p-4 transition-all duration-500 ease-out motion-safe:[@media(hover:hover)]:group-hover:scale-[1.04]',
+            'p-0 transition-all duration-700 ease-out motion-safe:[@media(hover:hover)]:group-hover:scale-[1.05]',
             secondaryImage && 'motion-safe:[@media(hover:hover)]:group-hover:opacity-0 motion-safe:[@media(hover:hover)]:group-focus-within:opacity-0',
             soldOut && 'opacity-75 grayscale-[20%]',
           )}
         />
-
         {/* Secondary Image on Desktop Hover (seamless crossfade) */}
-        {secondaryImage && (
-          <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 ease-out motion-safe:[@media(hover:hover)]:group-hover:opacity-100 motion-safe:[@media(hover:hover)]:group-focus-within:opacity-100">
+        <div className={cn(
+            "pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-700 ease-out",
+            secondaryImage && "motion-safe:[@media(hover:hover)]:group-hover:opacity-100 motion-safe:[@media(hover:hover)]:group-focus-within:opacity-100"
+        )}>
+          {secondaryImage && (
             <Image
               src={secondaryImage.src}
               alt={secondaryImage.alt || `${name} - alternate angle`}
@@ -72,11 +74,11 @@ export const ProductCard = memo(function ProductCard({
               objectFit="contain"
               width={600}
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-              className="h-full w-full bg-transparent"
-              imgClassName="p-3 sm:p-4 transition-transform duration-500 ease-out motion-safe:[@media(hover:hover)]:group-hover:scale-[1.04]"
+              className="h-full w-full bg-transparent mix-blend-multiply"
+              imgClassName="p-0 transition-transform duration-700 ease-out motion-safe:[@media(hover:hover)]:group-hover:scale-[1.05]"
             />
-          </div>
-        )}
+          )}
+        </div>
 
         {/* Badges */}
         <div className="pointer-events-none absolute left-2.5 top-2.5 sm:left-3 sm:top-3 flex flex-col items-start gap-1 z-10">
