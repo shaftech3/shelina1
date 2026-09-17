@@ -45,7 +45,7 @@ export const SquareCategoryCard = memo(function SquareCategoryCard({
             alt={image.alt || name}
             loading={priority ? 'eager' : 'lazy'}
             decoding={priority ? 'sync' : 'async'}
-            className="h-full w-full object-contain p-2 sm:p-2.5 transition-transform duration-500 ease-out motion-safe:[@media(hover:hover)]:group-hover:scale-105"
+            className="h-full w-full object-cover transition-transform duration-500 ease-out motion-safe:[@media(hover:hover)]:group-hover:scale-105"
             onError={(e) => {
               (e.currentTarget as HTMLImageElement).src =
                 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" fill="%23f5f0eb"><rect width="200" height="200"/><text x="100" y="105" fill="%238a7e72" font-size="18" font-family="serif" text-anchor="middle">SHELINA</text></svg>';

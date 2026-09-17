@@ -69,7 +69,7 @@ export function MobileNav({ open, onClose, onOpenSearch }: MobileNavProps) {
                       to={item.href}
                       onClick={onClose}
                       className={cn(
-                        'group flex items-center justify-between py-4 sm:py-5 font-serif text-[1.65rem] sm:text-[1.75rem] font-medium tracking-[0.02em]',
+                        'group flex items-center justify-between py-4 sm:py-5 font-display text-[2rem] sm:text-[2.25rem] leading-none tracking-tight',
                         'transition-all duration-300 focus-visible:outline-none',
                         item.accent
                           ? 'text-secondary-deep'
@@ -89,7 +89,7 @@ export function MobileNav({ open, onClose, onOpenSearch }: MobileNavProps) {
                     onClick={() => setExpanded(isOpen ? null : item.label)}
                     aria-expanded={isOpen}
                     aria-controls={`submenu-${item.label}`}
-                    className="flex w-full items-center justify-between py-4 sm:py-5 text-left font-serif text-[1.65rem] sm:text-[1.75rem] font-medium tracking-[0.02em] text-ink/90 transition-all duration-300 hover:text-ink focus-visible:outline-none focus-visible:text-ink"
+                    className="flex w-full items-center justify-between py-4 sm:py-5 text-left font-display text-[2rem] sm:text-[2.25rem] leading-none tracking-tight text-ink/90 transition-all duration-300 hover:text-ink focus-visible:outline-none focus-visible:text-ink"
                   >
                     <span className={cn("transition-transform duration-300", isOpen && "translate-x-1")}>{item.label}</span>
                     <span className="flex h-8 w-8 items-center justify-center rounded-full bg-cream/50 transition-colors">
@@ -118,7 +118,7 @@ export function MobileNav({ open, onClose, onOpenSearch }: MobileNavProps) {
                             onClick={onClose}
                             tabIndex={isOpen ? undefined : -1}
                             aria-hidden={!isOpen}
-                            className="block rounded-md px-3 py-3 text-[1.05rem] font-sans text-ink-muted transition-all duration-300 hover:bg-cream hover:text-ink hover:translate-x-1 focus-visible:outline-none focus-visible:bg-cream"
+                            className="block rounded-md px-3 py-3 text-[1.05rem] font-sans tracking-wide text-ink-muted transition-all duration-300 hover:bg-cream hover:text-ink hover:translate-x-1 focus-visible:outline-none focus-visible:bg-cream"
                           >
                             {child.label}
                           </Link>

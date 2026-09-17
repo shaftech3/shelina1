@@ -42,9 +42,10 @@ export const CategoryCard = memo(function CategoryCard({
         alt={image.alt}
         ratio={isFeature ? 'category' : 'square'}
         priority={priority}
+        objectFit="cover"
         sizes={isFeature ? '(max-width: 1023px) 100vw, 42vw' : '(max-width: 767px) 50vw, (max-width: 1023px) 50vw, 29vw'}
-        className="h-full"
-        imgClassName="transition-transform duration-[900ms] ease-elegant motion-safe:group-hover:scale-[1.06] motion-safe:group-focus-visible:scale-[1.06]"
+        className="h-full w-full"
+        imgClassName="h-full w-full object-cover transition-transform duration-[900ms] ease-elegant motion-safe:group-hover:scale-[1.06] motion-safe:group-focus-visible:scale-[1.06]"
       />
 
       {/* Scrim keeps label text legible over any imagery. */}
@@ -52,11 +53,9 @@ export const CategoryCard = memo(function CategoryCard({
         aria-hidden
         className={cn(
           'absolute inset-0 bg-gradient-to-t transition-opacity duration-base ease-elegant',
-          // Small square cards crop to a tighter frame over pale product shots,
-          // so they need a deeper scrim than the large feature card to hold AA.
           isFeature
-            ? 'from-ink/72 via-ink/18 to-transparent group-hover:from-ink/80'
-            : 'from-ink/92 via-ink/55 to-ink/10 group-hover:from-ink/95',
+            ? 'from-ink/60 via-ink/10 to-transparent group-hover:from-ink/70'
+            : 'from-ink/70 via-ink/30 to-transparent group-hover:from-ink/80',
         )}
       />
 
