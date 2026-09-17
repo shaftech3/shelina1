@@ -19,8 +19,10 @@
 
   body {
     @apply bg-background font-sans text-body text-ink antialiased;
-    /* Hard guarantee against horizontal overflow at every breakpoint. */
-    overflow-x: hidden;
+    /* Hard guarantee against horizontal overflow at every breakpoint.
+       Uses clip instead of hidden to prevent iOS Safari swipe-capture bug
+       where the first vertical swipe gets incorrectly interpreted as a horizontal pan. */
+    overflow-x: clip;
     text-rendering: optimizeLegibility;
   }
 

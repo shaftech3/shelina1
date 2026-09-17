@@ -181,7 +181,9 @@ export function SearchOverlay({ open, onClose }: SearchOverlayProps) {
                               <Image
                                 src={product.media[0].url}
                                 alt={product.name}
-                                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                objectFit="contain"
+                                className="h-full w-full"
+                                imgClassName="p-1 transition-transform duration-500 group-hover:scale-105"
                                 sizes="64px"
                               />
                             ) : (

@@ -56,6 +56,7 @@ export function CartLine({
           ratio="square"
           objectFit="contain"
           sizes={isPage ? '112px' : '80px'}
+          imgClassName="p-1.5 sm:p-2"
         />
       </SmartLink>
 
