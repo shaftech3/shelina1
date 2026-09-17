@@ -93,7 +93,7 @@ export const ProductCard = memo(function ProductCard({
             </Badge>
           )}
           {featured && !isNew && !discount && (
-            <Badge tone="dark" className="px-2 py-0.5 text-[10px] sm:text-xs font-semibold shadow-xs">
+            <Badge tone="dark" className="px-2 py-0.5 text-xs font-semibold shadow-xs">
               Featured
             </Badge>
           )}
@@ -101,7 +101,7 @@ export const ProductCard = memo(function ProductCard({
 
         {/* Sold out overlay */}
         {soldOut && (
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-surface/95 py-1.5 text-center text-[10px] sm:text-caption font-semibold uppercase tracking-[0.14em] text-ink-muted backdrop-blur-xs">
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-surface/95 py-1.5 text-center text-xs font-semibold uppercase tracking-wider text-ink-muted backdrop-blur-xs">
             Sold out
           </div>
         )}
@@ -110,7 +110,7 @@ export const ProductCard = memo(function ProductCard({
       {/* Product Information */}
       <div className="flex flex-1 flex-col gap-1 px-1 pt-2.5 sm:pt-3">
         {brand && (
-          <span className="line-clamp-1 text-[10px] sm:text-[11px] font-medium uppercase tracking-[0.16em] text-ink-subtle">
+          <span className="line-clamp-1 text-xs font-medium uppercase tracking-[0.16em] text-ink-subtle">
             {brand}
           </span>
         )}

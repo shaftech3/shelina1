@@ -165,7 +165,7 @@ export function Hero({ slide, slides, className }: HeroProps) {
             {heading}
           </h1>
 
-          {subheading && (
+          {subheading && !subheading.toLowerCase().includes('shaf tech') && (
             <p
               className="max-w-xl text-sm sm:text-base lg:text-lg text-cream/85 font-light leading-relaxed motion-safe:animate-[fade-up_var(--dur-slow)_var(--ease-entrance)_both]"
               style={{ animationDelay: '240ms' }}

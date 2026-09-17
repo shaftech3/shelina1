@@ -5,8 +5,8 @@ import {
   getResponsiveImageSrcSet,
   isCloudinaryUrl,
   normalizeMediaUrl,
+  FALLBACK_IMAGE_URL,
 } from '@/lib/media';
-import { Icon } from './Icon';
 
 export type AspectRatio = 'product' | 'category' | 'banner' | 'hero' | 'square' | 'wide' | 'diamond' | 'auto';
 
@@ -108,10 +108,15 @@ export function Image({
       )}
 
       {status === 'error' || !normalizedSrc ? (
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-cream-dark/40 text-ink-subtle p-3 text-center select-none">
-          <Icon name="image" size={24} className="opacity-40 text-primary-deep" />
-          <span className="text-caption font-medium tracking-wide text-ink-muted/80">{fallbackText}</span>
-        </div>
+        <img
+          src={FALLBACK_IMAGE_URL}
+          alt={fallbackText}
+          className={cn(
+            'h-full w-full max-h-full max-w-full transition-all duration-base ease-elegant opacity-100',
+            fitClass,
+            imgClassName,
+          )}
+        />
       ) : (
         <img
           src={displaySrc}

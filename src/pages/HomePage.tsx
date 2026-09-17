@@ -64,16 +64,18 @@ export function HomePage() {
 
   const heroSlide = hero.data?.[0];
 
-  // Resolve exactly 4 curated products for grid sections
-  const newArrivals4 = (newIn.data && newIn.data.length >= 4)
-    ? newIn.data.slice(0, 4)
-    : (allProducts.data ? allProducts.data.slice(0, 4) : null);
+  // Prevent repeating the exact same 4 items across 5 sections when inventory is tiny
+  const isLowInventory = (allProducts.data?.length || 0) <= 8;
 
-  const trending4 = (onSale.data && onSale.data.length >= 4)
-    ? onSale.data.slice(0, 4)
-    : (allProducts.data && allProducts.data.length >= 8
-        ? allProducts.data.slice(4, 8)
-        : (allProducts.data ? allProducts.data.slice(0, 4) : null));
+  const featuredList = featured.data && featured.data.length > 0 ? featured.data : allProducts.data;
+  
+  const newArrivals4 = isLowInventory ? null : (newIn.data && newIn.data.length > 0 ? newIn.data.slice(0, 4) : null);
+
+  const bestSellersList = isLowInventory ? null : (bestSellers.data && bestSellers.data.length > 0 ? bestSellers.data : null);
+
+  const trending4 = isLowInventory ? null : (onSale.data && onSale.data.length > 0 ? onSale.data.slice(0, 4) : null);
+
+  const essentialsList = isLowInventory ? null : (allProducts.data && allProducts.data.length > 4 ? allProducts.data : null);
 
   const homepageSchema = [
     {
@@ -140,135 +142,145 @@ export function HomePage() {
       </Section>
 
       {/* 3 — Scrolling Section: Featured Collection */}
-      <Section tone="cream" spacing="tight" aria-labelledby="featured-heading" className="overflow-hidden py-6 sm:py-8 md:py-10">
-        <Container className="flex flex-col gap-5 sm:gap-6">
-          <Reveal>
-            <SectionHeader
-              eyebrow="Season's Choice"
-              title="Featured Footwear"
-              description="Iconic pairs and timeless craftsmanship, favored by our atelier."
-              action={
-                <ButtonLink href="/shop" variant="outline">
-                  View All
-                </ButtonLink>
-              }
+      {featuredList && (
+        <Section tone="cream" spacing="tight" aria-labelledby="featured-heading" className="overflow-hidden py-6 sm:py-8 md:py-10">
+          <Container className="flex flex-col gap-5 sm:gap-6">
+            <Reveal>
+              <SectionHeader
+                eyebrow="Season's Choice"
+                title="Featured Footwear"
+                description="Iconic pairs and timeless craftsmanship, favored by our atelier."
+                action={
+                  <ButtonLink href="/shop" variant="ghost" iconRight={<Icon name="arrow-right" size={16} />}>
+                    View All
+                  </ButtonLink>
+                }
+              />
+            </Reveal>
+            <ProductCarousel
+              products={featuredList}
+              loading={featured.loading || allProducts.loading}
+              error={featured.error}
+              onRetry={featured.retry}
             />
-          </Reveal>
-          <ProductCarousel
-            products={featured.data && featured.data.length > 0 ? featured.data : allProducts.data}
-            loading={featured.loading || allProducts.loading}
-            error={featured.error}
-            onRetry={featured.retry}
-          />
-        </Container>
-      </Section>
+          </Container>
+        </Section>
+      )}
 
       {/* 4 — 4-Product Grid: New Arrivals (2x2 on Mobile, 4-Col Desktop) */}
-      <Section spacing="tight" aria-labelledby="new-arrivals-heading" className="py-6 sm:py-8 md:py-10">
-        <Container className="flex flex-col gap-5 sm:gap-6">
-          <Reveal>
-            <SectionHeader
-              eyebrow="Just Landed"
-              title="New Arrivals"
-              description="Fresh silhouettes and refined leathers released this season."
-              action={
-                <ButtonLink href="/new-arrivals" variant="ghost" iconRight={<Icon name="arrow-right" size={16} />}>
-                  Explore All
-                </ButtonLink>
-              }
+      {newArrivals4 && (
+        <Section spacing="tight" aria-labelledby="new-arrivals-heading" className="py-6 sm:py-8 md:py-10">
+          <Container className="flex flex-col gap-5 sm:gap-6">
+            <Reveal>
+              <SectionHeader
+                eyebrow="Just Landed"
+                title="New Arrivals"
+                description="Fresh silhouettes and refined leathers released this season."
+                action={
+                  <ButtonLink href="/new-arrivals" variant="ghost" iconRight={<Icon name="arrow-right" size={16} />}>
+                    Explore All
+                  </ButtonLink>
+                }
+              />
+            </Reveal>
+            <ProductGrid
+              products={newArrivals4}
+              loading={newIn.loading || allProducts.loading}
+              error={newIn.error}
+              onRetry={newIn.retry}
+              columns={4}
+              skeletonCount={4}
             />
-          </Reveal>
-          <ProductGrid
-            products={newArrivals4}
-            loading={newIn.loading || allProducts.loading}
-            error={newIn.error}
-            onRetry={newIn.retry}
-            columns={4}
-            skeletonCount={4}
-          />
-        </Container>
-      </Section>
+          </Container>
+        </Section>
+      )}
 
       {/* Promotional Banner (if available) */}
       {firstBanner && <Banner banner={firstBanner} />}
 
       {/* 5 — Scrolling Section: Best Sellers */}
-      <Section tone="cream" spacing="tight" aria-labelledby="bestsellers-heading" className="overflow-hidden py-6 sm:py-8 md:py-10">
-        <Container className="flex flex-col gap-5 sm:gap-6">
-          <Reveal>
-            <SectionHeader
-              eyebrow="Most Coveted"
-              title="Best Sellers"
-              description="Customer favorites celebrated for enduring quality and daylong comfort."
-              action={
-                <ButtonLink href="/shop?sort=bestselling" variant="outline">
-                  Shop Best Sellers
-                </ButtonLink>
-              }
+      {bestSellersList && (
+        <Section tone="cream" spacing="tight" aria-labelledby="bestsellers-heading" className="overflow-hidden py-6 sm:py-8 md:py-10">
+          <Container className="flex flex-col gap-5 sm:gap-6">
+            <Reveal>
+              <SectionHeader
+                eyebrow="Most Coveted"
+                title="Best Sellers"
+                description="Customer favorites celebrated for enduring quality and daylong comfort."
+                action={
+                  <ButtonLink href="/shop?sort=bestselling" variant="ghost" iconRight={<Icon name="arrow-right" size={16} />}>
+                    Shop Best Sellers
+                  </ButtonLink>
+                }
+              />
+            </Reveal>
+            <ProductCarousel
+              products={bestSellersList}
+              loading={bestSellers.loading || allProducts.loading}
+              error={bestSellers.error}
+              onRetry={bestSellers.retry}
+              emptyMessage="Celebrated styles will appear here soon."
             />
-          </Reveal>
-          <ProductCarousel
-            products={bestSellers.data && bestSellers.data.length > 0 ? bestSellers.data : allProducts.data}
-            loading={bestSellers.loading || allProducts.loading}
-            error={bestSellers.error}
-            onRetry={bestSellers.retry}
-            emptyMessage="Celebrated styles will appear here soon."
-          />
-        </Container>
-      </Section>
+          </Container>
+        </Section>
+      )}
 
       {/* 6 — 4-Product Grid: Trending Styles (2x2 on Mobile, 4-Col Desktop) */}
-      <Section spacing="tight" aria-labelledby="trending-heading" className="py-6 sm:py-8 md:py-10">
-        <Container className="flex flex-col gap-5 sm:gap-6">
-          <Reveal>
-            <SectionHeader
-              eyebrow="Curated Styles"
-              title="Trending Silhouettes"
-              description="Hand-selected statements designed to elevate everyday elegance."
-              action={
-                <ButtonLink href="/shop" variant="ghost" iconRight={<Icon name="arrow-right" size={16} />}>
-                  View Curated
-                </ButtonLink>
-              }
+      {trending4 && (
+        <Section spacing="tight" aria-labelledby="trending-heading" className="py-6 sm:py-8 md:py-10">
+          <Container className="flex flex-col gap-5 sm:gap-6">
+            <Reveal>
+              <SectionHeader
+                eyebrow="Curated Styles"
+                title="Trending Silhouettes"
+                description="Hand-selected statements designed to elevate everyday elegance."
+                action={
+                  <ButtonLink href="/shop" variant="ghost" iconRight={<Icon name="arrow-right" size={16} />}>
+                    View Curated
+                  </ButtonLink>
+                }
+              />
+            </Reveal>
+            <ProductGrid
+              products={trending4}
+              loading={onSale.loading || allProducts.loading}
+              error={onSale.error}
+              onRetry={onSale.retry}
+              columns={4}
+              skeletonCount={4}
             />
-          </Reveal>
-          <ProductGrid
-            products={trending4}
-            loading={onSale.loading || allProducts.loading}
-            error={onSale.error}
-            onRetry={onSale.retry}
-            columns={4}
-            skeletonCount={4}
-          />
-        </Container>
-      </Section>
+          </Container>
+        </Section>
+      )}
 
       {/* Second Promotional Banner (if available) */}
       {secondBanner && <Banner banner={secondBanner} />}
 
       {/* 7 — Scrolling Section: Handcrafted Essentials */}
-      <Section tone="cream" spacing="tight" aria-labelledby="essentials-heading" className="overflow-hidden py-6 sm:py-8 md:py-10">
-        <Container className="flex flex-col gap-5 sm:gap-6">
-          <Reveal>
-            <SectionHeader
-              eyebrow="Atelier Standards"
-              title="Handcrafted Essentials"
-              description="Signature Peshawari, Khussas, and bespoke loafers built to endure."
-              action={
-                <ButtonLink href="/shop" variant="outline">
-                  All Footwear
-                </ButtonLink>
-              }
+      {essentialsList && (
+        <Section tone="cream" spacing="tight" aria-labelledby="essentials-heading" className="overflow-hidden py-6 sm:py-8 md:py-10">
+          <Container className="flex flex-col gap-5 sm:gap-6">
+            <Reveal>
+              <SectionHeader
+                eyebrow="Atelier Standards"
+                title="Handcrafted Essentials"
+                description="Signature Peshawari, Khussas, and bespoke loafers built to endure."
+                action={
+                  <ButtonLink href="/shop" variant="ghost" iconRight={<Icon name="arrow-right" size={16} />}>
+                    All Footwear
+                  </ButtonLink>
+                }
+              />
+            </Reveal>
+            <ProductCarousel
+              products={essentialsList}
+              loading={allProducts.loading}
+              error={allProducts.error}
+              onRetry={allProducts.retry}
             />
-          </Reveal>
-          <ProductCarousel
-            products={allProducts.data && allProducts.data.length > 0 ? allProducts.data : featured.data}
-            loading={allProducts.loading}
-            error={allProducts.error}
-            onRetry={allProducts.retry}
-          />
-        </Container>
-      </Section>
+          </Container>
+        </Section>
+      )}
 
       {/* 8 — Signature Brand Lines */}
       <Section spacing="tight" aria-labelledby="brands-heading" className="py-7 sm:py-9">

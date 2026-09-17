@@ -25,7 +25,7 @@ export function AnnouncementBar() {
     <aside aria-label="Store Announcements" className="relative z-50 bg-primary-deep text-white/95 overflow-hidden select-none border-b border-primary/20">
       <Container className="flex h-9 items-center justify-between">
         {/* Left proof point indicator (Desktop only) */}
-        <span className="hidden md:inline-flex items-center gap-1.5 text-[0.72rem] tracking-wider uppercase text-[#DAE8EC] font-medium">
+        <span className="hidden md:inline-flex items-center gap-1.5 text-xs tracking-wider uppercase text-[#DAE8EC] font-medium">
           <span className="h-1.5 w-1.5 rounded-full bg-secondary animate-pulse" />
           Official Atelier
         </span>
@@ -35,7 +35,7 @@ export function AnnouncementBar() {
           <p
             key={currentIndex}
             className={cn(
-              'text-center text-caption tracking-[0.06em] font-medium leading-none truncate',
+              'text-center text-xs sm:text-sm tracking-wide font-medium leading-none truncate',
               'animate-fade-in transition-all duration-300 text-white',
             )}
           >
@@ -44,7 +44,7 @@ export function AnnouncementBar() {
         </div>
 
         {/* Right guarantee indicator (Desktop only) */}
-        <span className="hidden md:inline-flex items-center gap-1 text-[0.72rem] tracking-wider uppercase text-[#DAE8EC] font-medium">
+        <span className="hidden md:inline-flex items-center gap-1 text-xs tracking-wider uppercase text-[#DAE8EC] font-medium">
           Easy Returns & Exchanges
         </span>
       </Container>
